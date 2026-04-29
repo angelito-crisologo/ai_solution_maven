@@ -102,9 +102,9 @@ export default function ContactPage() {
               Keep it simple and specific
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              The form opens your email app with the details filled in. A server
-              email workflow can be added later when the production domain and
-              sender are confirmed.
+              The form sends messages directly from the site. Once your sender
+              and inbox settings are configured, enquiries will arrive in your
+              business email without relying on the visitor’s mail app.
             </p>
           </div>
 

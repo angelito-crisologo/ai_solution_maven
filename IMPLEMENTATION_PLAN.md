@@ -27,9 +27,11 @@ Completed:
   - `Footer`
 - Created the `/contact` page.
 - Built a frontend contact form with validation.
-- Added a mailto fallback so enquiries can be sent without backend infrastructure.
+- Added a production contact API route at `/api/contact`.
+- Wired the contact form to send submissions directly from the site.
 - Updated navbar and hero CTAs to route to `/contact`.
 - Created the `/products` page.
+- Created the dedicated `/products/plansight-ai` product page.
 - Created the `/projects` page.
 - Added branded case-study content for PlanSight AI, Appointment System, and My Vet Buddy.
 - Added a branded `not-found` page so missing routes no longer show the plain Next.js default.
@@ -48,11 +50,16 @@ Completed:
 - Created the first implementation commit.
 - Connected the repository to GitHub.
 - Pushed the implementation to `angelito-crisologo/ai_solution_maven`.
+- Added a production start script.
+- Added deployment notes in `README.md`.
 
 Not started:
+- XLSX import.
+- Smartsheet import.
+- User authentication and private workspace.
 - Production contact form handling.
 - Analytics.
-- Deployment.
+- Vercel deployment.
 
 ## Phase 1: Foundation
 
@@ -106,7 +113,7 @@ Remaining:
 
 Completed:
 - Create `/products`.
-- Showcase PlanSight AI prominently.
+- Showcase PlanSight AI as the flagship product.
 - Add product description, features, demo CTA, and case-study CTA.
 - Create `/projects`.
 - Add case-study layouts for:
@@ -123,6 +130,19 @@ Remaining:
 - Real screenshots where available.
 - Product mockups or UI preview cards where screenshots are not ready yet.
 
+Completed:
+- Add shared PlanSight scaffolding under `lib/plansight-ai/` and `components/plansight-ai/`.
+- Add a read-only stakeholder share route under `/share/[shareId]`.
+- Add a `My Tasks` filter to the PlanSight workspace.
+- Add an AI-generated project summary surface.
+- Add an actual `.mpp` import route backed by the external parser service.
+- Add a deployable parser service package under `services/plansight-import/`.
+- Add a root `render.yaml` for the parser service.
+
+Remaining:
+- Deploy the parser service to Render and wire `PLANSIGHT_IMPORT_SERVICE_URL`.
+- Add XLSX and Smartsheet import adapters later.
+
 ## Phase 4: Contact Flow
 
 Completed:
@@ -135,14 +155,11 @@ Completed:
   - Message
 - Add validation.
 - Add success and error states.
+- Add production email delivery via Resend-backed API route.
 
 Remaining:
-- Choose form handling approach.
-- Replace the mailto fallback with production email delivery when domain and sender details are available.
-
-Recommended contact handling:
-- Production option: Next.js server action plus Resend.
-- Simpler option: Formspree, EmailJS, or another hosted form provider.
+- Configure `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, and `CONTACT_TO_EMAIL`.
+- Verify the sender domain in Resend if the production domain changes.
 
 ## Phase 5: Polish And Responsiveness
 
@@ -166,6 +183,8 @@ Completed:
 - Add web app manifest.
 - Add `robots.txt`.
 - Add `sitemap.xml`.
+- Add a production start script.
+- Add Vercel deployment notes.
 
 Remaining:
 - Add a lint/typecheck quality command if needed.
@@ -197,14 +216,21 @@ Recommended analytics:
 
 ## Recommended Next Steps
 
-1. Decide how the production contact form should send messages:
-   - Use Resend with a server action for a production-grade setup.
-   - Use Formspree for the fastest operational setup.
+1. Configure the contact environment variables in production:
+   - `RESEND_API_KEY`
+   - `CONTACT_FROM_EMAIL`
+   - `CONTACT_TO_EMAIL`
 
-2. Add detailed tech stack notes to the `/projects` case studies.
+2. Add shareable public plan links and the `My Tasks` filter to the product.
 
-3. Add real screenshots or polished UI preview mockups for PlanSight AI and other projects.
+3. Add the AI-generated project summary to the product.
 
-4. Deploy the site to Vercel after products/projects pages and contact handling are finalized.
+4. Deploy the parser service on Render and set `PLANSIGHT_IMPORT_SERVICE_URL` in Vercel.
 
-5. Add analytics after deployment so CTA and contact conversion can be measured.
+5. Add detailed tech stack notes to the `/projects` case studies.
+
+6. Add real screenshots or polished UI preview mockups for PlanSight AI and other projects.
+
+7. Deploy the site to Vercel after the contact sender and inbox are configured.
+
+8. Add analytics after deployment so CTA and contact conversion can be measured.

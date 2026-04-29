@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 type FormState = {
@@ -36,24 +36,10 @@ const timelines = [
 
 export function ContactForm() {
   const [form, setForm] = useState<FormState>(initialState);
-  const [status, setStatus] = useState<"idle" | "ready">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
   const [error, setError] = useState("");
-
-  const emailHref = useMemo(() => {
-    const subject = encodeURIComponent(`Project enquiry from ${form.name}`);
-    const body = encodeURIComponent(
-      [
-        `Name: ${form.name}`,
-        `Email: ${form.email}`,
-        `Project type: ${form.projectType}`,
-        `Timeline: ${form.timeline}`,
-        "",
-        form.message,
-      ].join("\n"),
-    );
-
-    return `mailto:hello@aisolutionmaven.com?subject=${subject}&body=${body}`;
-  }, [form]);
 
   function updateField(field: keyof FormState, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -61,21 +47,54 @@ export function ContactForm() {
     setStatus("idle");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       setError("Please add your name, email, and a short project message.");
+      setStatus("error");
       return;
     }
 
     if (!/^\S+@\S+\.\S+$/.test(form.email)) {
       setError("Please enter a valid email address.");
+      setStatus("error");
       return;
     }
 
-    setStatus("ready");
-    window.location.href = emailHref;
+    setStatus("submitting");
+    setError("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setError(
+          data.error ??
+            "Message delivery failed. Please try again or email hello@aisolutionmaven.com directly.",
+        );
+        setStatus("error");
+        return;
+      }
+
+      setForm(initialState);
+      setStatus("success");
+    } catch {
+      setError(
+        "Unable to send the message right now. Please try again or email hello@aisolutionmaven.com directly.",
+      );
+      setStatus("error");
+    }
   }
 
   return (
@@ -150,18 +169,19 @@ export function ContactForm() {
         </p>
       ) : null}
 
-      {status === "ready" ? (
+      {status === "success" ? (
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm font-medium text-emerald-700">
           <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4" />
-          Your email app should open with the project details filled in.
+          Message sent. I’ll review it and reply by email.
         </p>
       ) : null}
 
       <button
         type="submit"
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-base font-medium text-white shadow-lg shadow-primary/20 transition hover:scale-[1.01] sm:w-auto"
+        disabled={status === "submitting"}
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-base font-medium text-white shadow-lg shadow-primary/20 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
       >
-        Send enquiry
+        {status === "submitting" ? "Sending..." : "Send enquiry"}
         <ArrowRight aria-hidden="true" className="h-5 w-5" />
       </button>
     </form>

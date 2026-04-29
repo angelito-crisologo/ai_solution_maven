@@ -75,7 +75,7 @@ export default function ProductsPage() {
               "Surface risks early so teams can adjust plans with less guesswork.",
               "Keep decisions, assumptions, and outcomes visible in one product workflow.",
             ]}
-            demoHref="/contact"
+            demoHref="/products/plansight-ai"
             caseStudyHref="/projects#plansight-ai"
           />
         </div>

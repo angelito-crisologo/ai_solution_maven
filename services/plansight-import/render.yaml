@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: plansight-import-service
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: .
+    healthCheckPath: /api/health
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    envVars:
+      - key: CORS_ORIGIN
+        sync: false
+      - key: SAMPLE_PROJECTS_DIR
+        value: /app/sample_projects
+      - key: MPP_PARSER_JAR
+        value: /app/parser-java/target/mpp-parser-cli-1.0.0-jar-with-dependencies.jar
