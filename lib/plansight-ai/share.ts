@@ -18,7 +18,8 @@ function slugify(value: string) {
 
 export function createSharePayload(plan: Plan): SharePayload {
   const metrics = summarizePlan(plan);
-  const shareId = `${slugify(plan.title || "plan")}-${plan.id}`;
+  const stablePlanId = plan.id.replace(/[:.]/g, "-");
+  const shareId = `${slugify(plan.title || "plan")}-${stablePlanId}`;
 
   return {
     shareId,

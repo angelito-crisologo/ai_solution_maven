@@ -9,6 +9,8 @@ npm install
 npm run dev
 ```
 
+For local `.mpp` imports, run the parser service on port `3005`. The Next app falls back to `http://localhost:3005` in development if `PLANSIGHT_IMPORT_SERVICE_URL` is not set.
+
 ## Production Build
 
 ```bash
@@ -27,12 +29,23 @@ This project is ready for Vercel.
    - `CONTACT_FROM_EMAIL`
    - `CONTACT_TO_EMAIL`
    - `PLANSIGHT_IMPORT_SERVICE_URL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. Deploy the project.
 
 Recommended values:
 - `CONTACT_FROM_EMAIL`: a verified sender address in Resend
 - `CONTACT_TO_EMAIL`: your inbox address
 - `PLANSIGHT_IMPORT_SERVICE_URL`: the deployed MPP parser service URL
+- `NEXT_PUBLIC_SUPABASE_URL`: your Supabase Project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: your Supabase anon public key
+
+## Supabase Setup
+
+1. Open your Supabase project.
+2. Go to the SQL editor and run `supabase/schema.sql`.
+3. Add the env vars above to `.env.local` for local development and to Vercel for production.
+4. Keep using the anon public key only for the current share flow.
 
 ## MPP Import Deployment
 

@@ -6,8 +6,22 @@ import {
 
 export const runtime = "nodejs";
 
+function resolveParserServiceUrl() {
+  const configuredUrl = process.env.PLANSIGHT_IMPORT_SERVICE_URL?.trim();
+  const isPlaceholder =
+    !configuredUrl ||
+    configuredUrl.includes("your-parser-service.example.com") ||
+    configuredUrl.includes("example.com");
+
+  if (!isPlaceholder) {
+    return configuredUrl;
+  }
+
+  return process.env.NODE_ENV === "development" ? "http://localhost:3005" : "";
+}
+
 export async function POST(request: Request) {
-  const parserServiceUrl = process.env.PLANSIGHT_IMPORT_SERVICE_URL;
+  const parserServiceUrl = resolveParserServiceUrl();
 
   const formData = await request.formData();
   const file = formData.get("file");
@@ -40,6 +54,11 @@ export async function POST(request: Request) {
     const parserFormData = new FormData();
     parserFormData.append("file", file);
 
+    const healthResponse = await fetch(`${parserServiceUrl.replace(/\/$/, "")}/api/health`);
+    if (!healthResponse.ok) {
+      throw new Error(`Parser service is not healthy at ${parserServiceUrl}.`);
+    }
+
     const response = await fetch(`${parserServiceUrl.replace(/\/$/, "")}/api/parse`, {
       method: "POST",
       body: parserFormData
@@ -66,7 +85,7 @@ export async function POST(request: Request) {
       {
         error:
           error instanceof Error
-            ? error.message
+            ? `${error.message} Check PLANSIGHT_IMPORT_SERVICE_URL and make sure the parser service is running.`
             : "Failed to import the MPP file."
       },
       { status: 500 }

@@ -1,22 +1,28 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
-import { Loader2, Upload } from "lucide-react";
-import { analyzePlan, summarizePlan } from "@/lib/plansight-ai/analysis";
+import type { FormEvent, ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
+import { BarChart3, Loader2, List, Sparkles, Upload } from "lucide-react";
+import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
+import { getOrCreateGuestId } from "@/lib/plansight-ai/guest";
 import { demoPlan } from "@/lib/plansight-ai/demo";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
+import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
 import { PlanSightWorkspace } from "./PlanSightWorkspace";
+import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 
 export function PlanSightProductShell() {
   const [plan, setPlan] = useState<Plan>(demoPlan);
   const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState<"plan" | "project-insights" | "analysis">("plan");
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
+  const importedPlanTabsRef = useRef<HTMLElement | null>(null);
 
   const metrics = useMemo(() => summarizePlan(plan), [plan]);
-  const insights = useMemo(() => analyzePlan(plan), [plan]);
+  const analysis = useMemo(() => buildInsightsReport(plan), [plan]);
   const share = useMemo(() => createSharePayload(plan), [plan]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -39,16 +45,45 @@ export function PlanSightProductShell() {
         body: formData
       });
 
-      const payload = (await response.json()) as
-        | { plan: Plan }
-        | { error?: string };
+      const payload = (await response.json()) as { plan: Plan } | { error?: string };
 
       if (!response.ok || !("plan" in payload)) {
         throw new Error("error" in payload && payload.error ? payload.error : "Failed to import the MPP file.");
       }
 
+      const guestId = getOrCreateGuestId();
+      const sharePayload = createSharePayload(payload.plan);
+      const saveResponse = await fetch("/api/plansight/share", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          shareId: sharePayload.shareId,
+          plan: payload.plan,
+          guestId
+        })
+      });
+
+      const savePayload = (await saveResponse.json().catch(() => ({}))) as { error?: string };
+
+      if (!saveResponse.ok) {
+        throw new Error(savePayload.error || "Imported the plan, but failed to persist it to the database.");
+      }
+
+      try {
+        window.localStorage.setItem(`plansight-share:${sharePayload.shareId}`, JSON.stringify({ plan: payload.plan }));
+      } catch {
+        // Ignore storage failures and fall back to the database.
+      }
+
       setPlan(payload.plan);
-      setStatus(`Imported ${selectedFile.name}.`);
+      setSelectedTaskIds(new Set());
+      setStatus(`Imported ${selectedFile.name} and saved it.`);
+      setActiveTab("plan");
+      window.setTimeout(() => {
+        importedPlanTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to import the MPP file.");
     } finally {
@@ -100,7 +135,78 @@ export function PlanSightProductShell() {
         </div>
       </section>
 
-      <PlanSightWorkspace plan={plan} metrics={metrics} insights={insights} share={share} />
+      <section ref={importedPlanTabsRef} className="px-6 pb-2">
+        <div className="mx-auto flex max-w-[1200px] gap-2">
+          <TabButton
+            active={activeTab === "plan"}
+            onClick={() => setActiveTab("plan")}
+            icon={<List className="h-4 w-4" />}
+            label="Imported plan"
+          />
+          <TabButton
+            active={activeTab === "project-insights"}
+            onClick={() => setActiveTab("project-insights")}
+            icon={<BarChart3 className="h-4 w-4" />}
+            label="Project Insights"
+          />
+          <TabButton
+            active={activeTab === "analysis"}
+            onClick={() => setActiveTab("analysis")}
+            icon={<Sparkles className="h-4 w-4" />}
+            label="AI analysis"
+          />
+        </div>
+      </section>
+
+      {activeTab === "plan" ? (
+        <PlanSightWorkspace
+          plan={plan}
+          metrics={metrics}
+          insights={[]}
+          share={share}
+          highlightedTaskIds={selectedTaskIds}
+        />
+      ) : activeTab === "project-insights" ? (
+        <PlanSightProjectInsightsPanel
+          analysis={analysis}
+          share={share}
+          metrics={metrics}
+          selectedTaskIds={selectedTaskIds}
+          onSelectTask={(taskId) => {
+            setSelectedTaskIds(new Set([taskId]));
+            setActiveTab("plan");
+          }}
+        />
+      ) : (
+        <PlanSightAIAnalysisPanel analysis={analysis} />
+      )}
     </>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-t-2xl border border-b-0 px-4 py-3 text-sm font-medium transition ${
+        active
+          ? "border-slate-200 bg-white text-dark shadow-soft"
+          : "border-transparent bg-slate-100 text-slate-500 hover:bg-slate-200"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

@@ -138,6 +138,8 @@ Completed:
 - Add an actual `.mpp` import route backed by the external parser service.
 - Add a deployable parser service package under `services/plansight-import/`.
 - Add a root `render.yaml` for the parser service.
+- Add a split-pane PlanSight workspace with a collapsible task tree and Gantt chart.
+- Add day, week, and month Gantt views.
 
 Remaining:
 - Deploy the parser service to Render and wire `PLANSIGHT_IMPORT_SERVICE_URL`.
