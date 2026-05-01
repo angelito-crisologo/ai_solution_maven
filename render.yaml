@@ -6,7 +6,6 @@ services:
     region: oregon
     rootDir: services/plansight-import
     dockerfilePath: Dockerfile
-    dockerContext: services/plansight-import
     healthCheckPath: /api/health
     envVars:
       - key: CORS_ORIGIN
