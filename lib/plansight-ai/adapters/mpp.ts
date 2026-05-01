@@ -22,6 +22,7 @@ export type ParsedTask = {
   milestone: boolean;
   predecessors: ParsedDependency[];
   resourceNames: string[];
+  notes: string | null;
 };
 
 export type ParsedProject = {
@@ -55,7 +56,8 @@ function normalizeTask(task: ParsedTask) {
     summary: task.summary,
     milestone: task.milestone,
     predecessors: task.predecessors.map(normalizeDependency),
-    resourceNames: task.resourceNames
+    resourceNames: task.resourceNames,
+    notes: task.notes
   };
 }
 

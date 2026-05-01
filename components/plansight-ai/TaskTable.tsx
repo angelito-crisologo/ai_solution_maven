@@ -30,7 +30,7 @@ type ResizeState = {
   startWidth: number;
 } | null;
 
-const DEFAULT_COLUMN_WIDTHS = [56, 290, 120, 120, 96, 96, 150, 170];
+const DEFAULT_COLUMN_WIDTHS = [56, 290, 120, 120, 96, 96, 150, 170, 220];
 const MIN_COLUMN_WIDTH = 48;
 
 function formatPercent(value: number | null) {
@@ -213,7 +213,7 @@ export function TaskTable({
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-normal text-primary">Tasks</p>
-          <p className="text-xs text-slate-500">Task ID, name, dates, duration, predecessors, and resources</p>
+          <p className="text-xs text-slate-500">Task ID, name, dates, duration, predecessors, resources, and notes</p>
         </div>
         <button
           type="button"
@@ -229,8 +229,8 @@ export function TaskTable({
           className="grid h-full transition-transform"
           style={{ gridTemplateColumns, height: PLAN_TABLE_HEADER_HEIGHT, transform: `translateX(-${scrollLeft}px)` }}
         >
-          {["ID", "Task", "Start", "Finish", "Duration", "% Complete", "Predecessors", "Resources"].map(
-            (label, index) => (
+          {["ID", "Task", "Start", "Finish", "Duration", "% Complete", "Predecessors", "Resources", "Notes"].map((label, index) => {
+            return (
               <div
                 key={label}
                 className="relative flex items-center overflow-hidden border-r border-slate-200 px-3 last:border-r-0"
@@ -247,8 +247,8 @@ export function TaskTable({
                   </button>
                 ) : null}
               </div>
-            )
-          )}
+            );
+          })}
         </div>
       </div>
 
@@ -333,10 +333,13 @@ export function TaskTable({
               <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2 text-slate-600">
                 <span className="whitespace-normal break-words leading-5">{formatPredecessors(task)}</span>
               </div>
-              <div className="flex items-start overflow-hidden px-3 py-2 text-slate-600">
+              <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2 text-slate-600">
                 <span className="whitespace-normal break-words leading-5">
-                  {task.resourceNames.length > 0 ? task.resourceNames.join(", ") : "Unassigned"}
+                  {task.resourceNames.length > 0 ? task.resourceNames.join(", ") : ""}
                 </span>
+              </div>
+              <div className="flex items-start overflow-hidden px-3 py-2 text-slate-600">
+                <span className="whitespace-normal break-words leading-5">{task.notes ?? ""}</span>
               </div>
             </div>
           );

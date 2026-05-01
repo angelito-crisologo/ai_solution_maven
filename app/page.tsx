@@ -86,13 +86,13 @@ export default function Home() {
         <div className="mx-auto max-w-[1200px]">
           <ProductCard
             title="PlanSight AI"
-            description="PlanSight AI helps teams turn uncertain plans into clearer decisions. It models scenarios, highlights risk, and gives leaders a practical view of what is likely to happen next."
+            description="PlanSight AI lets a PM upload an MPP plan, inspect the imported schedule, review project health, and share a clear stakeholder view from the same workflow."
             features={[
-              "Compare delivery, budget, and resource scenarios before committing.",
-              "Surface risks early so teams can adjust plans with less guesswork.",
-              "Keep decisions, assumptions, and outcomes visible in one product workflow.",
+              "Import an MPP plan and review the task table, Gantt chart, and schedule structure.",
+              "Surface project health, late work, and potential delivery risks quickly.",
+              "Generate a read-only stakeholder link from the same imported plan.",
             ]}
-            demoHref="/products#plansight-ai"
+            demoHref="/products/plansight-ai"
             caseStudyHref="/projects#plansight-ai"
           />
         </div>

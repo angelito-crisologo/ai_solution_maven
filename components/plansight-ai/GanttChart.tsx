@@ -215,14 +215,16 @@ export function GanttChart({
 
   return (
     <div className="flex h-full w-full max-w-full flex-col rounded-2xl border border-slate-200 bg-white shadow-soft">
-      <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-normal text-secondary">Gantt</p>
-          <p className="text-xs text-slate-500">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold uppercase tracking-normal text-secondary">
+            Gantt
+          </p>
+          <p className="truncate text-xs text-slate-500">
             {formatShortDate(start.toISOString())} - {formatShortDate(end.toISOString())}
           </p>
         </div>
-        <div className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+        <div className="max-w-[8.5rem] truncate rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
           {viewMode === "day" ? "Daily view" : viewMode === "week" ? "Weekly view" : "Monthly view"}
         </div>
       </div>

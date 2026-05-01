@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Plan, PlanMetrics } from "@/lib/plansight-ai/types";
-import type { PlanInsight } from "@/lib/plansight-ai/analysis";
+import type { PlanInsight, PlanInsightsReport } from "@/lib/plansight-ai/analysis";
 import type { SharePayload } from "@/lib/plansight-ai/share";
 import { GanttChart } from "./GanttChart";
 import { TaskTable } from "./TaskTable";
@@ -12,6 +12,7 @@ type Props = {
   plan: Plan;
   metrics: PlanMetrics;
   insights: PlanInsight[];
+  analysis: PlanInsightsReport;
   share: SharePayload;
   highlightedTaskIds?: Set<number>;
   stakeholderName?: string;
@@ -20,46 +21,8 @@ type Props = {
   outerSectionClassName?: string;
 };
 
-type TaskFilter = "all" | "my-tasks" | "milestones";
+type QuickViewFilter = "all" | "in-progress" | "late" | "at-risk" | "critical-path" | "completed";
 type TaskTreeNode = ReturnType<typeof buildTaskTree>[number];
-
-const MY_TASK_OWNER = "Angelito Crisologo";
-
-function normalizeName(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function matchesOwner(taskOwnerNames: string[], stakeholderName?: string) {
-  const normalizedStakeholderName = normalizeName(stakeholderName ?? MY_TASK_OWNER);
-  if (!normalizedStakeholderName) return false;
-
-  return taskOwnerNames.some((name) => {
-    const normalizedName = normalizeName(name);
-    return (
-      normalizedName === normalizedStakeholderName ||
-      normalizedName.includes(normalizedStakeholderName) ||
-      normalizedStakeholderName.includes(normalizedName)
-    );
-  });
-}
-
-function matchesFilter(
-  taskFilter: TaskFilter,
-  taskOwnerNames: string[],
-  milestone: boolean,
-  stakeholderName?: string
-) {
-  if (taskFilter === "milestones") {
-    return milestone;
-  }
-
-  if (taskFilter === "my-tasks") {
-    return matchesOwner(taskOwnerNames, stakeholderName);
-  }
-
-  return true;
-}
-
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -67,12 +30,6 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <p className="mt-2 text-2xl font-semibold text-dark">{value}</p>
     </div>
   );
-}
-
-function renderFilterLabel(filter: TaskFilter) {
-  if (filter === "all") return "All Tasks";
-  if (filter === "milestones") return "Milestones";
-  return "My Tasks";
 }
 
 function renderViewLabel(mode: ViewMode) {
@@ -98,10 +55,35 @@ function countLeafTasks(nodes: TaskTreeNode[]): number {
   return total;
 }
 
+function collectResourceOptions(nodes: TaskTreeNode[]) {
+  const values = new Set<string>();
+
+  const walk = (items: TaskTreeNode[]) => {
+    for (const node of items) {
+      node.resourceNames.forEach((name) => {
+        if (name.trim()) {
+          values.add(name.trim());
+        }
+      });
+
+      if (node.children.length > 0) {
+        walk(node.children as TaskTreeNode[]);
+      }
+    }
+  };
+
+  walk(nodes);
+
+  return {
+    values: Array.from(values).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+  };
+}
+
 export function PlanSightWorkspace({
   plan,
   metrics,
   insights,
+  analysis,
   share,
   highlightedTaskIds,
   stakeholderName,
@@ -109,12 +91,14 @@ export function PlanSightWorkspace({
   containerMaxWidthClassName = "max-w-[1200px]",
   outerSectionClassName = "px-6 py-10"
 }: Props) {
-  const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
+  const [quickViewFilter, setQuickViewFilter] = useState<QuickViewFilter>("all");
+  const [resourceFilter, setResourceFilter] = useState("all");
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [expandedTaskIds, setExpandedTaskIds] = useState<Set<number>>(new Set());
   const [leftPaneWidth, setLeftPaneWidth] = useState(520);
   const [isDraggingDivider, setIsDraggingDivider] = useState(false);
   const [rowHeights, setRowHeights] = useState<number[]>([]);
+  const [isMobilePortrait, setIsMobilePortrait] = useState(false);
   const splitRef = useRef<HTMLDivElement | null>(null);
   const taskPaneRef = useRef<HTMLDivElement | null>(null);
   const ganttPaneRef = useRef<HTMLDivElement | null>(null);
@@ -123,17 +107,77 @@ export function PlanSightWorkspace({
 
   const taskTree = useMemo(() => buildTaskTree(plan.tasks), [plan.tasks]);
   const hasChildrenTaskIds = useMemo(() => collectNodeIdsWithChildren(taskTree), [taskTree]);
+  const criticalTaskIds = useMemo(() => {
+    const source = analysis.mode === "approximate" ? analysis.insights.potentialCriticalTasks : analysis.insights.criticalTasks;
+    return new Set(source.map((task) => task.id));
+  }, [analysis]);
+  const lateTaskIds = useMemo(() => new Set(analysis.insights.lateTasks.map((task) => task.id)), [analysis]);
+  const atRiskTaskIds = useMemo(() => new Set(analysis.insights.atRiskTasks.map((task) => task.id)), [analysis]);
 
   useEffect(() => {
     setExpandedTaskIds(new Set(Array.from(hasChildrenTaskIds)));
   }, [hasChildrenTaskIds, plan.id]);
 
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 768px) and (orientation: portrait)");
+
+    const update = () => {
+      setIsMobilePortrait(query.matches);
+    };
+
+    update();
+
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
+
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  const resourceOptions = useMemo(() => collectResourceOptions(taskTree), [taskTree]);
+
+  useEffect(() => {
+    if (resourceFilter === "all") return;
+
+    const available = resourceOptions.values.includes(resourceFilter);
+    if (!available) {
+      setResourceFilter("all");
+    }
+  }, [resourceFilter, resourceOptions.values]);
+
   const filteredTree = useMemo(() => {
-    const predicate = (task: (typeof taskTree)[number]) =>
-      matchesFilter(taskFilter, task.resourceNames, task.milestone, stakeholderName);
+    const predicate = (task: (typeof taskTree)[number]) => {
+      const quickViewMatch = (() => {
+        if (quickViewFilter === "all") return true;
+        const percent = Math.max(0, Math.min(100, Math.round(task.percentComplete ?? 0)));
+        const isCompleted = percent >= 100;
+        if (quickViewFilter === "completed") return isCompleted;
+        if (quickViewFilter === "late") return lateTaskIds.has(task.id);
+        if (quickViewFilter === "at-risk") return atRiskTaskIds.has(task.id);
+        if (quickViewFilter === "critical-path") return criticalTaskIds.has(task.id);
+        if (quickViewFilter === "in-progress") return percent > 0 && !isCompleted;
+        return true;
+      })();
+
+      const resourceMatch =
+        resourceFilter === "all"
+          ? true
+          : task.resourceNames.some((name) => name.trim() === resourceFilter);
+
+      return quickViewMatch && resourceMatch;
+    };
 
     return filterTaskTree(taskTree, predicate);
-  }, [stakeholderName, taskFilter, taskTree]);
+  }, [
+    resourceFilter,
+    quickViewFilter,
+    taskTree,
+    criticalTaskIds,
+    lateTaskIds,
+    atRiskTaskIds
+  ]);
 
   const visibleTasks = useMemo(() => {
     const output: typeof filteredTree = [];
@@ -152,9 +196,37 @@ export function PlanSightWorkspace({
   }, [expandedTaskIds, filteredTree]);
 
   const filteredLeafTaskCount = useMemo(() => countLeafTasks(filteredTree), [filteredTree]);
-  const totalLeafTaskCount = useMemo(() => countLeafTasks(taskTree), [taskTree]);
-  const displayedTotalTaskCount =
-    taskFilter === "all" ? totalLeafTaskCount : filteredLeafTaskCount;
+  const displayedTotalTaskCount = filteredLeafTaskCount;
+  const filteredStatusCounts = useMemo(() => {
+    let notStarted = 0;
+    let inProgress = 0;
+    let completed = 0;
+
+    const walk = (nodes: TaskTreeNode[]) => {
+      for (const node of nodes) {
+        if (node.children.length === 0) {
+          const percent = Math.max(0, Math.min(100, Math.round(node.percentComplete ?? 0)));
+          if (percent >= 100) {
+            completed += 1;
+          } else if (percent > 0) {
+            inProgress += 1;
+          } else {
+            notStarted += 1;
+          }
+        } else {
+          walk(node.children as TaskTreeNode[]);
+        }
+      }
+    };
+
+    walk(filteredTree);
+
+    return {
+      notStarted,
+      inProgress,
+      completed
+    };
+  }, [filteredTree]);
 
   const allVisibleExpandableIds = useMemo(() => {
     const ids = new Set<number>();
@@ -301,49 +373,63 @@ export function PlanSightWorkspace({
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:ml-auto">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 lg:ml-auto">
               <StatCard label="Total tasks" value={displayedTotalTaskCount} />
-              <StatCard label="Completed" value={metrics.completedTasks} />
+              <StatCard label="Not started" value={filteredStatusCounts.notStarted} />
+              <StatCard label="In progress" value={filteredStatusCounts.inProgress} />
+              <StatCard label="Completed" value={filteredStatusCounts.completed} />
             </div>
           </div>
 
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {(
-              onStakeholderNameChange
-                ? (["all", "milestones", "my-tasks"] as TaskFilter[])
-                : (["all", "milestones"] as TaskFilter[])
-            ).map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setTaskFilter(filter)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  taskFilter === filter
-                    ? "bg-dark text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {renderFilterLabel(filter)}
-              </button>
-            ))}
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="grid gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {(["all", "in-progress", "late", "at-risk", "critical-path", "completed"] as QuickViewFilter[]).map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setQuickViewFilter(filter)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    quickViewFilter === filter
+                      ? "bg-dark text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {filter === "all"
+                    ? "All"
+                    : filter === "in-progress"
+                      ? "In Progress"
+                      : filter === "late"
+                        ? "Late"
+                        : filter === "at-risk"
+                          ? "At Risk"
+                          : filter === "critical-path"
+                            ? "Critical Path"
+                          : "Completed"}
+                </button>
+              ))}
+            </div>
 
-            {onStakeholderNameChange ? (
-              <>
-                <input
-                  type="text"
-                  value={stakeholderName ?? ""}
-                  onChange={(event) => onStakeholderNameChange(event.target.value)}
-                  placeholder="Enter resource name"
-                  className="min-w-[240px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-dark outline-none transition placeholder:text-slate-400 focus:border-primary"
-                />
-                <span className="max-w-[320px] text-xs leading-5 text-slate-500">
-                  My Tasks filters to this name when selected in the plan view.
-                </span>
-              </>
-            ) : null}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-dark">
+                <span aria-hidden="true">👤</span>
+                Resource:
+              </label>
+              <select
+                value={resourceFilter}
+                onChange={(event) => setResourceFilter(event.target.value)}
+                className="min-w-[180px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-dark outline-none transition focus:border-primary"
+              >
+                <option value="all">All</option>
+                {resourceOptions.values.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -368,7 +454,10 @@ export function PlanSightWorkspace({
           ref={splitRef}
           className="mt-6 flex h-[72vh] min-h-[640px] gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft"
         >
-          <div className="min-w-0 shrink-0 h-full overflow-hidden bg-white" style={{ width: leftPaneWidth }}>
+          <div
+            className="min-w-0 shrink-0 h-full overflow-hidden bg-white"
+            style={{ width: isMobilePortrait ? "100%" : leftPaneWidth }}
+          >
             <TaskTable
               tasks={visibleTasks}
               expandedTaskIds={expandedTaskIds}
@@ -384,31 +473,35 @@ export function PlanSightWorkspace({
             />
           </div>
 
-          <div
-            className={`group relative z-10 w-3 cursor-col-resize border-x border-slate-200 bg-slate-100 transition hover:bg-primary/10 ${
-              isDraggingDivider ? "bg-primary/15" : ""
-            }`}
-            onPointerDown={() => setIsDraggingDivider(true)}
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Resize task table and Gantt chart"
-          >
-            <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-300 group-hover:bg-primary" />
-          </div>
+          {!isMobilePortrait ? (
+            <>
+              <div
+                className={`group relative z-10 w-3 cursor-col-resize border-x border-slate-200 bg-slate-100 transition hover:bg-primary/10 ${
+                  isDraggingDivider ? "bg-primary/15" : ""
+                }`}
+                onPointerDown={() => setIsDraggingDivider(true)}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize task table and Gantt chart"
+              >
+                <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-300 group-hover:bg-primary" />
+              </div>
 
-          <div className="min-w-0 flex-1 shrink-0 h-full overflow-hidden bg-white">
-            <GanttChart
-              plan={plan}
-              tasks={visibleTasks}
-              viewMode={viewMode}
-              rowHeights={rowHeights}
-              highlightedTaskIds={highlightedTaskIds}
-              scrollContainerRef={(element) => {
-                ganttPaneRef.current = element;
-              }}
-              onScroll={handleGanttScroll}
-            />
-          </div>
+              <div className="min-w-0 flex-1 shrink-0 h-full overflow-hidden bg-white">
+                <GanttChart
+                  plan={plan}
+                  tasks={visibleTasks}
+                  viewMode={viewMode}
+                  rowHeights={rowHeights}
+                  highlightedTaskIds={highlightedTaskIds}
+                  scrollContainerRef={(element) => {
+                    ganttPaneRef.current = element;
+                  }}
+                  onScroll={handleGanttScroll}
+                />
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
     </section>

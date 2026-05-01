@@ -20,6 +20,7 @@ export type ParsedTask = {
   milestone: boolean;
   predecessors: ParsedDependency[];
   resourceNames: string[];
+  notes: string | null;
 };
 
 export type ParsedProject = {

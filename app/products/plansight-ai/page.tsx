@@ -1,42 +1,25 @@
 import type { Metadata } from "next";
-import { ArrowRight, FileUp, Share2, Sparkles } from "lucide-react";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysisTeaser";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
+import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 
 export const metadata: Metadata = {
   title: "PlanSight AI",
   description:
-    "Upload project plans, analyze them with AI, and share clear stakeholder views with PlanSight AI.",
+    "Upload project plans, review deterministic insights, and share clear stakeholder views with PlanSight AI.",
   alternates: {
     canonical: "/products/plansight-ai",
   },
   openGraph: {
     title: "PlanSight AI | AI Solution Maven",
     description:
-      "Upload project plans, analyze them with AI, and share clear stakeholder views with PlanSight AI.",
+      "Upload project plans, review deterministic insights, and share clear stakeholder views with PlanSight AI.",
     url: "/products/plansight-ai",
   },
 };
-
-const flowSteps = [
-  {
-    icon: FileUp,
-    title: "Upload",
-    text: "Import an MPP plan into a normalized workspace."
-  },
-  {
-    icon: Sparkles,
-    title: "Analyze",
-    text: "Review schedule health, dependencies, and AI-ready insight."
-  },
-  {
-    icon: Share2,
-    title: "Share",
-    text: "Open a read-only stakeholder link from the same plan."
-  }
-];
 
 export default function PlanSightAIPage() {
   return (
@@ -56,54 +39,49 @@ export default function PlanSightAIPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur">
-            <p className="text-sm font-semibold uppercase tracking-normal text-slate-300">
-              Product flow
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {flowSteps.map((step, index) => {
-                const Icon = step.icon;
-                return (
-                  <div key={step.title} className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span className="text-xs font-semibold uppercase tracking-normal text-slate-400">
-                        0{index + 1}
-                      </span>
-                    </div>
-                    <p className="mt-4 text-sm font-semibold text-white">{step.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">{step.text}</p>
-                    {index < flowSteps.length - 1 ? (
-                      <ArrowRight className="mt-4 h-4 w-4 text-slate-500 sm:hidden" />
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PlanSightFlowGraphic />
         </div>
       </section>
 
       <PlanSightProductShell />
+
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="mb-6 max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
+              Premium add-on · Coming soon
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight text-dark md:text-4xl">
+              Deeper AI analysis when you need it
+            </h2>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              The free version focuses on deterministic insights. A paid AI layer will add richer
+              commentary, what-if guidance, and stakeholder-ready recommendations.
+            </p>
+          </div>
+
+          <PremiumAnalysisTeaser />
+        </div>
+      </section>
 
       <section className="px-6 pb-20">
         <div className="mx-auto grid max-w-[1200px] gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
             <h2 className="text-2xl font-semibold text-dark">Why this product exists</h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              PlanSight AI is built for PMs who need to upload a schedule, understand what is
-              inside it, and share a clean story with stakeholders without turning the plan into
-              a heavy project-management tool.
+              PlanSight AI is built for PMs who need to upload a schedule, review deterministic
+              project insights, and share a clean story with stakeholders without turning the
+              plan into a heavy project-management tool.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
-            <h2 className="text-2xl font-semibold text-dark">What comes next</h2>
+            <h2 className="text-2xl font-semibold text-dark">What you get</h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              The next implementation layer is the real import service: parse MPP, normalize it
-              into the PlanSight schema, and feed that same pipeline into the stakeholder view.
+              PlanSight AI gives PMs a working import-and-share flow: upload an MPP plan,
+              inspect the imported schedule and project health, then send stakeholders a
+              read-only view they can open directly. Deeper AI commentary and natural-language
+              recommendations are reserved for a future paid tier.
             </p>
           </div>
         </div>
