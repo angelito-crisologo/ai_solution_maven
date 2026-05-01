@@ -7,9 +7,9 @@ export type TaskNode = PlanTask & {
 
 export type ViewMode = "day" | "week" | "month";
 
-export const PLAN_TABLE_HEADER_HEIGHT = 48;
+export const PLAN_TABLE_HEADER_HEIGHT = 64;
 export const PLAN_TABLE_ROW_HEIGHT = 40;
-export const PLAN_GANTT_HEADER_HEIGHT = 48;
+export const PLAN_GANTT_HEADER_HEIGHT = 64;
 export const PLAN_GANTT_ROW_HEIGHT = 40;
 
 function toLocalCalendarDate(date: Date) {

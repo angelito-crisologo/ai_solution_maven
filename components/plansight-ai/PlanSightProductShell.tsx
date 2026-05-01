@@ -2,28 +2,27 @@
 
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
-import { BarChart3, Loader2, List, Sparkles, Upload } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, Loader2, List, Upload } from "lucide-react";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
 import { getOrCreateGuestId } from "@/lib/plansight-ai/guest";
-import { demoPlan } from "@/lib/plansight-ai/demo";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
-import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
 import { PlanSightWorkspace } from "./PlanSightWorkspace";
 import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 
 export function PlanSightProductShell() {
-  const [plan, setPlan] = useState<Plan>(demoPlan);
+  const [plan, setPlan] = useState<Plan | null>(null);
   const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<"plan" | "project-insights" | "analysis">("plan");
+  const [activeTab, setActiveTab] = useState<"plan" | "project-insights">("plan");
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const importedPlanTabsRef = useRef<HTMLElement | null>(null);
 
-  const metrics = useMemo(() => summarizePlan(plan), [plan]);
-  const analysis = useMemo(() => buildInsightsReport(plan), [plan]);
-  const share = useMemo(() => createSharePayload(plan), [plan]);
+  const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
+  const analysis = useMemo(() => (plan ? buildInsightsReport(plan) : null), [plan]);
+  const share = useMemo(() => (plan ? createSharePayload(plan) : null), [plan]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -132,53 +131,94 @@ export function PlanSightProductShell() {
           </div>
 
           <p className="mt-4 text-sm text-slate-500">{status}</p>
+          <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+            Need to report an issue or request a feature?{" "}
+            <Link
+              href={{
+                pathname: "/feedback",
+                query: {
+                  product: "PlanSight AI",
+                  source: "imported-plan",
+                  pagePath: "/products/plansight-ai",
+                  planTitle: plan?.title ?? ""
+                }
+              }}
+              className="font-semibold text-primary transition hover:text-secondary"
+            >
+              Send feedback
+            </Link>
+            .
+          </div>
         </div>
       </section>
 
-      <section ref={importedPlanTabsRef} className="px-6 pb-2">
-        <div className="mx-auto flex max-w-[1200px] gap-2">
-          <TabButton
-            active={activeTab === "plan"}
-            onClick={() => setActiveTab("plan")}
-            icon={<List className="h-4 w-4" />}
-            label="Imported plan"
-          />
-          <TabButton
-            active={activeTab === "project-insights"}
-            onClick={() => setActiveTab("project-insights")}
-            icon={<BarChart3 className="h-4 w-4" />}
-            label="Project Insights"
-          />
-          <TabButton
-            active={activeTab === "analysis"}
-            onClick={() => setActiveTab("analysis")}
-            icon={<Sparkles className="h-4 w-4" />}
-            label="AI analysis"
-          />
-        </div>
-      </section>
+      {plan && metrics && share && analysis ? (
+        <>
+          <section ref={importedPlanTabsRef} className="px-6 pb-2">
+            <div className="mx-auto flex max-w-[1200px] gap-2">
+              <TabButton
+                active={activeTab === "plan"}
+                onClick={() => setActiveTab("plan")}
+                icon={<List className="h-4 w-4" />}
+                label="Imported plan"
+              />
+              <TabButton
+                active={activeTab === "project-insights"}
+                onClick={() => setActiveTab("project-insights")}
+                icon={<BarChart3 className="h-4 w-4" />}
+                label="Project Insights"
+              />
+            </div>
+          </section>
 
-      {activeTab === "plan" ? (
-        <PlanSightWorkspace
-          plan={plan}
-          metrics={metrics}
-          insights={[]}
-          share={share}
-          highlightedTaskIds={selectedTaskIds}
-        />
-      ) : activeTab === "project-insights" ? (
-        <PlanSightProjectInsightsPanel
-          analysis={analysis}
-          share={share}
-          metrics={metrics}
-          selectedTaskIds={selectedTaskIds}
-          onSelectTask={(taskId) => {
-            setSelectedTaskIds(new Set([taskId]));
-            setActiveTab("plan");
-          }}
-        />
+          {activeTab === "plan" ? (
+          <PlanSightWorkspace
+            plan={plan}
+            metrics={metrics}
+            insights={[]}
+            analysis={analysis}
+            share={share}
+            highlightedTaskIds={selectedTaskIds}
+          />
+          ) : activeTab === "project-insights" ? (
+            <PlanSightProjectInsightsPanel
+              analysis={analysis}
+              share={share}
+              metrics={metrics}
+              selectedTaskIds={selectedTaskIds}
+              onSelectTask={(taskId) => {
+                setSelectedTaskIds(new Set([taskId]));
+                setActiveTab("plan");
+              }}
+            />
+          ) : null}
+        </>
       ) : (
-        <PlanSightAIAnalysisPanel analysis={analysis} />
+        <section className="px-6 pb-16 pt-4">
+          <div className="mx-auto max-w-[1200px] rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
+            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
+              Imported plan
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold text-dark">
+              Import a plan to continue
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+              No project is loaded yet. Import an MPP plan to display the task table, Gantt chart,
+              and project insights.
+            </p>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                Upload a Microsoft Project file
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                Review the imported schedule
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                Share the plan with stakeholders
+              </div>
+            </div>
+          </div>
+        </section>
       )}
     </>
   );

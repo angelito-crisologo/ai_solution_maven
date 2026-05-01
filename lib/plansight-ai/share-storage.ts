@@ -33,6 +33,7 @@ type SharedPlanTaskRow = {
   milestone: boolean;
   predecessors: unknown;
   resource_names: string[];
+  notes: string | null;
 };
 
 export type SharedPlanDebug = {
@@ -63,7 +64,8 @@ function buildPlanFromRows(planRow: SharedPlanRow, taskRows: SharedPlanTaskRow[]
       summary: row.summary,
       milestone: row.milestone,
       predecessors: Array.isArray(row.predecessors) ? row.predecessors : [],
-      resourceNames: row.resource_names ?? []
+      resourceNames: row.resource_names ?? [],
+      notes: row.notes
     }));
 
   return {
@@ -110,7 +112,8 @@ function buildPlanFromTaskRows(shareId: string, taskRows: SharedPlanTaskRow[]): 
       summary: row.summary,
       milestone: row.milestone,
       predecessors: Array.isArray(row.predecessors) ? row.predecessors : [],
-      resourceNames: row.resource_names ?? []
+      resourceNames: row.resource_names ?? [],
+      notes: row.notes
     }));
 
   const datedTasks = tasks.filter((task) => task.start && task.finish);
@@ -194,7 +197,8 @@ export async function saveSharedPlan(
     summary: task.summary,
     milestone: task.milestone,
     predecessors: task.predecessors,
-    resource_names: task.resourceNames
+    resource_names: task.resourceNames,
+    notes: task.notes
   }));
 
   const { error: planError } = await client.from("plans").upsert(sharedPlanRow, {

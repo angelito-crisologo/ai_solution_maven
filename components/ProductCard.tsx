@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 
 type ProductCardProps = {
   title: string;
@@ -48,7 +49,7 @@ export function ProductCard({
             href={demoHref}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-5 py-3 text-sm font-medium text-white shadow-lg shadow-primary/20"
           >
-            Try Demo
+            Try for free
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
           <Link
@@ -64,52 +65,14 @@ export function ProductCard({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-sm text-slate-400">PlanSight AI</p>
-            <p className="font-medium">Portfolio forecast</p>
+            <p className="font-medium">Imported plan workspace</p>
           </div>
-          <span className="rounded-xl bg-emerald-400/15 px-3 py-2 text-sm font-medium text-emerald-300">
-            On track
+          <span className="rounded-xl bg-amber-400/15 px-3 py-2 text-sm font-medium text-amber-300">
+            Limited analysis
           </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          {[
-            ["Runway", "14 mo"],
-            ["Open risks", "6"],
-            ["Saved time", "18h"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-white/[0.06] p-4">
-              <p className="text-sm text-slate-400">{label}</p>
-              <p className="mt-2 text-2xl font-semibold">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 rounded-2xl bg-white/[0.06] p-4">
-          <div className="mb-4 flex items-center justify-between text-sm">
-            <span className="text-slate-300">Scenario comparison</span>
-            <span className="text-emerald-300">Best fit selected</span>
-          </div>
-          <div className="space-y-4">
-            {[
-              ["Conservative", 54],
-              ["Balanced", 82],
-              ["Aggressive", 67],
-            ].map(([label, width]) => (
-              <div key={label}>
-                <div className="mb-2 flex justify-between text-sm text-slate-400">
-                  <span>{label}</span>
-                  <span>{width}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
-                    style={{ width: `${width}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PlanSightFlowGraphic title="Product flow" className="bg-white/[0.04]" />
       </div>
     </article>
   );

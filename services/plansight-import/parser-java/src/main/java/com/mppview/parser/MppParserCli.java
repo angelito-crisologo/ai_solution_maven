@@ -76,6 +76,7 @@ public final class MppParserCli {
       item.put("milestone", task.getMilestone());
       item.put("predecessors", parsePredecessors(task));
       item.put("resourceNames", parseResourceNames(task));
+      item.put("notes", emptyToNull(task.getNotes()));
       output.add(item);
     }
     return output;

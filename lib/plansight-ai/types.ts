@@ -20,6 +20,7 @@ export type PlanTask = {
   milestone: boolean;
   predecessors: PlanDependency[];
   resourceNames: string[];
+  notes: string | null;
 };
 
 export type Plan = {

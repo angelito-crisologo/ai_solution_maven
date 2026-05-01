@@ -23,7 +23,8 @@ export const demoPlan: Plan = {
       summary: true,
       milestone: false,
       predecessors: [],
-      resourceNames: ["Program Management Office"]
+      resourceNames: ["Program Management Office"],
+      notes: null
     },
     {
       id: 2,
@@ -40,7 +41,8 @@ export const demoPlan: Plan = {
       summary: false,
       milestone: false,
       predecessors: [],
-      resourceNames: ["Angelito Crisologo"]
+      resourceNames: ["Angelito Crisologo"],
+      notes: null
     },
     {
       id: 3,
@@ -57,7 +59,8 @@ export const demoPlan: Plan = {
       summary: false,
       milestone: false,
       predecessors: [{ predecessorTaskId: 2, type: "FS", lag: "0d" }],
-      resourceNames: ["Project Controls"]
+      resourceNames: ["Project Controls"],
+      notes: null
     },
     {
       id: 4,
@@ -74,7 +77,8 @@ export const demoPlan: Plan = {
       summary: false,
       milestone: true,
       predecessors: [{ predecessorTaskId: 3, type: "FS", lag: "0d" }],
-      resourceNames: ["Leadership"]
+      resourceNames: ["Leadership"],
+      notes: null
     },
     {
       id: 5,
@@ -91,7 +95,8 @@ export const demoPlan: Plan = {
       summary: false,
       milestone: false,
       predecessors: [{ predecessorTaskId: 4, type: "FS", lag: "0d" }],
-      resourceNames: ["Angelito Crisologo", "Comms"]
+      resourceNames: ["Angelito Crisologo", "Comms"],
+      notes: null
     },
     {
       id: 6,
@@ -108,7 +113,8 @@ export const demoPlan: Plan = {
       summary: false,
       milestone: false,
       predecessors: [{ predecessorTaskId: 5, type: "FS", lag: "1d" }],
-      resourceNames: []
+      resourceNames: [],
+      notes: null
     }
   ]
 };
