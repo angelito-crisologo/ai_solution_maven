@@ -52,13 +52,13 @@ export default function PlanSightAIPage() {
               AI Analysis
             </p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight text-dark md:text-4xl">
-              Claude-powered analysis is live
+              Free for the first analysis. Pro for daily use.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              Every imported plan gets an AI-generated narrative summary, identified risks,
-              and prescriptive next-step recommendations — produced by Claude Haiku 4.5 and
-              cached so repeat views don&apos;t spend tokens. The Pro tier adds on-demand
-              regeneration plus advanced what-if features.
+              Every imported plan gets a Claude-generated AI summary, risks, and recommendations
+              at no cost. Pro unlocks the multi-plan dashboard, regeneration on demand,
+              version compare, stakeholder view analytics, plan health alerts, and custom
+              branding for share pages.
             </p>
           </div>
 
