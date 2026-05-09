@@ -407,11 +407,18 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
 
     if (typeof toolUse.input === "object" && toolUse.input !== null) {
       const inputObj = toolUse.input as Record<string, unknown>;
+      // JSON.stringify(undefined) returns undefined (not a string), so guard
+      // before calling .slice. We log "undefined" / "null" verbatim when the
+      // field is missing — that's still useful diagnostic info.
+      const recsSample =
+        inputObj.recommendations === undefined
+          ? "<missing>"
+          : (JSON.stringify(inputObj.recommendations) ?? "<unstringifiable>").slice(0, 400);
       console.log(
         "[ai-analysis] tool_use input keys:",
         Object.keys(inputObj),
         "recommendations sample:",
-        JSON.stringify(inputObj.recommendations).slice(0, 400)
+        recsSample
       );
     }
 
@@ -467,7 +474,7 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
   if (!normalized) {
     console.error(
       "[ai-analysis] malformed tool_use input:",
-      JSON.stringify(toolUse.input).slice(0, 800)
+      (JSON.stringify(toolUse.input) ?? "<unstringifiable>").slice(0, 800)
     );
     throw new Error("Claude returned a malformed analysis shape.");
   }
