@@ -137,45 +137,55 @@ const SYSTEM_PROMPT = `You are a senior project management analyst. The user giv
 structured insights report computed by a deterministic engine. The numbers are \
 authoritative.
 
-Produce a coherent three-part analysis: SUMMARY, RISKS, RECOMMENDATIONS. They reinforce \
-each other — every problem the summary identifies must be addressed by at least one \
-recommendation.
+You produce three FIELDS. They are different by construction:
 
-WORK IN THIS ORDER:
+- SUMMARY: 2-3 sentences. Past/present-tense observation. NO actions, no imperatives.
+- RISKS: what is at stake / what could go wrong (descriptive). Each entry is a passive \
+warning the stakeholder needs to know about.
+- RECOMMENDATIONS: what the PM must DO next (prescriptive). Each entry starts with an \
+imperative verb (Reassign, Reschedule, Confirm, Update, Schedule, Convene, Review, \
+Escalate, etc.). RECOMMENDATIONS is NOT a restatement of RISKS — they sit alongside \
+risks, not instead of them.
 
-Step 1 — Identify the 2-4 most important findings from the data (e.g., "all tasks late", \
-"foundational tasks blocking downstream work", "critical path is heavily gated"). Hold \
-this list in mind for the rest of the analysis.
+EXAMPLE OF DIFFERENCE:
 
-Step 2 — SUMMARY (2-3 sentences). State what IS the case for each finding from Step 1. \
-Use past/present-tense observation: "All 74 tasks are overdue", "53 tasks sit on the \
-critical path", "Eight foundational tasks block downstream work". Mention the health \
-status (green/amber/red). Do not start with "This project".
+For a finding "Scope tasks (1, 6) are unassigned and 2100 days overdue, blocking the \
+critical path":
 
-Step 3 — RISKS (0-5 items). For each finding from Step 1 that represents a threat to \
-delivery, write one risk entry with a title, an explanation in plain language, and the \
-specific task IDs it references. Skip if the plan is genuinely healthy.
+  RISK entry:
+    {
+      "title": "Critical path is gated by unassigned scope work",
+      "explanation": "Tasks 1 and 6 are on the critical path and have no resource owner, \
+so scope clarification cannot start without intervention.",
+      "taskIds": [1, 6]
+    }
 
-Step 4 — RECOMMENDATIONS (1-5 items, REQUIRED at least 1). For EACH finding from Step 1, \
-write at least one matching recommendation. The recommendation specifies the action the PM \
-should take to address that finding. Each recommendation has an "action" field (the \
-imperative — what to do) and a "rationale" field (why it matters for this plan). Prefer \
-actions tied to specific tasks or task groups. If the plan is healthy, write at least one \
-forward-looking action (e.g., "Confirm milestone X at next standup").
+  RECOMMENDATION entry (REQUIRED — describes the action, NOT the situation):
+    {
+      "action": "Assign owners to tasks 1 and 6 by end of week",
+      "rationale": "Both tasks are unassigned and gate the entire critical path; until \
+they have owners no scope work can resume."
+    }
 
-Mapping requirement: if your SUMMARY mentions "foundational tasks blocking downstream \
-work", your RECOMMENDATIONS must include an action addressing those foundational tasks. \
-If the SUMMARY mentions "schedule has slipped", your RECOMMENDATIONS must include a \
-rescheduling action. Never describe a problem in the summary without prescribing a \
-response to it in recommendations.
+  Notice: the risk states the situation. The recommendation prescribes the action. They \
+are NEVER the same content. For every risk, there must be a corresponding recommendation \
+that moves the plan forward.
+
+REQUIREMENTS:
+
+1. Generate the SUMMARY with passive observation only — no "must", "should", "needs to".
+2. Generate at least 1 RECOMMENDATION for every risk you produce, plus at least 1 \
+forward-looking recommendation if there are no risks.
+3. recommendations MUST contain at least 1 entry. An empty recommendations array is \
+ALWAYS invalid output, even if all problems are already covered in risks. Risks are \
+descriptive; recommendations are prescriptive. A risk does not satisfy the requirement \
+to provide recommendations.
+4. Each recommendation begins its "action" with an imperative verb.
 
 When the analysis mode is "approximate", note that dependencies were not provided and the \
-critical-path findings are heuristic — frame language accordingly ("tasks near project \
-completion that may impact delivery") rather than declaring something definitively \
-critical.
+critical-path findings are heuristic — frame language accordingly.
 
-Submit your analysis using the submit_analysis tool. The recommendations array MUST contain \
-at least one item.`;
+Submit your analysis using the submit_analysis tool.`;
 
 const ANALYSIS_TOOL = {
   name: "submit_analysis",
@@ -342,69 +352,118 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
   const insights = buildInsightsReport(plan);
   const compressed = compressInsightsForPrompt(plan, insights);
 
-  const requestBody = {
-    model: MODEL_ID,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    system: [
-      {
-        type: "text",
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" }
-      }
-    ],
-    tools: [ANALYSIS_TOOL],
-    tool_choice: { type: "tool", name: "submit_analysis" },
-    messages: [
-      {
-        role: "user",
-        content: `Here is the project plan and its computed insights. Produce the analysis.\n\n${JSON.stringify(compressed, null, 2)}`
-      }
-    ]
+  type ClaudeMessage = {
+    role: "user" | "assistant";
+    content: string | Array<{ type: string; [key: string]: unknown }>;
   };
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": ANTHROPIC_API_VERSION,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
-  });
+  const callClaude = async (messages: ClaudeMessage[]) => {
+    const requestBody = {
+      model: MODEL_ID,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" }
+        }
+      ],
+      tools: [ANALYSIS_TOOL],
+      tool_choice: { type: "tool", name: "submit_analysis" },
+      messages
+    };
 
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => "");
-    throw new Error(
-      `Anthropic API returned ${response.status}: ${errorBody.slice(0, 200) || response.statusText}`
-    );
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": ANTHROPIC_API_VERSION,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        `Anthropic API returned ${response.status}: ${errorBody.slice(0, 200) || response.statusText}`
+      );
+    }
+
+    return (await response.json()) as AnthropicMessageResponse;
+  };
+
+  const extractAndNormalize = (data: AnthropicMessageResponse) => {
+    const toolUse = data.content.find((block) => block.type === "tool_use") as
+      | (AnthropicContentBlock & { type: "tool_use"; input: unknown })
+      | undefined;
+    if (!toolUse) {
+      console.error(
+        "[ai-analysis] no tool_use block in response. content keys:",
+        data.content.map((block) => block.type)
+      );
+      throw new Error("Claude did not return a tool_use response.");
+    }
+
+    if (typeof toolUse.input === "object" && toolUse.input !== null) {
+      const inputObj = toolUse.input as Record<string, unknown>;
+      console.log(
+        "[ai-analysis] tool_use input keys:",
+        Object.keys(inputObj),
+        "recommendations sample:",
+        JSON.stringify(inputObj.recommendations).slice(0, 400)
+      );
+    }
+
+    return { toolUse, normalized: normalizeAiAnalysisInput(toolUse.input) };
+  };
+
+  const initialMessages: ClaudeMessage[] = [
+    {
+      role: "user",
+      content: `Here is the project plan and its computed insights. Produce the analysis.\n\n${JSON.stringify(compressed, null, 2)}`
+    }
+  ];
+
+  let data = await callClaude(initialMessages);
+  let { toolUse, normalized } = extractAndNormalize(data);
+
+  // Retry-on-empty-recommendations: if Claude obeyed the schema but returned an
+  // empty recommendations array (which the model sometimes does despite minItems:1),
+  // send a single corrective turn that explicitly demands recommendations.
+  if (normalized && normalized.recommendations.length === 0) {
+    console.warn("[ai-analysis] empty recommendations; retrying with corrective turn");
+
+    const retryMessages: ClaudeMessage[] = [
+      ...initialMessages,
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool_use",
+            id: toolUse.id ?? "toolu_initial",
+            name: "submit_analysis",
+            input: toolUse.input
+          }
+        ]
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: toolUse.id ?? "toolu_initial",
+            content:
+              "The recommendations array was empty. This is invalid. Re-submit using the submit_analysis tool with the same summary and risks, plus a recommendations array containing at least 1 prescriptive action that starts with an imperative verb (Reassign, Reschedule, Confirm, Update, Convene, etc.). For each risk you returned, include at least one recommendation that addresses it directly."
+          } as { type: string; tool_use_id: string; content: string }
+        ]
+      }
+    ];
+
+    data = await callClaude(retryMessages);
+    ({ toolUse, normalized } = extractAndNormalize(data));
   }
 
-  const data = (await response.json()) as AnthropicMessageResponse;
-
-  const toolUse = data.content.find((block) => block.type === "tool_use") as
-    | (AnthropicContentBlock & { type: "tool_use"; input: unknown })
-    | undefined;
-  if (!toolUse) {
-    console.error(
-      "[ai-analysis] no tool_use block in response. content keys:",
-      data.content.map((block) => block.type)
-    );
-    throw new Error("Claude did not return a tool_use response.");
-  }
-
-  // Diagnostic: log the structure Claude returned so we can spot prompt drift.
-  // Trimmed to keep log payloads small. Safe to keep in production.
-  if (typeof toolUse.input === "object" && toolUse.input !== null) {
-    const inputObj = toolUse.input as Record<string, unknown>;
-    console.log(
-      "[ai-analysis] tool_use input keys:",
-      Object.keys(inputObj),
-      "recommendations sample:",
-      JSON.stringify(inputObj.recommendations).slice(0, 400)
-    );
-  }
-
-  const normalized = normalizeAiAnalysisInput(toolUse.input);
   if (!normalized) {
     console.error(
       "[ai-analysis] malformed tool_use input:",
