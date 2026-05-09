@@ -1,9 +1,9 @@
 "use client";
 
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Loader2, List, Sparkles, Upload } from "lucide-react";
+import { BarChart3, Check, Loader2, List, Sparkles, Upload } from "lucide-react";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
@@ -27,6 +27,15 @@ export function PlanSightProductShell() {
     () => (plan && shareId ? createSharePayload(plan, shareId) : null),
     [plan, shareId]
   );
+
+  // Auto-scroll to the tabs the moment a plan is loaded so the user
+  // immediately sees the workspace + view switcher. Runs after render
+  // so the section ref is guaranteed to be set.
+  useEffect(() => {
+    if (plan && shareId && importedPlanTabsRef.current) {
+      importedPlanTabsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [plan, shareId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,9 +98,6 @@ export function PlanSightProductShell() {
       setSelectedTaskIds(new Set());
       setStatus(`Imported ${selectedFile.name} and saved it.`);
       setActiveTab("plan");
-      window.setTimeout(() => {
-        importedPlanTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 0);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to import the MPP file.");
     } finally {
@@ -163,26 +169,44 @@ export function PlanSightProductShell() {
 
       {plan && metrics && share && analysis ? (
         <>
-          <section ref={importedPlanTabsRef} className="px-6 pb-2">
-            <div className="mx-auto flex max-w-[1200px] gap-2">
-              <TabButton
-                active={activeTab === "plan"}
-                onClick={() => setActiveTab("plan")}
-                icon={<List className="h-4 w-4" />}
-                label="Imported plan"
-              />
-              <TabButton
-                active={activeTab === "project-insights"}
-                onClick={() => setActiveTab("project-insights")}
-                icon={<BarChart3 className="h-4 w-4" />}
-                label="Project Insights"
-              />
-              <TabButton
-                active={activeTab === "ai-analysis"}
-                onClick={() => setActiveTab("ai-analysis")}
-                icon={<Sparkles className="h-4 w-4" />}
-                label="AI Analysis"
-              />
+          <section
+            ref={importedPlanTabsRef}
+            className="scroll-mt-6 px-6 pb-2 pt-4"
+            aria-label="Plan view switcher"
+          >
+            <div className="mx-auto flex max-w-[1200px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+                <span className="font-semibold text-dark">Plan loaded</span>
+                <span className="text-slate-500">— pick a view</span>
+              </div>
+
+              <div
+                role="tablist"
+                aria-label="Plan views"
+                className="inline-flex flex-wrap items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1.5 shadow-soft"
+              >
+                <TabButton
+                  active={activeTab === "plan"}
+                  onClick={() => setActiveTab("plan")}
+                  icon={<List className="h-4 w-4" />}
+                  label="Imported plan"
+                />
+                <TabButton
+                  active={activeTab === "project-insights"}
+                  onClick={() => setActiveTab("project-insights")}
+                  icon={<BarChart3 className="h-4 w-4" />}
+                  label="Project Insights"
+                />
+                <TabButton
+                  active={activeTab === "ai-analysis"}
+                  onClick={() => setActiveTab("ai-analysis")}
+                  icon={<Sparkles className="h-4 w-4" />}
+                  label="AI Analysis"
+                />
+              </div>
             </div>
           </section>
 
@@ -262,12 +286,14 @@ function TabButton({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-t-2xl border border-b-0 px-4 py-3 text-sm font-medium transition ${
+      className={
         active
-          ? "border-slate-200 bg-white text-dark shadow-soft"
-          : "border-transparent bg-slate-100 text-slate-500 hover:bg-slate-200"
-      }`}
+          ? "inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25"
+          : "inline-flex items-center gap-2 rounded-xl bg-transparent px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-dark hover:shadow-sm"
+      }
     >
       {icon}
       {label}
