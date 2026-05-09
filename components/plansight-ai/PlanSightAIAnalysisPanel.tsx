@@ -19,14 +19,14 @@ type LoadState =
 export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTasks }: Props) {
   const [state, setState] = useState<LoadState>({ status: "idle" });
 
-  const fetchAnalysis = useCallback(async () => {
+  const fetchAnalysis = useCallback(async (options?: { force?: boolean }) => {
     setState({ status: "loading" });
 
     try {
       const response = await fetch("/api/plansight/ai-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shareId })
+        body: JSON.stringify({ shareId, force: options?.force ?? false })
       });
 
       const payload = (await response.json().catch(() => ({}))) as {
@@ -56,6 +56,8 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
     void fetchAnalysis();
   }, [fetchAnalysis]);
 
+  const regenerate = () => fetchAnalysis({ force: true });
+
   return (
     <section className="px-6 py-10">
       <div className="mx-auto grid max-w-[1200px] gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -76,12 +78,12 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
             {state.status === "success" ? (
               <button
                 type="button"
-                onClick={fetchAnalysis}
+                onClick={regenerate}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                title={state.cached ? "Cached result. Click to regenerate." : "Regenerate"}
+                title="Force a fresh Claude call (bypasses cache)"
               >
                 <RefreshCcw className="h-3.5 w-3.5" />
-                {state.cached ? "Regenerate" : "Refresh"}
+                Regenerate
               </button>
             ) : null}
           </div>
@@ -100,7 +102,7 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
                 </div>
                 <button
                   type="button"
-                  onClick={fetchAnalysis}
+                  onClick={() => fetchAnalysis()}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
                 >
                   <RefreshCcw className="h-3.5 w-3.5" />
@@ -154,7 +156,7 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
                 </ul>
               ) : (
                 <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  No specific recommendations from the analysis. The plan is tracking cleanly.
+                  The analysis didn&apos;t return specific recommendations. Try regenerating.
                 </p>
               )
             ) : null}

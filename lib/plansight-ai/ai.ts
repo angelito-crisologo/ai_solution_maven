@@ -151,9 +151,11 @@ specific task IDs from the input where applicable. Use plain language a non-tech
 stakeholder can understand. If there are no real risks, return an empty array (do not \
 fabricate risks).
 
-3. RECOMMENDATIONS (up to 5): concrete next actions for the project manager. Each \
-recommendation must be specific to the plan, not generic PM advice. Prefer actions tied \
-to specific tasks or task groups when possible.
+3. RECOMMENDATIONS (1-5, always at least 1): concrete next actions for the project \
+manager. Each recommendation must be specific to the plan, not generic PM advice. Prefer \
+actions tied to specific tasks or task groups when possible. Even when the plan is healthy \
+(green), provide at least one forward-looking recommendation (e.g., "Confirm milestone X \
+is still on track at next standup"). Never return an empty recommendations array.
 
 When the analysis mode is "approximate", note that dependencies were not provided and the \
 critical-path findings are heuristic — frame language accordingly ("tasks near project \
@@ -194,6 +196,7 @@ const ANALYSIS_TOOL = {
       },
       recommendations: {
         type: "array",
+        minItems: 1,
         maxItems: 5,
         items: {
           type: "object",

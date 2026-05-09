@@ -13,7 +13,8 @@ import {
 export const runtime = "edge";
 
 const requestSchema = z.object({
-  shareId: z.string().min(1).max(200)
+  shareId: z.string().min(1).max(200),
+  force: z.boolean().optional()
 });
 
 // TODO(Phase 4): require an authenticated session here. For Phase 3 the
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { shareId } = parsed.data;
+    const { shareId, force } = parsed.data;
 
     const plan = await loadSharedPlan(shareId);
     if (!plan) {
@@ -40,9 +41,11 @@ export async function POST(request: Request) {
 
     const contentHash = await computePlanContentHash(plan);
 
-    const cached = await loadAiAnalysisIfFresh(shareId, contentHash);
-    if (cached) {
-      return NextResponse.json({ analysis: cached, cached: true });
+    if (!force) {
+      const cached = await loadAiAnalysisIfFresh(shareId, contentHash);
+      if (cached) {
+        return NextResponse.json({ analysis: cached, cached: true });
+      }
     }
 
     const analysis = await generateAiAnalysis(plan);
