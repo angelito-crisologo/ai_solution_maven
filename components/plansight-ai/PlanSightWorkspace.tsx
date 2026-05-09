@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Download } from "lucide-react";
 import type { Plan, PlanMetrics } from "@/lib/plansight-ai/types";
 import type { PlanInsight, PlanInsightsReport } from "@/lib/plansight-ai/analysis";
 import type { SharePayload } from "@/lib/plansight-ai/share";
@@ -99,6 +100,7 @@ export function PlanSightWorkspace({
   const [isDraggingDivider, setIsDraggingDivider] = useState(false);
   const [rowHeights, setRowHeights] = useState<number[]>([]);
   const [isMobilePortrait, setIsMobilePortrait] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const splitRef = useRef<HTMLDivElement | null>(null);
   const taskPaneRef = useRef<HTMLDivElement | null>(null);
   const ganttPaneRef = useRef<HTMLDivElement | null>(null);
@@ -354,6 +356,43 @@ export function PlanSightWorkspace({
     });
   }
 
+  async function exportWorkbook() {
+    setIsExporting(true);
+
+    try {
+      const response = await fetch("/api/plansight/export-xlsx", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ plan })
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Failed to export the plan to Excel.");
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition") ?? "";
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+      const filename = filenameMatch?.[1] ?? `${plan.title}.xlsx`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Failed to export the plan to Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <section className={outerSectionClassName}>
       <div className={`mx-auto w-full ${containerMaxWidthClassName}`}>
@@ -373,11 +412,24 @@ export function PlanSightWorkspace({
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 lg:ml-auto">
-              <StatCard label="Total tasks" value={displayedTotalTaskCount} />
-              <StatCard label="Not started" value={filteredStatusCounts.notStarted} />
-              <StatCard label="In progress" value={filteredStatusCounts.inProgress} />
-              <StatCard label="Completed" value={filteredStatusCounts.completed} />
+            <div className="flex flex-col gap-3 lg:ml-auto">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={exportWorkbook}
+                  disabled={isExporting}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-dark transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Download className="h-4 w-4" />
+                  {isExporting ? "Exporting..." : "Export Excel"}
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard label="Total tasks" value={displayedTotalTaskCount} />
+                <StatCard label="Not started" value={filteredStatusCounts.notStarted} />
+                <StatCard label="In progress" value={filteredStatusCounts.inProgress} />
+                <StatCard label="Completed" value={filteredStatusCounts.completed} />
+              </div>
             </div>
           </div>
 

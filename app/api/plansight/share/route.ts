@@ -3,46 +3,9 @@ import { z } from "zod";
 import { generateShareId } from "@/lib/plansight-ai/share";
 import { loadSharedPlan, loadSharedPlanWithDebug, saveSharedPlan } from "@/lib/plansight-ai/share-storage";
 import type { Plan } from "@/lib/plansight-ai/types";
+import { MAX_PLAN_BODY_BYTES, planSchema } from "@/lib/plansight-ai/validation";
 
 export const runtime = "nodejs";
-
-const MAX_TASKS = 5000;
-const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
-
-const planDependencySchema = z.object({
-  predecessorTaskId: z.number().int().nullable(),
-  type: z.string().nullable(),
-  lag: z.string().nullable()
-});
-
-const planTaskSchema = z.object({
-  id: z.number().int(),
-  uniqueId: z.number().int().nullable(),
-  parentId: z.number().int().nullable(),
-  name: z.string(),
-  outlineLevel: z.number().int(),
-  outlineNumber: z.string().nullable(),
-  wbs: z.string().nullable(),
-  start: z.string().nullable(),
-  finish: z.string().nullable(),
-  duration: z.string().nullable(),
-  percentComplete: z.number().nullable(),
-  summary: z.boolean(),
-  milestone: z.boolean(),
-  predecessors: z.array(planDependencySchema),
-  resourceNames: z.array(z.string()),
-  notes: z.string().nullable()
-});
-
-const planSchema = z.object({
-  id: z.string(),
-  title: z.string().min(1).max(500),
-  sourceFormat: z.enum(["mpp", "xlsx", "smartsheet", "other"]),
-  importedAt: z.string(),
-  startDate: z.string().nullable(),
-  finishDate: z.string().nullable(),
-  tasks: z.array(planTaskSchema).max(MAX_TASKS, `Plan exceeds maximum of ${MAX_TASKS} tasks.`)
-});
 
 const postBodySchema = z.object({
   plan: planSchema
@@ -74,7 +37,7 @@ function formatError(error: unknown) {
 export async function POST(request: Request) {
   try {
     const contentLength = Number(request.headers.get("content-length") ?? "0");
-    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    if (Number.isFinite(contentLength) && contentLength > MAX_PLAN_BODY_BYTES) {
       return NextResponse.json(
         { error: "Request body exceeds maximum size of 5 MB." },
         { status: 413 }
