@@ -108,7 +108,10 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
   }, [shareId]);
 
   const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
-  const share = useMemo(() => (plan ? createSharePayload(plan) : null), [plan]);
+  const share = useMemo(
+    () => (plan ? createSharePayload(plan, shareId) : null),
+    [plan, shareId]
+  );
 
   if (!plan || !metrics || !share) {
     return (

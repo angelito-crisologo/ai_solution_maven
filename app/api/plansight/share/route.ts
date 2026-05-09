@@ -1,8 +1,52 @@
 import { NextResponse } from "next/server";
-import type { Plan } from "@/lib/plansight-ai/types";
+import { z } from "zod";
+import { generateShareId } from "@/lib/plansight-ai/share";
 import { loadSharedPlan, loadSharedPlanWithDebug, saveSharedPlan } from "@/lib/plansight-ai/share-storage";
+import type { Plan } from "@/lib/plansight-ai/types";
 
 export const runtime = "nodejs";
+
+const MAX_TASKS = 5000;
+const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const planDependencySchema = z.object({
+  predecessorTaskId: z.number().int().nullable(),
+  type: z.string().nullable(),
+  lag: z.string().nullable()
+});
+
+const planTaskSchema = z.object({
+  id: z.number().int(),
+  uniqueId: z.number().int().nullable(),
+  parentId: z.number().int().nullable(),
+  name: z.string(),
+  outlineLevel: z.number().int(),
+  outlineNumber: z.string().nullable(),
+  wbs: z.string().nullable(),
+  start: z.string().nullable(),
+  finish: z.string().nullable(),
+  duration: z.string().nullable(),
+  percentComplete: z.number().nullable(),
+  summary: z.boolean(),
+  milestone: z.boolean(),
+  predecessors: z.array(planDependencySchema),
+  resourceNames: z.array(z.string()),
+  notes: z.string().nullable()
+});
+
+const planSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(500),
+  sourceFormat: z.enum(["mpp", "xlsx", "smartsheet", "other"]),
+  importedAt: z.string(),
+  startDate: z.string().nullable(),
+  finishDate: z.string().nullable(),
+  tasks: z.array(planTaskSchema).max(MAX_TASKS, `Plan exceeds maximum of ${MAX_TASKS} tasks.`)
+});
+
+const postBodySchema = z.object({
+  plan: planSchema
+});
 
 function formatError(error: unknown) {
   if (error instanceof Error) {
@@ -29,22 +73,29 @@ function formatError(error: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as { shareId?: unknown; plan?: unknown; guestId?: unknown };
-
-    if (typeof payload.shareId !== "string" || !payload.shareId.trim()) {
-      return NextResponse.json({ error: "Missing shareId." }, { status: 400 });
+    const contentLength = Number(request.headers.get("content-length") ?? "0");
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: "Request body exceeds maximum size of 5 MB." },
+        { status: 413 }
+      );
     }
 
-    if (typeof payload.plan !== "object" || payload.plan == null) {
-      return NextResponse.json({ error: "Missing plan." }, { status: 400 });
+    const raw = await request.json().catch(() => null);
+    const parsed = postBodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid plan payload.", details: parsed.error.issues.slice(0, 3) },
+        { status: 400 }
+      );
     }
 
-    const plan = payload.plan as Plan;
-    await saveSharedPlan(payload.shareId, plan, {
-      guestId: typeof payload.guestId === "string" ? payload.guestId : null
-    });
+    const plan = parsed.data.plan as Plan;
+    const shareId = generateShareId();
 
-    return NextResponse.json({ ok: true });
+    await saveSharedPlan(shareId, plan);
+
+    return NextResponse.json({ shareId, ok: true });
   } catch (error) {
     const message = formatError(error);
     return NextResponse.json(
@@ -66,7 +117,9 @@ export async function GET(request: Request) {
     }
 
     const debug = url.searchParams.get("debug") === "1";
-    const result = debug ? await loadSharedPlanWithDebug(shareId) : { plan: await loadSharedPlan(shareId) };
+    const result = debug
+      ? await loadSharedPlanWithDebug(shareId)
+      : { plan: await loadSharedPlan(shareId) };
 
     if (!result.plan) {
       const responseBody = debug
@@ -76,10 +129,7 @@ export async function GET(request: Request) {
           }
         : { error: "Shared plan not found." };
 
-      return NextResponse.json(
-        responseBody,
-        { status: 404 }
-      );
+      return NextResponse.json(responseBody, { status: 404 });
     }
 
     return NextResponse.json(debug ? result : { plan: result.plan });

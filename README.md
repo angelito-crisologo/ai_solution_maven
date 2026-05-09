@@ -31,6 +31,7 @@ This project is ready for Vercel.
    - `PLANSIGHT_IMPORT_SERVICE_URL`
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-only, do **not** prefix with `NEXT_PUBLIC_`)
 4. Deploy the project.
 
 Recommended values:
@@ -39,13 +40,18 @@ Recommended values:
 - `PLANSIGHT_IMPORT_SERVICE_URL`: the deployed MPP parser service URL
 - `NEXT_PUBLIC_SUPABASE_URL`: your Supabase Project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: your Supabase anon public key
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase dashboard → Project Settings → API → `service_role` secret
 
 ## Supabase Setup
 
 1. Open your Supabase project.
-2. Go to the SQL editor and run `supabase/schema.sql`.
-3. Add the env vars above to `.env.local` for local development and to Vercel for production.
-4. Keep using the anon public key only for the current share flow.
+2. Go to the SQL editor and run `supabase/schema.sql` for a fresh setup.
+3. Existing installations: run `supabase/migrations/01_phase1_security.sql` to lock down RLS and add forward-compat columns. **This truncates existing `plans` and `plan_tasks` data.**
+4. Add the env vars above to `.env.local` for local development and to Vercel for production.
+
+### RLS posture
+
+After Phase 1, the anonymous Supabase key is **read-only**. All writes (saving a shared plan, deleting expired plans) go through Next.js server routes using `SUPABASE_SERVICE_ROLE_KEY`, which bypasses RLS. The service-role key must never reach the browser.
 
 ## MPP Import Deployment
 

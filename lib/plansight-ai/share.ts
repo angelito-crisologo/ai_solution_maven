@@ -9,17 +9,24 @@ export type SharePayload = {
   summary: string;
 };
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+/**
+ * Generate an unguessable share ID. The URL is the credential for
+ * stakeholder access, so this must not be derivable from plan content.
+ *
+ * Server-side use is authoritative; clients receive the share ID back
+ * from the share API after persisting.
+ */
+export function generateShareId() {
+  return crypto.randomUUID();
 }
 
-export function createSharePayload(plan: Plan): SharePayload {
+/**
+ * Format a share payload for display given a plan and an existing share ID.
+ * Does not generate IDs — pass an ID returned by the share API or read from
+ * the URL on stakeholder views.
+ */
+export function createSharePayload(plan: Plan, shareId: string): SharePayload {
   const metrics = summarizePlan(plan);
-  const stablePlanId = plan.id.replace(/[:.]/g, "-");
-  const shareId = `${slugify(plan.title || "plan")}-${stablePlanId}`;
 
   return {
     shareId,

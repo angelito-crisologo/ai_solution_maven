@@ -1,7 +1,11 @@
 import type { Plan, PlanTask } from "./types";
 import { getGuestPlanExpiryIso } from "./guest";
-import { createSupabaseAnonClient, isSupabaseConfigured } from "./supabase";
-import { getSharedPlanRecord, storeSharedPlan } from "./share-registry";
+import {
+  createSupabaseAnonClient,
+  createSupabaseServiceClient,
+  isSupabaseConfigured,
+  isSupabaseServiceConfigured
+} from "./supabase";
 
 type SharedPlanRow = {
   share_id: string;
@@ -11,6 +15,7 @@ type SharedPlanRow = {
   start_date: string | null;
   finish_date: string | null;
   owner_type: "guest" | "user";
+  owner_user_id: string | null;
   guest_id: string | null;
   expires_at: string | null;
 };
@@ -42,7 +47,7 @@ export type SharedPlanDebug = {
   taskCount: number;
   planOwnerType: "guest" | "user" | null;
   planExpired: boolean;
-  source: "plans+tasks" | "tasks-only" | "registry" | "missing";
+  source: "plans+tasks" | "missing";
 };
 
 function buildPlanFromRows(planRow: SharedPlanRow, taskRows: SharedPlanTaskRow[]): Plan {
@@ -79,59 +84,7 @@ function buildPlanFromRows(planRow: SharedPlanRow, taskRows: SharedPlanTaskRow[]
   };
 }
 
-function inferPlanTitle(shareId: string, taskRows: SharedPlanTaskRow[]) {
-  const rootTask = taskRows.find((row) => row.parent_id === null && row.summary);
-  if (rootTask?.task_name) {
-    return rootTask.task_name;
-  }
-
-  const firstTask = taskRows[0];
-  if (firstTask?.task_name) {
-    return firstTask.task_name;
-  }
-
-  return shareId;
-}
-
-function buildPlanFromTaskRows(shareId: string, taskRows: SharedPlanTaskRow[]): Plan {
-  const tasks = taskRows
-    .slice()
-    .sort((a, b) => a.task_order - b.task_order || a.task_id - b.task_id)
-    .map((row) => ({
-      id: row.task_id,
-      uniqueId: row.unique_id,
-      parentId: row.parent_id,
-      name: row.task_name,
-      outlineLevel: row.outline_level,
-      outlineNumber: row.outline_number,
-      wbs: row.wbs,
-      start: row.start_date,
-      finish: row.finish_date,
-      duration: row.duration,
-      percentComplete: row.percent_complete,
-      summary: row.summary,
-      milestone: row.milestone,
-      predecessors: Array.isArray(row.predecessors) ? row.predecessors : [],
-      resourceNames: row.resource_names ?? [],
-      notes: row.notes
-    }));
-
-  const datedTasks = tasks.filter((task) => task.start && task.finish);
-  const startDate = datedTasks.map((task) => task.start!).sort()[0] ?? null;
-  const finishDate = datedTasks.map((task) => task.finish!).sort().at(-1) ?? null;
-
-  return {
-    id: shareId,
-    title: inferPlanTitle(shareId, taskRows),
-    sourceFormat: "mpp",
-    importedAt: new Date().toISOString(),
-    startDate,
-    finishDate,
-    tasks
-  };
-}
-
-async function cleanupExpiredGuestPlans(client: ReturnType<typeof createSupabaseAnonClient>) {
+async function cleanupExpiredGuestPlans(client: ReturnType<typeof createSupabaseServiceClient>) {
   if (!client) {
     return;
   }
@@ -148,16 +101,27 @@ async function cleanupExpiredGuestPlans(client: ReturnType<typeof createSupabase
   }
 }
 
+/**
+ * Persist a shared plan. Writes go through the Supabase service-role key,
+ * which bypasses RLS. The anon key in the browser is read-only.
+ *
+ * Phase 1: ownerUserId is reserved for Phase 4 (Supabase Auth). Pass null
+ * for now; anonymous uploads keep owner_type='guest' with a 30-day expiry.
+ */
 export async function saveSharedPlan(
   shareId: string,
   plan: Plan,
-  options?: { guestId?: string | null; ownerType?: "guest" | "user" }
+  options?: { ownerUserId?: string | null; ownerType?: "guest" | "user" }
 ) {
-  const client = createSupabaseAnonClient();
-  const record = storeSharedPlan(shareId, plan);
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
 
+  const client = createSupabaseServiceClient();
   if (!client) {
-    return record.plan;
+    throw new Error("Failed to create Supabase service client.");
   }
 
   await cleanupExpiredGuestPlans(client).catch(() => {
@@ -165,7 +129,7 @@ export async function saveSharedPlan(
   });
 
   const ownerType = options?.ownerType ?? "guest";
-  const guestId = options?.guestId ?? null;
+  const ownerUserId = options?.ownerUserId ?? null;
   const expiresAt = ownerType === "guest" ? getGuestPlanExpiryIso(30) : null;
 
   const sharedPlanRow: SharedPlanRow = {
@@ -176,7 +140,8 @@ export async function saveSharedPlan(
     start_date: plan.startDate,
     finish_date: plan.finishDate,
     owner_type: ownerType,
-    guest_id: guestId,
+    owner_user_id: ownerUserId,
+    guest_id: null,
     expires_at: expiresAt
   };
 
@@ -201,6 +166,7 @@ export async function saveSharedPlan(
     notes: task.notes
   }));
 
+  // Upsert plan row first; FK on plan_tasks requires it to exist.
   const { error: planError } = await client.from("plans").upsert(sharedPlanRow, {
     onConflict: "share_id"
   });
@@ -208,14 +174,20 @@ export async function saveSharedPlan(
     throw planError;
   }
 
+  // Replace tasks for this share_id atomically from the client's POV:
+  // delete-then-insert. If the insert fails, the plan row stays but tasks are
+  // empty — surfaced as an error to the caller, who can retry. We no longer
+  // silently fall back to "tasks-only" reconstruction.
   const { error: deleteError } = await client.from("plan_tasks").delete().eq("share_id", shareId);
   if (deleteError) {
     throw deleteError;
   }
 
-  const { error: taskError } = await client.from("plan_tasks").insert(taskRows);
-  if (taskError) {
-    throw taskError;
+  if (taskRows.length > 0) {
+    const { error: taskError } = await client.from("plan_tasks").insert(taskRows);
+    if (taskError) {
+      throw taskError;
+    }
   }
 
   return plan;
@@ -227,92 +199,86 @@ export async function loadSharedPlan(shareId: string) {
 }
 
 export async function loadSharedPlanWithDebug(shareId: string): Promise<{ plan: Plan | null; debug: SharedPlanDebug }> {
+  // Reads use the anon client (RLS allows SELECT for anyone with the share_id).
   const client = createSupabaseAnonClient();
-  if (client && isSupabaseConfigured()) {
-    await cleanupExpiredGuestPlans(client).catch(() => {
-      // Best-effort cleanup only.
-    });
-
-    const { data: planRow, error: planError } = await client
-      .from("plans")
-      .select("*")
-      .eq("share_id", shareId)
-      .maybeSingle<SharedPlanRow>();
-
-    const { data: taskRows, error: taskError } = await client
-      .from("plan_tasks")
-      .select("*")
-      .eq("share_id", shareId)
-      .order("task_order", { ascending: true });
-
-    if (taskError) {
-      throw taskError;
-    }
-
-    const rows = (taskRows ?? []) as SharedPlanTaskRow[];
-    if (planRow) {
-      const planExpired =
-        !!planRow.expires_at &&
-        planRow.owner_type === "guest" &&
-        Date.parse(planRow.expires_at) <= Date.now();
-
-      if (planExpired) {
-        await client.from("plans").delete().eq("share_id", shareId);
-        return {
-          plan: null,
-          debug: {
-            shareId,
-            hasPlanRow: true,
-            taskCount: rows.length,
-            planOwnerType: planRow.owner_type,
-            planExpired: true,
-            source: "missing"
-          }
-        };
+  if (!client || !isSupabaseConfigured()) {
+    return {
+      plan: null,
+      debug: {
+        shareId,
+        hasPlanRow: false,
+        taskCount: 0,
+        planOwnerType: null,
+        planExpired: false,
+        source: "missing"
       }
-
-      return {
-        plan: buildPlanFromRows(planRow, rows),
-        debug: {
-          shareId,
-          hasPlanRow: true,
-          taskCount: rows.length,
-          planOwnerType: planRow.owner_type,
-          planExpired: false,
-          source: "plans+tasks"
-        }
-      };
-    }
-
-    if (rows.length > 0) {
-      return {
-        plan: buildPlanFromTaskRows(shareId, rows),
-        debug: {
-          shareId,
-          hasPlanRow: false,
-          taskCount: rows.length,
-          planOwnerType: null,
-          planExpired: false,
-          source: "tasks-only"
-        }
-      };
-    }
-
-    if (planError) {
-      throw planError;
-    }
+    };
   }
 
-  const registryPlan = getSharedPlanRecord(shareId)?.plan ?? null;
+  const { data: planRow, error: planError } = await client
+    .from("plans")
+    .select("*")
+    .eq("share_id", shareId)
+    .maybeSingle<SharedPlanRow>();
+
+  if (planError) {
+    throw planError;
+  }
+
+  if (!planRow) {
+    return {
+      plan: null,
+      debug: {
+        shareId,
+        hasPlanRow: false,
+        taskCount: 0,
+        planOwnerType: null,
+        planExpired: false,
+        source: "missing"
+      }
+    };
+  }
+
+  const planExpired =
+    !!planRow.expires_at &&
+    planRow.owner_type === "guest" &&
+    Date.parse(planRow.expires_at) <= Date.now();
+
+  if (planExpired) {
+    return {
+      plan: null,
+      debug: {
+        shareId,
+        hasPlanRow: true,
+        taskCount: 0,
+        planOwnerType: planRow.owner_type,
+        planExpired: true,
+        source: "missing"
+      }
+    };
+  }
+
+  const { data: taskRows, error: taskError } = await client
+    .from("plan_tasks")
+    .select("*")
+    .eq("share_id", shareId)
+    .order("task_order", { ascending: true });
+
+  if (taskError) {
+    throw taskError;
+  }
+
+  const rows = (taskRows ?? []) as SharedPlanTaskRow[];
+
   return {
-    plan: registryPlan,
+    plan: buildPlanFromRows(planRow, rows),
     debug: {
       shareId,
-      hasPlanRow: false,
-      taskCount: registryPlan?.tasks.length ?? 0,
-      planOwnerType: null,
+      hasPlanRow: true,
+      taskCount: rows.length,
+      planOwnerType: planRow.owner_type,
       planExpired: false,
-      source: registryPlan ? "registry" : "missing"
+      source: "plans+tasks"
     }
   };
 }

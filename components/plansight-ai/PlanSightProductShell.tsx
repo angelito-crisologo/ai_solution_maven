@@ -5,7 +5,6 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { BarChart3, Loader2, List, Upload } from "lucide-react";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
-import { getOrCreateGuestId } from "@/lib/plansight-ai/guest";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { PlanSightWorkspace } from "./PlanSightWorkspace";
@@ -13,6 +12,7 @@ import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 
 export function PlanSightProductShell() {
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [shareId, setShareId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -22,7 +22,10 @@ export function PlanSightProductShell() {
 
   const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
   const analysis = useMemo(() => (plan ? buildInsightsReport(plan) : null), [plan]);
-  const share = useMemo(() => (plan ? createSharePayload(plan) : null), [plan]);
+  const share = useMemo(
+    () => (plan && shareId ? createSharePayload(plan, shareId) : null),
+    [plan, shareId]
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,33 +53,38 @@ export function PlanSightProductShell() {
         throw new Error("error" in payload && payload.error ? payload.error : "Failed to import the MPP file.");
       }
 
-      const guestId = getOrCreateGuestId();
-      const sharePayload = createSharePayload(payload.plan);
       const saveResponse = await fetch("/api/plansight/share", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          shareId: sharePayload.shareId,
-          plan: payload.plan,
-          guestId
+          plan: payload.plan
         })
       });
 
-      const savePayload = (await saveResponse.json().catch(() => ({}))) as { error?: string };
+      const savePayload = (await saveResponse.json().catch(() => ({}))) as {
+        shareId?: string;
+        error?: string;
+      };
 
-      if (!saveResponse.ok) {
+      if (!saveResponse.ok || !savePayload.shareId) {
         throw new Error(savePayload.error || "Imported the plan, but failed to persist it to the database.");
       }
 
+      const newShareId = savePayload.shareId;
+
       try {
-        window.localStorage.setItem(`plansight-share:${sharePayload.shareId}`, JSON.stringify({ plan: payload.plan }));
+        window.localStorage.setItem(
+          `plansight-share:${newShareId}`,
+          JSON.stringify({ plan: payload.plan })
+        );
       } catch {
         // Ignore storage failures and fall back to the database.
       }
 
       setPlan(payload.plan);
+      setShareId(newShareId);
       setSelectedTaskIds(new Set());
       setStatus(`Imported ${selectedFile.name} and saved it.`);
       setActiveTab("plan");
