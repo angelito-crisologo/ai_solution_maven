@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysisTeaser";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "PlanSight AI",
@@ -21,7 +22,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PlanSightAIPage() {
+export default async function PlanSightAIPage() {
+  const user = await getCurrentUser();
+
   return (
     <main className="min-h-screen bg-light">
       <section className="bg-dark text-white">
@@ -43,7 +46,10 @@ export default function PlanSightAIPage() {
         </div>
       </section>
 
-      <PlanSightProductShell />
+      <PlanSightProductShell
+        signedIn={!!user}
+        userTier={user?.tier ?? null}
+      />
 
       <section className="px-6 py-20">
         <div className="mx-auto max-w-[1200px]">

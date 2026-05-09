@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { FileX2, Loader2 } from "lucide-react";
 import { summarizePlan } from "@/lib/plansight-ai/analysis";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
@@ -11,6 +11,12 @@ type Props = {
   shareId: string;
 };
 
+type LoadState =
+  | { kind: "loading"; message: string }
+  | { kind: "loaded"; plan: Plan }
+  | { kind: "not-found" }
+  | { kind: "error"; message: string };
+
 function storageKey(shareId: string) {
   return `plansight-share:${shareId}`;
 }
@@ -19,15 +25,23 @@ function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+type FetchResult =
+  | { kind: "ok"; plan: Plan }
+  | { kind: "not-found" }
+  | { kind: "error" };
+
 export function SharedStakeholderPlanLoader({ shareId }: Props) {
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [status, setStatus] = useState("Loading shared plan...");
+  const [state, setState] = useState<LoadState>({
+    kind: "loading",
+    message: "Loading shared plan..."
+  });
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchSharedPlanWithRetry() {
+    async function fetchSharedPlanWithRetry(): Promise<FetchResult> {
       const attempts = 4;
+      let lastWas404 = false;
 
       for (let attempt = 1; attempt <= attempts; attempt += 1) {
         const response = await fetch(
@@ -44,15 +58,17 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
         }
 
         if (response.ok && payload.plan) {
-          return payload.plan;
+          return { kind: "ok", plan: payload.plan };
         }
+
+        lastWas404 = response.status === 404;
 
         if (attempt < attempts) {
           await sleep(750 * attempt);
         }
       }
 
-      return null;
+      return lastWas404 ? { kind: "not-found" } : { kind: "error" };
     }
 
     async function loadSharedPlan() {
@@ -62,8 +78,7 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
           const parsed = JSON.parse(urlPlan) as Plan;
           if (parsed && Array.isArray(parsed.tasks)) {
             if (!cancelled) {
-              setPlan(parsed);
-              setStatus("Shared plan loaded.");
+              setState({ kind: "loaded", plan: parsed });
               window.localStorage.setItem(storageKey(shareId), JSON.stringify({ plan: parsed }));
             }
             return;
@@ -75,27 +90,43 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
           const parsed = JSON.parse(cached) as { plan?: Plan };
           if (parsed.plan) {
             if (!cancelled) {
-              setPlan(parsed.plan);
-              setStatus("Shared plan loaded.");
+              setState({ kind: "loaded", plan: parsed.plan });
             }
             return;
           }
         }
 
-        const fetchedPlan = await fetchSharedPlanWithRetry();
-        if (!fetchedPlan) {
-          throw new Error("Shared plan not available yet.");
+        const result = await fetchSharedPlanWithRetry();
+        if (cancelled) return;
+
+        if (result.kind === "ok") {
+          setState({ kind: "loaded", plan: result.plan });
+          window.localStorage.setItem(storageKey(shareId), JSON.stringify({ plan: result.plan }));
+          return;
         }
 
-        if (!cancelled) {
-          setPlan(fetchedPlan);
-          setStatus("Shared plan loaded.");
-          window.localStorage.setItem(storageKey(shareId), JSON.stringify({ plan: fetchedPlan }));
+        if (result.kind === "not-found") {
+          // The plan was deleted (Free single-plan slot replacement, expired
+          // guest plan, or the PM removed it). Tell stakeholders explicitly
+          // instead of leaving them on a generic loading state.
+          window.localStorage.removeItem(storageKey(shareId));
+          setState({ kind: "not-found" });
+          return;
         }
+
+        setState({
+          kind: "error",
+          message: "This shared plan is not available right now. Please try again in a moment."
+        });
       } catch (error) {
         if (!cancelled) {
-          setPlan(null);
-          setStatus(error instanceof Error && error.message ? error.message : "This shared plan is not available yet.");
+          setState({
+            kind: "error",
+            message:
+              error instanceof Error && error.message
+                ? error.message
+                : "This shared plan is not available right now."
+          });
         }
       }
     }
@@ -107,34 +138,63 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
     };
   }, [shareId]);
 
-  const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
+  const metrics = useMemo(
+    () => (state.kind === "loaded" ? summarizePlan(state.plan) : null),
+    [state]
+  );
   const share = useMemo(
-    () => (plan ? createSharePayload(plan, shareId) : null),
-    [plan, shareId]
+    () => (state.kind === "loaded" ? createSharePayload(state.plan, shareId) : null),
+    [state, shareId]
   );
 
-  if (!plan || !metrics || !share) {
+  if (state.kind === "not-found") {
     return (
       <section className="px-6 py-10">
-        <div className="mx-auto w-full max-w-[1600px] rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
-          <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-                Shared plan
-              </p>
-              <h2 className="text-2xl font-semibold text-dark">Loading stakeholder view</h2>
-            </div>
+        <div className="mx-auto w-full max-w-[1600px] rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-soft">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+            <FileX2 className="h-7 w-7" />
           </div>
-          <p className="mt-4 text-sm leading-6 text-slate-600">{status}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            If this was just published, wait a moment and refresh. Guest plans stay available for
-            30 days.
+          <p className="mt-5 text-sm font-semibold uppercase tracking-normal text-primary">
+            Shared plan
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-dark">
+            This plan is no longer available for viewing
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-slate-600">
+            The project manager may have replaced this plan with a newer version or
+            removed it. Reach out to them for an up-to-date share link.
           </p>
         </div>
       </section>
     );
   }
 
-  return <SharedStakeholderPlanView plan={plan} metrics={metrics} share={share} />;
+  if (state.kind === "loaded" && metrics && share) {
+    return <SharedStakeholderPlanView plan={state.plan} metrics={metrics} share={share} />;
+  }
+
+  // loading or transient error
+  const message =
+    state.kind === "error" ? state.message : state.kind === "loading" ? state.message : "";
+
+  return (
+    <section className="px-6 py-10">
+      <div className="mx-auto w-full max-w-[1600px] rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
+              Shared plan
+            </p>
+            <h2 className="text-2xl font-semibold text-dark">Loading stakeholder view</h2>
+          </div>
+        </div>
+        <p className="mt-4 text-sm leading-6 text-slate-600">{message}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          If this was just published, wait a moment and refresh. Guest plans stay available for
+          30 days.
+        </p>
+      </div>
+    </section>
+  );
 }

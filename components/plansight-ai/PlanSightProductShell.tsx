@@ -19,12 +19,17 @@ import { PlanSightWorkspace } from "./PlanSightWorkspace";
 import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
 
-// Phase 4 will replace this hardcoded constant with a real session check
-// (e.g., `!session?.user`). Until auth ships, every PM is anonymous, so the
-// sign-in CTA is always shown when a plan is loaded.
-const IS_ANONYMOUS = true;
+type Props = {
+  /** True when a Supabase auth session exists. Drives the sign-in CTA vs the
+   * Pro upsell banner on plan replacement. */
+  signedIn: boolean;
+  /** Tier from the public.users row. null when anonymous. */
+  userTier: "free" | "pro" | null;
+};
 
-export function PlanSightProductShell() {
+export function PlanSightProductShell({ signedIn, userTier }: Props) {
+  const isAnonymous = !signedIn;
+  const isFreeSignedIn = signedIn && userTier !== "pro";
   const [plan, setPlan] = useState<Plan | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
@@ -111,10 +116,10 @@ export function PlanSightProductShell() {
       }
 
       // Free signed-in users have a single-plan slot. When they import a new
-      // plan, the previous one is silently replaced in their workspace and we
-      // surface a Pro upsell banner. Anonymous users had no persistent plan to
-      // begin with, so the banner doesn't fire for them.
-      if (!IS_ANONYMOUS && plan && plan.title !== payload.plan.title) {
+      // plan, the previous one is hard-deleted server-side and we surface a
+      // Pro upsell banner. Anonymous users had no persistent plan to begin
+      // with; Pro users keep all plans, so the banner doesn't fire for them.
+      if (isFreeSignedIn && plan && plan.title !== payload.plan.title) {
         setReplacedPlanTitle(plan.title);
       } else {
         setReplacedPlanTitle(null);
@@ -236,7 +241,7 @@ export function PlanSightProductShell() {
               </div>
             </div>
 
-            {IS_ANONYMOUS ? (
+            {isAnonymous ? (
               <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
                   <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -252,18 +257,16 @@ export function PlanSightProductShell() {
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  disabled
-                  title="Sign-in ships in Phase 4"
-                  className="inline-flex shrink-0 cursor-not-allowed items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white opacity-60"
+                <Link
+                  href="/signin?redirectTo=/products/plansight-ai"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
                 >
-                  Sign in (coming soon)
-                </button>
+                  Sign in
+                </Link>
               </div>
             ) : null}
 
-            {!IS_ANONYMOUS && replacedPlanTitle ? (
+            {isFreeSignedIn && replacedPlanTitle ? (
               <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-secondary/30 bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
                   <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
@@ -274,21 +277,20 @@ export function PlanSightProductShell() {
                       Replaced your previous plan: &ldquo;{replacedPlanTitle}&rdquo;
                     </p>
                     <p className="mt-0.5 text-sm leading-6 text-slate-600">
-                      Free includes one plan slot. Upgrade to Pro to keep every plan you
-                      upload, with a full multi-plan dashboard.
+                      Free includes one plan slot, so the previous plan was deleted —
+                      any share link you sent for it no longer works. Upgrade to Pro to
+                      keep every plan you upload, with a full multi-plan dashboard.
                     </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    disabled
-                    title="Pro upgrade ships in Phase 5"
-                    className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white opacity-60"
+                  <Link
+                    href="/upgrade"
+                    className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white transition hover:bg-secondary/90"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Upgrade to Pro
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => setReplacedPlanTitle(null)}
@@ -325,6 +327,7 @@ export function PlanSightProductShell() {
             <PlanSightAIAnalysisPanel
               shareId={share.shareId}
               selectedTaskIds={selectedTaskIds}
+              canRegenerate={userTier === "pro"}
               onSelectTasks={(taskIds) => {
                 setSelectedTaskIds(new Set(taskIds));
                 setActiveTab("plan");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/auth/session";
 import { computePlanContentHash, generateAiAnalysis } from "@/lib/plansight-ai/ai";
 import {
   loadAiAnalysisIfFresh,
@@ -17,9 +18,13 @@ const requestSchema = z.object({
   force: z.boolean().optional()
 });
 
-// TODO(Phase 4): require an authenticated session here. For Phase 3 the
-// route is open so the feature can be validated; rate-limit and content-hash
-// caching keep cost bounded during validation.
+// Phase 4: server-side Pro gate on regenerate.
+// - GET cache / first-time generation: open to anyone (anonymous or signed-in).
+// - force=true (regenerate): requires session.user.tier === 'pro'.
+// - NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE=true is a Preview-only escape hatch
+//   for prompt iteration; it MUST stay false in Production.
+const DEV_BYPASS_ENABLED =
+  process.env.NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE === "true";
 
 export async function POST(request: Request) {
   try {
@@ -33,6 +38,16 @@ export async function POST(request: Request) {
     }
 
     const { shareId, force } = parsed.data;
+
+    if (force && !DEV_BYPASS_ENABLED) {
+      const user = await getCurrentUser();
+      if (!user || user.tier !== "pro") {
+        return NextResponse.json(
+          { error: "Regenerate is a Pro feature. Upgrade to re-run the AI analysis." },
+          { status: 403 }
+        );
+      }
+    }
 
     const plan = await loadSharedPlan(shareId);
     if (!plan) {
