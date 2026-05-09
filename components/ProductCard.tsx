@@ -67,8 +67,8 @@ export function ProductCard({
             <p className="text-sm text-slate-400">PlanSight AI</p>
             <p className="font-medium">Imported plan workspace</p>
           </div>
-          <span className="rounded-xl bg-amber-400/15 px-3 py-2 text-sm font-medium text-amber-300">
-            Limited analysis
+          <span className="rounded-xl bg-emerald-400/15 px-3 py-2 text-sm font-medium text-emerald-300">
+            AI analysis live
           </span>
         </div>
 
