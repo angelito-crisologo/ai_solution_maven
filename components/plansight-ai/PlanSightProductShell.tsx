@@ -3,12 +3,13 @@
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Loader2, List, Upload } from "lucide-react";
+import { BarChart3, Loader2, List, Sparkles, Upload } from "lucide-react";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { PlanSightWorkspace } from "./PlanSightWorkspace";
 import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
+import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
 
 export function PlanSightProductShell() {
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -16,7 +17,7 @@ export function PlanSightProductShell() {
   const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<"plan" | "project-insights">("plan");
+  const [activeTab, setActiveTab] = useState<"plan" | "project-insights" | "ai-analysis">("plan");
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const importedPlanTabsRef = useRef<HTMLElement | null>(null);
 
@@ -176,6 +177,12 @@ export function PlanSightProductShell() {
                 icon={<BarChart3 className="h-4 w-4" />}
                 label="Project Insights"
               />
+              <TabButton
+                active={activeTab === "ai-analysis"}
+                onClick={() => setActiveTab("ai-analysis")}
+                icon={<Sparkles className="h-4 w-4" />}
+                label="AI Analysis"
+              />
             </div>
           </section>
 
@@ -196,6 +203,15 @@ export function PlanSightProductShell() {
               selectedTaskIds={selectedTaskIds}
               onSelectTask={(taskId) => {
                 setSelectedTaskIds(new Set([taskId]));
+                setActiveTab("plan");
+              }}
+            />
+          ) : activeTab === "ai-analysis" ? (
+            <PlanSightAIAnalysisPanel
+              shareId={share.shareId}
+              selectedTaskIds={selectedTaskIds}
+              onSelectTasks={(taskIds) => {
+                setSelectedTaskIds(new Set(taskIds));
                 setActiveTab("plan");
               }}
             />

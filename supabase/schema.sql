@@ -36,6 +36,16 @@ create index if not exists plans_owner_user_id_idx
   on public.plans (owner_user_id)
   where owner_user_id is not null;
 
+-- Phase 3: cached Claude AI analysis output.
+alter table public.plans
+add column if not exists ai_analysis jsonb null;
+
+alter table public.plans
+add column if not exists ai_analysis_content_hash text null;
+
+alter table public.plans
+add column if not exists ai_analysis_generated_at timestamptz null;
+
 alter table if exists public.shared_plan_tasks rename to plan_tasks;
 
 create table if not exists public.plan_tasks (

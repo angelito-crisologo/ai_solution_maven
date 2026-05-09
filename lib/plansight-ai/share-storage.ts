@@ -1,4 +1,5 @@
 import type { Plan, PlanTask } from "./types";
+import type { AiAnalysis } from "./ai";
 import { getGuestPlanExpiryIso } from "./guest";
 import {
   createSupabaseAnonClient,
@@ -281,4 +282,73 @@ export async function loadSharedPlanWithDebug(shareId: string): Promise<{ plan: 
       source: "plans+tasks"
     }
   };
+}
+
+/**
+ * Load a cached AI analysis if its content hash still matches the current
+ * plan content. Returns null if no cache exists or the hash is stale.
+ *
+ * Reads use the anon client (RLS allows SELECT for anyone with the share_id).
+ */
+export async function loadAiAnalysisIfFresh(
+  shareId: string,
+  expectedContentHash: string
+): Promise<AiAnalysis | null> {
+  const client = createSupabaseAnonClient();
+  if (!client) {
+    return null;
+  }
+
+  const { data, error } = await client
+    .from("plans")
+    .select("ai_analysis, ai_analysis_content_hash")
+    .eq("share_id", shareId)
+    .maybeSingle<{
+      ai_analysis: AiAnalysis | null;
+      ai_analysis_content_hash: string | null;
+    }>();
+
+  if (error || !data) {
+    return null;
+  }
+
+  if (!data.ai_analysis || data.ai_analysis_content_hash !== expectedContentHash) {
+    return null;
+  }
+
+  return data.ai_analysis;
+}
+
+/**
+ * Persist an AI analysis result alongside its content hash. Writes go through
+ * the service-role key.
+ */
+export async function saveAiAnalysis(
+  shareId: string,
+  contentHash: string,
+  analysis: AiAnalysis
+): Promise<void> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { error } = await client
+    .from("plans")
+    .update({
+      ai_analysis: analysis,
+      ai_analysis_content_hash: contentHash,
+      ai_analysis_generated_at: analysis.generatedAt
+    })
+    .eq("share_id", shareId);
+
+  if (error) {
+    throw error;
+  }
 }

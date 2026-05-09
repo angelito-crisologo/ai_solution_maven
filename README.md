@@ -32,6 +32,7 @@ This project is ready for Vercel.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only, do **not** prefix with `NEXT_PUBLIC_`)
+   - `ANTHROPIC_API_KEY` (server-only, do **not** prefix with `NEXT_PUBLIC_`)
 4. Deploy the project.
 
 Recommended values:
@@ -41,6 +42,14 @@ Recommended values:
 - `NEXT_PUBLIC_SUPABASE_URL`: your Supabase Project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: your Supabase anon public key
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase dashboard → Project Settings → API → `service_role` secret
+- `ANTHROPIC_API_KEY`: from https://console.anthropic.com → Settings → API Keys
+
+### AI Analysis (Phase 3)
+
+The AI Analysis tab calls Claude Haiku 4.5 via the Anthropic API, runs on Vercel Edge runtime (30s timeout), and caches each result by content hash on the plan row, so repeat views never re-spend tokens. To enable it:
+
+1. Run `supabase/migrations/02_phase3_ai_cache.sql` in the Supabase SQL editor (adds `ai_analysis`, `ai_analysis_content_hash`, `ai_analysis_generated_at` columns).
+2. Add `ANTHROPIC_API_KEY` to Vercel environment variables (Production + Preview).
 
 ## Supabase Setup
 
