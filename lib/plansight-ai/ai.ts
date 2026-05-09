@@ -133,45 +133,49 @@ function compressInsightsForPrompt(plan: Plan, insights: PlanInsightsReport) {
   };
 }
 
-const SYSTEM_PROMPT = `You are a senior project management analyst reviewing a project plan.
+const SYSTEM_PROMPT = `You are a senior project management analyst. The user gives you a \
+structured insights report computed by a deterministic engine. The numbers are \
+authoritative.
 
-The user gives you a structured insights report computed by a deterministic engine: \
-counts, late/at-risk/critical/lagging tasks, bottlenecks, and project health (RAG: \
-green/amber/red). The numbers are authoritative; do not contradict them.
+Produce a coherent three-part analysis: SUMMARY, RISKS, RECOMMENDATIONS. They reinforce \
+each other — every problem the summary identifies must be addressed by at least one \
+recommendation.
 
-You produce three things. They are NOT independent — they form a coherent analysis where \
-the SUMMARY describes the situation, the RISKS explain what's at stake, and the \
-RECOMMENDATIONS prescribe what to do about each concern named in the summary.
+WORK IN THIS ORDER:
 
-CRITICAL RULE: every concern, problem, or call-to-action implied by the SUMMARY must \
-appear as a corresponding RISK (if descriptive) or RECOMMENDATION (if prescriptive). \
-Never let the summary mention a problem without addressing it in risks or recommendations.
+Step 1 — Identify the 2-4 most important findings from the data (e.g., "all tasks late", \
+"foundational tasks blocking downstream work", "critical path is heavily gated"). Hold \
+this list in mind for the rest of the analysis.
 
-1. SUMMARY (2-3 sentences, DESCRIPTIVE only): a clear narrative the project manager can \
-read in 10 seconds. Mention the health status and the top concern (or that things are \
-tracking well) — but DO NOT use imperative or prescriptive language. Words like "must", \
-"should", "immediate action required", "reset", "fix" belong in recommendations, not the \
-summary. The summary states what IS, not what to do. Do not start with "This project".
+Step 2 — SUMMARY (2-3 sentences). State what IS the case for each finding from Step 1. \
+Use past/present-tense observation: "All 74 tasks are overdue", "53 tasks sit on the \
+critical path", "Eight foundational tasks block downstream work". Mention the health \
+status (green/amber/red). Do not start with "This project".
 
-2. RISKS (up to 5): the most important risks visible in the data. Each risk must reference \
-specific task IDs from the input where applicable. Use plain language a non-technical \
-stakeholder can understand. If there are no real risks, return an empty array (do not \
-fabricate risks).
+Step 3 — RISKS (0-5 items). For each finding from Step 1 that represents a threat to \
+delivery, write one risk entry with a title, an explanation in plain language, and the \
+specific task IDs it references. Skip if the plan is genuinely healthy.
 
-3. RECOMMENDATIONS (1-5, always at least 1): concrete next actions for the project \
-manager — this is where prescriptive language lives. Each recommendation must be specific \
-to the plan, not generic PM advice. For every problem you named or implied in the SUMMARY, \
-include a recommendation that addresses it directly. Prefer actions tied to specific tasks \
-or task groups when possible. Even when the plan is healthy (green), provide at least one \
-forward-looking recommendation (e.g., "Confirm milestone X is still on track at next \
-standup"). Never return an empty recommendations array.
+Step 4 — RECOMMENDATIONS (1-5 items, REQUIRED at least 1). For EACH finding from Step 1, \
+write at least one matching recommendation. The recommendation specifies the action the PM \
+should take to address that finding. Each recommendation has an "action" field (the \
+imperative — what to do) and a "rationale" field (why it matters for this plan). Prefer \
+actions tied to specific tasks or task groups. If the plan is healthy, write at least one \
+forward-looking action (e.g., "Confirm milestone X at next standup").
+
+Mapping requirement: if your SUMMARY mentions "foundational tasks blocking downstream \
+work", your RECOMMENDATIONS must include an action addressing those foundational tasks. \
+If the SUMMARY mentions "schedule has slipped", your RECOMMENDATIONS must include a \
+rescheduling action. Never describe a problem in the summary without prescribing a \
+response to it in recommendations.
 
 When the analysis mode is "approximate", note that dependencies were not provided and the \
 critical-path findings are heuristic — frame language accordingly ("tasks near project \
 completion that may impact delivery") rather than declaring something definitively \
 critical.
 
-Always submit your analysis using the submit_analysis tool. Never respond in plain text.`;
+Submit your analysis using the submit_analysis tool. The recommendations array MUST contain \
+at least one item.`;
 
 const ANALYSIS_TOOL = {
   name: "submit_analysis",
@@ -252,24 +256,43 @@ function normalizeAiAnalysisInput(
     })
     .filter((r): r is AiAnalysisRisk => r !== null);
 
+  // Tolerant recommendation parser. Accepts:
+  //  - { action, rationale } (preferred shape per schema)
+  //  - alternative field names: title/name/recommendation, reason/explanation/description/why
+  //  - bare strings (entire entry is treated as the action)
+  // Falls back to "Recommendation N" if the action is missing entirely.
   const rawRecs = Array.isArray(obj.recommendations) ? obj.recommendations : [];
   const droppedRecs: unknown[] = [];
+  const ACTION_KEYS = ["action", "title", "name", "recommendation", "text"];
+  const RATIONALE_KEYS = ["rationale", "reason", "explanation", "description", "why"];
+
+  const pickString = (record: Record<string, unknown>, keys: string[]) => {
+    for (const key of keys) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+    return "";
+  };
+
   const recommendations: AiAnalysisRecommendation[] = rawRecs
-    .map((entry) => {
+    .map((entry, index) => {
+      if (typeof entry === "string" && entry.trim()) {
+        return { action: entry.trim(), rationale: "" };
+      }
       if (typeof entry !== "object" || entry === null) {
         droppedRecs.push(entry);
         return null;
       }
-      const r = entry as Record<string, unknown>;
-      const action = typeof r.action === "string" && r.action.trim() ? r.action : null;
-      // Accept the recommendation even if rationale is missing — surface it
-      // verbatim rather than dropping a useful action.
-      const rationale =
-        typeof r.rationale === "string" && r.rationale.trim() ? r.rationale : "";
+
+      const record = entry as Record<string, unknown>;
+      const action = pickString(record, ACTION_KEYS);
+      const rationale = pickString(record, RATIONALE_KEYS);
+
       if (!action) {
         droppedRecs.push(entry);
         return null;
       }
+
       return { action, rationale };
     })
     .filter((r): r is AiAnalysisRecommendation => r !== null);
@@ -367,6 +390,18 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
       data.content.map((block) => block.type)
     );
     throw new Error("Claude did not return a tool_use response.");
+  }
+
+  // Diagnostic: log the structure Claude returned so we can spot prompt drift.
+  // Trimmed to keep log payloads small. Safe to keep in production.
+  if (typeof toolUse.input === "object" && toolUse.input !== null) {
+    const inputObj = toolUse.input as Record<string, unknown>;
+    console.log(
+      "[ai-analysis] tool_use input keys:",
+      Object.keys(inputObj),
+      "recommendations sample:",
+      JSON.stringify(inputObj.recommendations).slice(0, 400)
+    );
   }
 
   const normalized = normalizeAiAnalysisInput(toolUse.input);
