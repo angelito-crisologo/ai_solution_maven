@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, MessageSquare, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { AlertCircle, Loader2, Lock, MessageSquare, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { AiAnalysis } from "@/lib/plansight-ai/ai";
 
@@ -8,6 +8,12 @@ type Props = {
   shareId: string;
   selectedTaskIds: Set<number>;
   onSelectTasks: (taskIds: number[]) => void;
+  /**
+   * Whether the current user can force a fresh Claude call (bypassing cache).
+   * Regenerate is a Pro-tier feature. Phase 4 (auth) will derive this from
+   * the user session. Defaults to false today.
+   */
+  canRegenerate?: boolean;
 };
 
 type LoadState =
@@ -16,8 +22,14 @@ type LoadState =
   | { status: "success"; analysis: AiAnalysis; cached: boolean }
   | { status: "error"; message: string };
 
-export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTasks }: Props) {
+export function PlanSightAIAnalysisPanel({
+  shareId,
+  selectedTaskIds,
+  onSelectTasks,
+  canRegenerate = false
+}: Props) {
   const [state, setState] = useState<LoadState>({ status: "idle" });
+  const [showProGate, setShowProGate] = useState(false);
 
   const fetchAnalysis = useCallback(async (options?: { force?: boolean }) => {
     setState({ status: "loading" });
@@ -58,6 +70,15 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
 
   const regenerate = () => fetchAnalysis({ force: true });
 
+  const handleRegenerateClick = () => {
+    if (canRegenerate) {
+      setShowProGate(false);
+      regenerate();
+    } else {
+      setShowProGate(true);
+    }
+  };
+
   return (
     <section className="px-6 py-10">
       <div className="mx-auto grid max-w-[1200px] gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -78,15 +99,67 @@ export function PlanSightAIAnalysisPanel({ shareId, selectedTaskIds, onSelectTas
             {state.status === "success" ? (
               <button
                 type="button"
-                onClick={regenerate}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                title="Force a fresh Claude call (bypasses cache)"
+                onClick={handleRegenerateClick}
+                className={
+                  canRegenerate
+                    ? "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                    : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100"
+                }
+                title={
+                  canRegenerate
+                    ? "Force a fresh Claude call (bypasses cache)"
+                    : "Regenerate is a Pro feature"
+                }
               >
-                <RefreshCcw className="h-3.5 w-3.5" />
-                Regenerate
+                {canRegenerate ? (
+                  <RefreshCcw className="h-3.5 w-3.5" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5" />
+                )}
+                <span>Regenerate</span>
+                {!canRegenerate ? (
+                  <span className="rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-secondary">
+                    Pro
+                  </span>
+                ) : null}
               </button>
             ) : null}
           </div>
+
+          {showProGate ? (
+            <div className="mt-5 rounded-2xl border border-secondary/30 bg-secondary/5 p-5">
+              <div className="flex items-start gap-3">
+                <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-dark">Regenerate is a Pro feature</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Each plan gets one AI analysis at no cost — re-runs and prompt iteration
+                    are reserved for Pro. Upgrade to regenerate with the latest model output.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-xs font-semibold text-white opacity-60"
+                      title="Upgrade flow ships in Phase 5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Upgrade to Pro (coming soon)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowProGate(false)}
+                      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-5 rounded-2xl bg-slate-50 p-5">
             {state.status === "loading" || state.status === "idle" ? (
