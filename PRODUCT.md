@@ -36,15 +36,18 @@ PlanSight is explicitly **not** a project management tool — not a competitor t
 
 ### Tier model
 
-| Capability | Anonymous | Free (signed-up) | Paid (Pro) |
+The model is a clean three-step ladder. Each tier solves a different problem.
+
+| Capability | Anonymous | Free (signed-in) | Paid (Pro) |
 |---|---|---|---|
-| Upload, view, deterministic insights | yes | yes | yes |
-| Share read-only stakeholder link | yes | yes | yes |
-| Excel export (tasks-only) | yes | yes | yes |
+| Upload, view workspace + Insights + AI Analysis on the page | yes | yes | yes |
 | AI analysis (Claude) — first generation, cached | yes | yes | yes |
-| Plans persist | auto-delete after 14 days | up to 3 plans | unlimited |
-| "My Plans" dashboard | no | yes | yes |
-| Plan management (rename, archive, delete) | no | basic | full |
+| Stakeholder share link (read-only Gantt + table) | yes | yes | yes |
+| Excel export (tasks-only) | yes | yes | yes |
+| **Last imported plan still loaded when you return** | **no — must re-import** | **yes — single plan slot** | yes |
+| **Number of plans retained** | **0 (ephemeral session)** | **1 (only the last one)** | **unlimited** |
+| "My Plans" dashboard | no | no | yes |
+| Plan management (rename, archive, delete) | no | no | yes |
 | Regenerate AI analysis on demand | no | no | yes |
 | Plan version history & compare | no | no | yes |
 | Stakeholder share view analytics | no | no | yes |
@@ -57,13 +60,18 @@ PlanSight is explicitly **not** a project management tool — not a competitor t
 | Natural-language Q&A over plan | no | no | yes (roadmap) |
 | Custom AI analysis prompt presets | no | no | yes (roadmap) |
 
+**Tier framing:**
+- **Anonymous** is a tryout. The PM uses the full workspace (table, Gantt, Insights, AI Analysis) on the page, but the moment they navigate away, the session is gone. The plan still exists in Supabase for the 14-day stakeholder TTL, but the PM has no UI to find it again unless they kept the share URL.
+- **Free signed-in** is the single-plan workflow. The PM signs in and gets persistence of *one* plan — the most recently imported one. Importing a new plan silently replaces the previous one in their workspace; the old plan stays accessible via its share URL until TTL.
+- **Pro** is the multi-plan workflow. Dashboard with all plans, regeneration, version compare, analytics, alerts, branding, and the rest of the workspace tools that make PlanSight a daily PM tool.
+
+**Stakeholder share views stay simple at every tier.** Read-only Gantt + task table — no Insights, no AI Analysis. The AI commentary is for the PM, not the audience. This keeps share links focused, avoids leaking the PM's analysis to all stakeholders, and avoids accidental Claude cost from viewer traffic.
+
 Future tier above Pro (Team / Pro+):
 - Team workspaces with multiple PMs
 - Role-based access (admin/editor/viewer)
 - API access for integrations
 - SSO
-
-Every plan gets one AI analysis at no token cost (cached server-side by content hash). Pro adds the workspace and stakeholder tools that make PlanSight useful as a daily PM tool, not just a one-off viewer.
 
 ### Why this product
 

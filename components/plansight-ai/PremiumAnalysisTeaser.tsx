@@ -56,14 +56,14 @@ const features: AnalysisFeature[] = [
     status: "pro",
     icon: LayoutDashboard,
     description:
-      "Upload unlimited plans, see them all in one place, rename, archive, or delete."
+      "Upload unlimited plans, see them all in one place, rename, archive, or delete. Free signed-in users see only their most recent plan; Pro keeps every plan."
   },
   {
-    name: "Unlimited retention",
+    name: "Multi-plan retention",
     status: "pro",
     icon: History,
     description:
-      "Plans persist as long as your subscription is active. No 14-day auto-delete."
+      "Pro keeps every plan you upload. Free signed-in users have a single plan slot — importing a new plan replaces the previous one in their workspace."
   },
   {
     name: "Regenerate AI",
@@ -187,9 +187,9 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
             Click to compare what&apos;s live and what comes with Pro
           </h3>
           <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-            Free covers AI analysis on every imported plan. Pro adds a multi-plan dashboard,
-            regeneration, version compare, stakeholder analytics, health alerts, and branded
-            shares.
+            Free signed-in PMs keep one plan slot — the latest import is always available
+            when they return. Pro adds the multi-plan dashboard, regeneration, version
+            compare, stakeholder analytics, health alerts, and branded shares.
           </p>
         </div>
 
@@ -256,15 +256,15 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
               <TierColumn
                 badge="Free"
                 badgeClassName="border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                title="What anyone gets"
-                description="Upload, view, share, and read the AI analysis. Each plan's analysis is cached so repeat views don't cost anything."
+                title="Use the full workspace today"
+                description="Anyone can upload, view, and read the AI analysis. Sign in to keep your most recent plan accessible across sessions — one plan slot, replaced when you import a new one."
                 features={FREE_FEATURES}
               />
               <TierColumn
                 badge="Pro"
                 badgeClassName="border-secondary/40 bg-secondary/15 text-amber-200"
-                title="Built for PMs who use it daily"
-                description="Sign up to unlock the multi-plan workspace, regeneration, and stakeholder tools."
+                title="Multi-plan workflow for daily PMs"
+                description="Pro keeps every plan you upload, plus everything PMs need to use PlanSight as a daily tool — regeneration, analytics, alerts, and branded shares."
                 features={PRO_FEATURES}
               />
             </div>

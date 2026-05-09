@@ -3,13 +3,26 @@
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Check, Loader2, List, Sparkles, Upload } from "lucide-react";
+import {
+  BarChart3,
+  Check,
+  KeyRound,
+  Loader2,
+  List,
+  Sparkles,
+  Upload
+} from "lucide-react";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { PlanSightWorkspace } from "./PlanSightWorkspace";
 import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
+
+// Phase 4 will replace this hardcoded constant with a real session check
+// (e.g., `!session?.user`). Until auth ships, every PM is anonymous, so the
+// sign-in CTA is always shown when a plan is loaded.
+const IS_ANONYMOUS = true;
 
 export function PlanSightProductShell() {
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -19,6 +32,10 @@ export function PlanSightProductShell() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<"plan" | "project-insights" | "ai-analysis">("plan");
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
+  // Tracks the title of the previous plan when a Free signed-in user replaces
+  // their slot. Triggers the Pro-upsell banner. Anonymous users don't keep
+  // any plan across imports, so this never fires for them.
+  const [replacedPlanTitle, setReplacedPlanTitle] = useState<string | null>(null);
   const importedPlanTabsRef = useRef<HTMLElement | null>(null);
 
   const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
@@ -91,6 +108,16 @@ export function PlanSightProductShell() {
         );
       } catch {
         // Ignore storage failures and fall back to the database.
+      }
+
+      // Free signed-in users have a single-plan slot. When they import a new
+      // plan, the previous one is silently replaced in their workspace and we
+      // surface a Pro upsell banner. Anonymous users had no persistent plan to
+      // begin with, so the banner doesn't fire for them.
+      if (!IS_ANONYMOUS && plan && plan.title !== payload.plan.title) {
+        setReplacedPlanTitle(plan.title);
+      } else {
+        setReplacedPlanTitle(null);
       }
 
       setPlan(payload.plan);
@@ -208,6 +235,70 @@ export function PlanSightProductShell() {
                 />
               </div>
             </div>
+
+            {IS_ANONYMOUS ? (
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-dark">
+                      Want this plan still here next time?
+                    </p>
+                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
+                      Sign in to keep your most recent plan, its insights, and AI analysis
+                      ready when you return. Upgrade to Pro to keep every plan you upload.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled
+                  title="Sign-in ships in Phase 4"
+                  className="inline-flex shrink-0 cursor-not-allowed items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white opacity-60"
+                >
+                  Sign in (coming soon)
+                </button>
+              </div>
+            ) : null}
+
+            {!IS_ANONYMOUS && replacedPlanTitle ? (
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-secondary/30 bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-dark">
+                      Replaced your previous plan: &ldquo;{replacedPlanTitle}&rdquo;
+                    </p>
+                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
+                      Free includes one plan slot. Upgrade to Pro to keep every plan you
+                      upload, with a full multi-plan dashboard.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    disabled
+                    title="Pro upgrade ships in Phase 5"
+                    className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white opacity-60"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Upgrade to Pro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReplacedPlanTitle(null)}
+                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </section>
 
           {activeTab === "plan" ? (
