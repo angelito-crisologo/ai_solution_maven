@@ -90,8 +90,8 @@ export function PlanSightAIAnalysisPanel({
   return (
     <section className="px-6 py-10">
       <div className="mx-auto grid max-w-[1200px] gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-soft xl:h-[640px]">
+          <div className="flex shrink-0 items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <MessageSquare className="h-5 w-5" />
@@ -135,7 +135,7 @@ export function PlanSightAIAnalysisPanel({
           </div>
 
           {showProGate ? (
-            <div className="mt-5 rounded-2xl border border-secondary/30 bg-secondary/5 p-5">
+            <div className="mt-5 shrink-0 rounded-2xl border border-secondary/30 bg-secondary/5 p-5">
               <div className="flex items-start gap-3">
                 <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
                   <Sparkles className="h-4 w-4" />
@@ -169,46 +169,46 @@ export function PlanSightAIAnalysisPanel({
             </div>
           ) : null}
 
-          <div className="mt-5 rounded-2xl bg-slate-50 p-5">
-            {state.status === "loading" || state.status === "idle" ? (
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span>Generating AI analysis...</span>
-              </div>
-            ) : state.status === "error" ? (
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 text-sm text-red-700">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{state.message}</span>
+          <div className="mt-5 flex flex-col gap-5 overflow-y-auto pr-1 xl:min-h-0 xl:flex-1">
+            <div className="shrink-0 rounded-2xl bg-slate-50 p-5">
+              {state.status === "loading" || state.status === "idle" ? (
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span>Generating AI analysis...</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => fetchAnalysis()}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
-                >
-                  <RefreshCcw className="h-3.5 w-3.5" />
-                  Try again
-                </button>
-              </div>
-            ) : (
-              <p className="text-base leading-7 text-slate-700">{state.analysis.summary}</p>
-            )}
-          </div>
+              ) : state.status === "error" ? (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 text-sm text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{state.message}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fetchAnalysis()}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
+                  >
+                    <RefreshCcw className="h-3.5 w-3.5" />
+                    Try again
+                  </button>
+                </div>
+              ) : (
+                <p className="text-base leading-7 text-slate-700">{state.analysis.summary}</p>
+              )}
+            </div>
 
-          {state.status === "success" ? (
-            <div className="mt-5">
+            {state.status === "success" ? (
               <RisksList
                 risks={state.analysis.risks}
                 selectedTaskIds={selectedTaskIds}
                 onSelectTasks={onSelectTasks}
               />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
-        <div className="grid gap-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-soft xl:h-[640px]">
+            <div className="flex shrink-0 items-center gap-3">
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
                 <Sparkles className="h-5 w-5" />
               </div>
@@ -220,27 +220,29 @@ export function PlanSightAIAnalysisPanel({
               </div>
             </div>
 
-            {state.status === "loading" || state.status === "idle" ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Generating...</span>
-              </div>
-            ) : state.status === "success" ? (
-              state.analysis.recommendations.length > 0 ? (
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {state.analysis.recommendations.map((recommendation, index) => (
-                    <li key={index} className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="font-medium text-dark">{recommendation.action}</p>
-                      <p className="mt-1 text-slate-600">{recommendation.rationale}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  The analysis didn&apos;t return specific recommendations. Try regenerating.
-                </p>
-              )
-            ) : null}
+            <div className="mt-4 overflow-y-auto pr-1 xl:min-h-0 xl:flex-1">
+              {state.status === "loading" || state.status === "idle" ? (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generating...</span>
+                </div>
+              ) : state.status === "success" ? (
+                state.analysis.recommendations.length > 0 ? (
+                  <ul className="space-y-3 text-sm leading-6 text-slate-600">
+                    {state.analysis.recommendations.map((recommendation, index) => (
+                      <li key={index} className="rounded-2xl bg-slate-50 px-4 py-3">
+                        <p className="font-medium text-dark">{recommendation.action}</p>
+                        <p className="mt-1 text-slate-600">{recommendation.rationale}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    The analysis didn&apos;t return specific recommendations. Try regenerating.
+                  </p>
+                )
+              ) : null}
+            </div>
           </div>
 
           {state.status === "success" && state.analysis.generatedAt ? (

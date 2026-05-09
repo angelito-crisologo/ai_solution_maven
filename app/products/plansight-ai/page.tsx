@@ -49,14 +49,16 @@ export default function PlanSightAIPage() {
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-6 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-              Premium add-on · Coming soon
+              AI Analysis
             </p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight text-dark md:text-4xl">
-              Deeper AI analysis when you need it
+              Claude-powered analysis is live
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              The free version focuses on deterministic insights. A paid AI layer will add richer
-              commentary, what-if guidance, and stakeholder-ready recommendations.
+              Every imported plan gets an AI-generated narrative summary, identified risks,
+              and prescriptive next-step recommendations — produced by Claude Haiku 4.5 and
+              cached so repeat views don&apos;t spend tokens. The Pro tier adds on-demand
+              regeneration plus advanced what-if features.
             </p>
           </div>
 
@@ -78,10 +80,10 @@ export default function PlanSightAIPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
             <h2 className="text-2xl font-semibold text-dark">What you get</h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              PlanSight AI gives PMs a working import-and-share flow: upload an MPP plan,
-              inspect the imported schedule and project health, then send stakeholders a
-              read-only view they can open directly. Deeper AI commentary and natural-language
-              recommendations are reserved for a future paid tier.
+              Upload an MPP plan, inspect the imported schedule and project health, read a
+              Claude-generated AI analysis with risks and recommendations, then send
+              stakeholders a read-only share view. The Pro tier unlocks regeneration, advanced
+              what-if analysis, and natural-language Q&amp;A.
             </p>
           </div>
         </div>
