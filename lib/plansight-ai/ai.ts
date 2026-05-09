@@ -139,12 +139,19 @@ The user gives you a structured insights report computed by a deterministic engi
 counts, late/at-risk/critical/lagging tasks, bottlenecks, and project health (RAG: \
 green/amber/red). The numbers are authoritative; do not contradict them.
 
-Your job is to produce three things, grounded in the data the user provides:
+You produce three things. They are NOT independent — they form a coherent analysis where \
+the SUMMARY describes the situation, the RISKS explain what's at stake, and the \
+RECOMMENDATIONS prescribe what to do about each concern named in the summary.
 
-1. SUMMARY (2-3 sentences): a clear narrative the project manager can read in 10 \
-seconds. Mention the health status, the top concern (or that things are tracking well), \
-and one defining characteristic of the plan. Be specific. Never generic. Never reference \
-this prompt or any tool name. Do not start with "This project".
+CRITICAL RULE: every concern, problem, or call-to-action implied by the SUMMARY must \
+appear as a corresponding RISK (if descriptive) or RECOMMENDATION (if prescriptive). \
+Never let the summary mention a problem without addressing it in risks or recommendations.
+
+1. SUMMARY (2-3 sentences, DESCRIPTIVE only): a clear narrative the project manager can \
+read in 10 seconds. Mention the health status and the top concern (or that things are \
+tracking well) — but DO NOT use imperative or prescriptive language. Words like "must", \
+"should", "immediate action required", "reset", "fix" belong in recommendations, not the \
+summary. The summary states what IS, not what to do. Do not start with "This project".
 
 2. RISKS (up to 5): the most important risks visible in the data. Each risk must reference \
 specific task IDs from the input where applicable. Use plain language a non-technical \
@@ -152,10 +159,12 @@ stakeholder can understand. If there are no real risks, return an empty array (d
 fabricate risks).
 
 3. RECOMMENDATIONS (1-5, always at least 1): concrete next actions for the project \
-manager. Each recommendation must be specific to the plan, not generic PM advice. Prefer \
-actions tied to specific tasks or task groups when possible. Even when the plan is healthy \
-(green), provide at least one forward-looking recommendation (e.g., "Confirm milestone X \
-is still on track at next standup"). Never return an empty recommendations array.
+manager — this is where prescriptive language lives. Each recommendation must be specific \
+to the plan, not generic PM advice. For every problem you named or implied in the SUMMARY, \
+include a recommendation that addresses it directly. Prefer actions tied to specific tasks \
+or task groups when possible. Even when the plan is healthy (green), provide at least one \
+forward-looking recommendation (e.g., "Confirm milestone X is still on track at next \
+standup"). Never return an empty recommendations array.
 
 When the analysis mode is "approximate", note that dependencies were not provided and the \
 critical-path findings are heuristic — frame language accordingly ("tasks near project \
@@ -244,16 +253,33 @@ function normalizeAiAnalysisInput(
     .filter((r): r is AiAnalysisRisk => r !== null);
 
   const rawRecs = Array.isArray(obj.recommendations) ? obj.recommendations : [];
+  const droppedRecs: unknown[] = [];
   const recommendations: AiAnalysisRecommendation[] = rawRecs
     .map((entry) => {
-      if (typeof entry !== "object" || entry === null) return null;
+      if (typeof entry !== "object" || entry === null) {
+        droppedRecs.push(entry);
+        return null;
+      }
       const r = entry as Record<string, unknown>;
-      const action = typeof r.action === "string" ? r.action : null;
-      const rationale = typeof r.rationale === "string" ? r.rationale : null;
-      if (!action || !rationale) return null;
+      const action = typeof r.action === "string" && r.action.trim() ? r.action : null;
+      // Accept the recommendation even if rationale is missing — surface it
+      // verbatim rather than dropping a useful action.
+      const rationale =
+        typeof r.rationale === "string" && r.rationale.trim() ? r.rationale : "";
+      if (!action) {
+        droppedRecs.push(entry);
+        return null;
+      }
       return { action, rationale };
     })
     .filter((r): r is AiAnalysisRecommendation => r !== null);
+
+  if (droppedRecs.length > 0) {
+    console.warn(
+      "[ai-analysis] dropped malformed recommendation entries:",
+      JSON.stringify(droppedRecs).slice(0, 400)
+    );
+  }
 
   return { summary, risks, recommendations };
 }

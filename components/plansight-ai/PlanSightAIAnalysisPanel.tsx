@@ -22,12 +22,20 @@ type LoadState =
   | { status: "success"; analysis: AiAnalysis; cached: boolean }
   | { status: "error"; message: string };
 
+// Preview-only escape hatch for prompt-iteration testing during validation.
+// Set NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE=true on the Vercel Preview env to
+// bypass the Pro gate and exercise fresh Claude calls. NEVER set this in
+// Production. Phase 4 (auth) replaces this with a real session.tier check.
+const DEV_BYPASS_ENABLED =
+  process.env.NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE === "true";
+
 export function PlanSightAIAnalysisPanel({
   shareId,
   selectedTaskIds,
   onSelectTasks,
-  canRegenerate = false
+  canRegenerate: canRegenerateProp = false
 }: Props) {
+  const canRegenerate = canRegenerateProp || DEV_BYPASS_ENABLED;
   const [state, setState] = useState<LoadState>({ status: "idle" });
   const [showProGate, setShowProGate] = useState(false);
 
