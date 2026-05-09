@@ -1,16 +1,32 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BrainCircuit,
   CheckCircle2,
-  Gauge,
-  LineChart,
+  Layers,
+  Rocket,
   Sparkles,
 } from "lucide-react";
 
-const metrics = [
-  { label: "Forecast confidence", value: "92%" },
-  { label: "Plan risk", value: "Low" },
-  { label: "Decisions tracked", value: "128" },
+const capabilities = [
+  {
+    icon: BrainCircuit,
+    title: "AI app development",
+    outcome:
+      "Claude-powered features, decision tools, and assistants — wired to a real workflow, not a demo.",
+  },
+  {
+    icon: Layers,
+    title: "Full-stack builds",
+    outcome:
+      "Next.js / TypeScript / Postgres products with clean data flow and room to grow into something paid.",
+  },
+  {
+    icon: Rocket,
+    title: "MVP & validation",
+    outcome:
+      "Focused builds that ship in weeks so you can put real software in front of real users fast.",
+  },
 ];
 
 export function Hero() {
@@ -66,84 +82,58 @@ export function Hero() {
           <div className="absolute -inset-4 rounded-[28px] bg-gradient-to-br from-primary/35 to-secondary/35 blur-2xl" />
           <div className="relative rounded-2xl border border-white/10 bg-white/[0.08] p-4 shadow-soft backdrop-blur">
             <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-5">
-              <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-slate-400">
-                    Featured product
-                  </p>
+                  <p className="text-sm font-medium text-slate-400">What I build</p>
                   <h2 className="mt-1 text-2xl font-semibold text-white">
-                    PlanSight AI
+                    AI products that ship and stay shipped
                   </h2>
                 </div>
-                <div className="rounded-xl bg-success/15 px-3 py-2 text-sm font-medium text-emerald-300">
-                  Live preview
-                </div>
+                <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-400/10 px-3 py-2 text-sm font-medium text-emerald-300">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                  Available
+                </span>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                {metrics.map((metric) => (
+              <div className="space-y-3">
+                {capabilities.map((capability) => (
                   <div
-                    key={metric.label}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                    key={capability.title}
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
                   >
-                    <p className="text-sm text-slate-400">{metric.label}</p>
-                    <p className="mt-2 text-2xl font-semibold text-white">
-                      {metric.value}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-white">
+                        <capability.icon
+                          aria-hidden="true"
+                          className="h-5 w-5"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white">{capability.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-300">
+                          {capability.outcome}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400">Scenario model</p>
-                    <p className="font-medium text-white">Q3 delivery plan</p>
-                  </div>
-                  <Gauge aria-hidden="true" className="h-6 w-6 text-primary" />
+              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-400">Currently shipping</p>
+                  <p className="mt-1 font-medium text-white">PlanSight AI</p>
                 </div>
-                <div className="space-y-3">
-                  {[76, 58, 89].map((width, index) => (
-                    <div key={width}>
-                      <div className="mb-2 flex justify-between text-sm text-slate-400">
-                        <span>
-                          {["Resource fit", "Schedule risk", "Outcome score"][index]}
-                        </span>
-                        <span>{width}%</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
-                          style={{ width: `${width}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_auto]">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <div className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-300">
-                    <LineChart aria-hidden="true" className="h-4 w-4" />
-                    Decision timeline
-                  </div>
-                  <div className="flex h-24 items-end gap-2">
-                    {[42, 62, 48, 72, 55, 86, 74].map((height) => (
-                      <div
-                        key={height}
-                        className="flex-1 rounded-t-lg bg-gradient-to-t from-primary to-secondary"
-                        style={{ height: `${height}%` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex min-w-32 flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-sm text-slate-400">Next action</p>
-                  <p className="mt-3 text-lg font-semibold text-white">
-                    Approve revised plan
-                  </p>
-                </div>
+                <Link
+                  href="/products/plansight-ai"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/[0.1]"
+                >
+                  See it live
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
