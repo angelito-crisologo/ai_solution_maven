@@ -209,13 +209,50 @@ const ANALYSIS_TOOL = {
   }
 };
 
-function isAiAnalysisShape(value: unknown): value is Omit<AiAnalysis, "generatedAt"> {
-  if (typeof value !== "object" || value === null) return false;
+/**
+ * Normalize Claude's tool_use input into our AiAnalysis shape. Tolerant of
+ * minor schema deviations: missing/null risks or recommendations become empty
+ * arrays. Returns null only if the response is genuinely unusable (no summary).
+ */
+function normalizeAiAnalysisInput(
+  value: unknown
+): Omit<AiAnalysis, "generatedAt"> | null {
+  if (typeof value !== "object" || value === null) return null;
   const obj = value as Record<string, unknown>;
-  if (typeof obj.summary !== "string") return false;
-  if (!Array.isArray(obj.risks)) return false;
-  if (!Array.isArray(obj.recommendations)) return false;
-  return true;
+
+  const summary = typeof obj.summary === "string" && obj.summary.trim().length > 0
+    ? obj.summary
+    : null;
+  if (!summary) return null;
+
+  const rawRisks = Array.isArray(obj.risks) ? obj.risks : [];
+  const risks: AiAnalysisRisk[] = rawRisks
+    .map((entry) => {
+      if (typeof entry !== "object" || entry === null) return null;
+      const r = entry as Record<string, unknown>;
+      const title = typeof r.title === "string" ? r.title : null;
+      const explanation = typeof r.explanation === "string" ? r.explanation : null;
+      if (!title || !explanation) return null;
+      const taskIds = Array.isArray(r.taskIds)
+        ? r.taskIds.filter((id): id is number => typeof id === "number")
+        : [];
+      return { title, explanation, taskIds };
+    })
+    .filter((r): r is AiAnalysisRisk => r !== null);
+
+  const rawRecs = Array.isArray(obj.recommendations) ? obj.recommendations : [];
+  const recommendations: AiAnalysisRecommendation[] = rawRecs
+    .map((entry) => {
+      if (typeof entry !== "object" || entry === null) return null;
+      const r = entry as Record<string, unknown>;
+      const action = typeof r.action === "string" ? r.action : null;
+      const rationale = typeof r.rationale === "string" ? r.rationale : null;
+      if (!action || !rationale) return null;
+      return { action, rationale };
+    })
+    .filter((r): r is AiAnalysisRecommendation => r !== null);
+
+  return { summary, risks, recommendations };
 }
 
 type AnthropicContentBlock =
@@ -296,17 +333,24 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
     | (AnthropicContentBlock & { type: "tool_use"; input: unknown })
     | undefined;
   if (!toolUse) {
+    console.error(
+      "[ai-analysis] no tool_use block in response. content keys:",
+      data.content.map((block) => block.type)
+    );
     throw new Error("Claude did not return a tool_use response.");
   }
 
-  if (!isAiAnalysisShape(toolUse.input)) {
+  const normalized = normalizeAiAnalysisInput(toolUse.input);
+  if (!normalized) {
+    console.error(
+      "[ai-analysis] malformed tool_use input:",
+      JSON.stringify(toolUse.input).slice(0, 800)
+    );
     throw new Error("Claude returned a malformed analysis shape.");
   }
 
   return {
-    summary: toolUse.input.summary,
-    risks: toolUse.input.risks,
-    recommendations: toolUse.input.recommendations,
+    ...normalized,
     generatedAt: new Date().toISOString()
   };
 }
