@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  ArrowLeft,
   ArrowRight,
   LayoutDashboard,
   LogOut,
@@ -45,26 +44,28 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
         aria-label="PlanSight AI navigation"
         className="relative mx-auto flex h-20 max-w-[1200px] items-center justify-between gap-4 px-6"
       >
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
-            href="/"
-            className="hidden items-center gap-1.5 text-xs font-medium text-slate-400 transition hover:text-white sm:inline-flex"
-            title="Back to AI Solution Maven"
+            href="/products/plansight-ai"
+            className="flex items-center gap-3"
+            aria-label="PlanSight AI home"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            AI Solution Maven
-          </Link>
-
-          <span className="hidden h-5 w-px bg-white/15 sm:block" aria-hidden="true" />
-
-          <Link href="/products/plansight-ai" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-300 to-primary text-sm font-bold text-slate-950 shadow-lg shadow-primary/30">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-300 to-primary text-sm font-bold text-slate-950 shadow-lg shadow-primary/30">
               <Sparkles className="h-5 w-5" />
             </span>
-            <span className="text-base font-semibold tracking-normal">
+            <span className="text-base font-semibold tracking-normal text-white">
               PlanSight AI
             </span>
           </Link>
+          <span className="hidden text-[11px] leading-tight text-slate-400 sm:inline-block">
+            Powered by{" "}
+            <Link
+              href="/"
+              className="font-medium text-slate-200 underline-offset-2 transition hover:text-white hover:underline"
+            >
+              AI Solution Maven
+            </Link>
+          </span>
         </div>
 
         <div className="hidden items-center gap-7 md:flex">
@@ -100,16 +101,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
 
         {isOpen ? (
           <div className="absolute left-6 right-6 top-[88px] z-20 rounded-2xl border border-white/10 bg-slate-950/95 p-4 shadow-soft backdrop-blur md:hidden">
-            <Link
-              href="/"
-              onClick={() => setIsOpen(false)}
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-400 transition hover:text-white"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              AI Solution Maven
-            </Link>
-
-            <div className="mt-2 grid gap-1 border-t border-white/10 pt-3">
+            <div className="grid gap-1">
               {productNav.map((item) => (
                 <Link
                   key={item.href}
@@ -132,6 +124,17 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
                 onAfter={() => setIsOpen(false)}
               />
             </div>
+
+            <p className="mt-4 border-t border-white/10 pt-4 text-center text-[11px] text-slate-400">
+              Powered by{" "}
+              <Link
+                href="/"
+                onClick={() => setIsOpen(false)}
+                className="font-medium text-slate-200 underline-offset-2 transition hover:text-white hover:underline"
+              >
+                AI Solution Maven
+              </Link>
+            </p>
           </div>
         ) : null}
       </nav>
