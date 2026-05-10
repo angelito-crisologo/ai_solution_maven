@@ -78,17 +78,45 @@ export default async function MyPlansPage() {
               <LayoutDashboard className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-micro text-cyan-400">My plans</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-micro text-cyan-400">My plans</p>
+                <span
+                  className={
+                    isPro
+                      ? "rounded border border-cyan-700 bg-cyan-900/30 px-2 py-0.5 text-micro text-cyan-300"
+                      : "rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-micro text-slate-300"
+                  }
+                >
+                  {isPro ? "Pro plan" : "Free plan"}
+                </span>
+              </div>
               <h1 className="mt-1 text-h1 text-slate-100">
                 {isPro ? "Your plan workspace" : "Your most recent plan"}
               </h1>
             </div>
           </div>
-          <p className="mt-3 max-w-2xl text-body-lg text-slate-300">
-            {isPro
-              ? "Pro keeps every plan you import. Open one to view its insights, AI analysis, or share view."
-              : "Free includes one plan slot. Importing a new plan replaces the previous one. Upgrade to Pro to keep every plan you upload."}
-          </p>
+          {isPro ? (
+            <p className="mt-3 max-w-2xl text-body-lg text-slate-300">
+              Pro keeps every plan you import. Open one to view its insights, AI
+              analysis, or share view.
+            </p>
+          ) : (
+            <div className="mt-3 max-w-2xl space-y-2 text-body-lg text-slate-300">
+              <p>
+                Free includes one plan slot. Importing a new plan replaces the
+                previous one — and{" "}
+                <span className="font-semibold text-slate-100">
+                  invalidates any share links you sent for the previous plan
+                </span>
+                . Stakeholders opening an old link will see &ldquo;This plan is
+                no longer available for viewing.&rdquo;
+              </p>
+              <p>
+                Upgrade to Pro to keep every plan you upload, with stable share
+                links that don&apos;t expire on import.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

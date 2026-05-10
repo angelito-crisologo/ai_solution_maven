@@ -33,9 +33,10 @@ type Props = {
 export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Account-scoped destinations (My plans, Sign out) live in the right-side
+  // cluster. The center nav is product-feature navigation only.
   const productNav = [
     { label: "Workspace", href: "/products/plansight-ai" },
-    ...(activated ? [{ label: "My plans", href: "/my-plans" }] : []),
     { label: "Pricing", href: "/upgrade" }
   ];
 
