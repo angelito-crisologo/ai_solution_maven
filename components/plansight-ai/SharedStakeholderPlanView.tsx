@@ -21,8 +21,8 @@ export function SharedStakeholderPlanView({ plan, metrics, share }: Props) {
   return (
     <section className="px-4 pt-2 pb-6 sm:px-6">
       <div className="mx-auto w-full max-w-[1600px]">
-        <div className="mb-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600 shadow-soft">
-          Need to report an issue, leave a comment, or request a feature?{" "}
+        <div className="mb-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-body text-slate-700">
+          Have a comment or want to flag something on this plan?{" "}
           <Link
             href={{
               pathname: "/feedback",
@@ -34,7 +34,7 @@ export function SharedStakeholderPlanView({ plan, metrics, share }: Props) {
                 planTitle: plan.title
               }
             }}
-            className="font-semibold text-primary transition hover:text-secondary"
+            className="font-semibold text-cyan-700 transition hover:text-cyan-800"
           >
             Send feedback
           </Link>

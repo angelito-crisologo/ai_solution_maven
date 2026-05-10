@@ -103,6 +103,144 @@ async function cleanupExpiredGuestPlans(client: ReturnType<typeof createSupabase
 }
 
 /**
+ * Hard-delete every plan owned by the given user. plan_tasks rows cascade.
+ * Used for the Free single-plan slot: when a Free user imports a new plan,
+ * all of their previous plans are removed before the new one is saved.
+ *
+ * Returns the number of plans deleted (0 if none existed).
+ */
+export async function deleteAllPlansForUser(userId: string): Promise<number> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data, error } = await client
+    .from("plans")
+    .delete()
+    .eq("owner_user_id", userId)
+    .select("share_id");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.length ?? 0;
+}
+
+/**
+ * List plans owned by a user, newest first. Used by /my-plans.
+ */
+export async function listPlansForUser(userId: string) {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data, error } = await client
+    .from("plans")
+    .select("share_id, title, source_format, imported_at, start_date, finish_date")
+    .eq("owner_user_id", userId)
+    .order("imported_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+/**
+ * Load a plan only when it belongs to the given user. Used by the workspace
+ * deep-link (/products/plansight-ai?shareId=...) so a stakeholder who pasted
+ * the share URL into the PM workspace can't sneak into someone else's
+ * insights/AI-analysis surface. Returns null if the plan doesn't exist or
+ * belongs to someone else.
+ */
+export async function loadPlanForOwner(shareId: string, userId: string): Promise<Plan | null> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data: planRow, error: planError } = await client
+    .from("plans")
+    .select("*")
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .maybeSingle<SharedPlanRow>();
+
+  if (planError) {
+    throw planError;
+  }
+
+  if (!planRow) {
+    return null;
+  }
+
+  const { data: taskRows, error: taskError } = await client
+    .from("plan_tasks")
+    .select("*")
+    .eq("share_id", shareId)
+    .order("task_order", { ascending: true });
+
+  if (taskError) {
+    throw taskError;
+  }
+
+  return buildPlanFromRows(planRow, (taskRows ?? []) as SharedPlanTaskRow[]);
+}
+
+/**
+ * Hard-delete a single plan by share_id and owner. owner_user_id is enforced
+ * to prevent users from deleting plans they don't own. Returns true if a
+ * row was deleted.
+ */
+export async function deletePlanForUser(shareId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data, error } = await client
+    .from("plans")
+    .delete()
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .select("share_id");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data?.length ?? 0) > 0;
+}
+
+/**
  * Persist a shared plan. Writes go through the Supabase service-role key,
  * which bypasses RLS. The anon key in the browser is read-only.
  *

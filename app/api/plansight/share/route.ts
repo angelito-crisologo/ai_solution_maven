@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getCurrentUser } from "@/lib/auth/session";
 import { generateShareId } from "@/lib/plansight-ai/share";
-import { loadSharedPlan, loadSharedPlanWithDebug, saveSharedPlan } from "@/lib/plansight-ai/share-storage";
+import {
+  deleteAllPlansForUser,
+  loadSharedPlan,
+  loadSharedPlanWithDebug,
+  saveSharedPlan
+} from "@/lib/plansight-ai/share-storage";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { MAX_PLAN_BODY_BYTES, planSchema } from "@/lib/plansight-ai/validation";
 
@@ -56,7 +63,32 @@ export async function POST(request: Request) {
     const plan = parsed.data.plan as Plan;
     const shareId = generateShareId();
 
-    await saveSharedPlan(shareId, plan);
+    const user = await getCurrentUser();
+
+    // Anonymous and signed-in-but-not-activated-for-PlanSight users both
+    // save as guest (ephemeral, no /my-plans linkage). Activated users
+    // own the plan; Free activated users get the single-plan-slot
+    // replacement on each new import.
+    let ownerUserId: string | null = null;
+    let ownerType: "guest" | "user" = "guest";
+
+    if (user) {
+      const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
+      if (activation) {
+        ownerUserId = user.id;
+        ownerType = "user";
+        if (activation.tier !== "pro") {
+          try {
+            await deleteAllPlansForUser(user.id);
+          } catch {
+            // Don't block the import on a cleanup failure; the new plan
+            // still saves and the Pro upsell prompts the user to upgrade.
+          }
+        }
+      }
+    }
+
+    await saveSharedPlan(shareId, plan, { ownerUserId, ownerType });
 
     return NextResponse.json({ shareId, ok: true });
   } catch (error) {

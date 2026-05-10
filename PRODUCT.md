@@ -162,7 +162,7 @@ Stripe Checkout for Pro upgrade, webhook updates user tier in DB, paywall on Pro
 | `INSIGHTS_SYSTEM.md` | PMP-aligned insights engine spec (CPM math, RAG thresholds) |
 | `EXCEL_EXPORT_SPEC.md` | Excel export acceptance criteria |
 | `PLANSIGHT_MIGRATION_MAP.md` | Migration map from the original `mpp_viewer` codebase |
-| `BRANDKIT.md` | Design system: colors, typography, spacing, voice |
+| `branding/<product>/BRANDKIT.md` | Per-product design system (colors, typography, voice). AISM brand at `branding/ai-solution-maven/BRANDKIT.md`. Tokens in `lib/branding/`. |
 | `AGENTS.md` | Original project instructions |
 | `IMPLEMENTATION_PLAN.md` | Phase-by-phase work tracker |
 | `README.md` | Dev environment, deployment, env vars |

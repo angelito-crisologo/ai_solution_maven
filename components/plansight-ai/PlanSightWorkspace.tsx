@@ -26,9 +26,11 @@ type QuickViewFilter = "all" | "in-progress" | "late" | "at-risk" | "critical-pa
 type TaskTreeNode = ReturnType<typeof buildTaskTree>[number];
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-dark">{value}</p>
+    <div className="rounded-md bg-slate-50 p-4">
+      <p className="text-caption text-slate-500">{label}</p>
+      <p className="mt-1 font-mono text-3xl font-semibold tabular-nums text-ink">
+        {value}
+      </p>
     </div>
   );
 }
@@ -396,19 +398,24 @@ export function PlanSightWorkspace({
   return (
     <section className={outerSectionClassName}>
       <div className={`mx-auto w-full ${containerMaxWidthClassName}`}>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-                Imported plan
+              <p className="text-micro text-cyan-700">Imported plan</p>
+              <h2 className="mt-2 text-h2 text-ink">{plan.title}</h2>
+              <p className="mt-2 text-caption text-slate-500">
+                <span className="font-mono">{plan.sourceFormat.toUpperCase()}</span>{" "}
+                uploaded{" "}
+                <span className="font-mono">{formatLongDate(plan.importedAt)}</span>
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-dark">{plan.title}</h2>
-              <p className="mt-2 text-sm text-slate-500">
-                {plan.sourceFormat.toUpperCase()} uploaded {formatLongDate(plan.importedAt)}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                {plan.startDate ? formatLongDate(plan.startDate) : "No start date"} to{" "}
-                {plan.finishDate ? formatLongDate(plan.finishDate) : "No finish date"}
+              <p className="mt-1 text-caption text-slate-500">
+                <span className="font-mono">
+                  {plan.startDate ? formatLongDate(plan.startDate) : "No start date"}
+                </span>{" "}
+                to{" "}
+                <span className="font-mono">
+                  {plan.finishDate ? formatLongDate(plan.finishDate) : "No finish date"}
+                </span>
               </p>
             </div>
 
@@ -418,7 +425,7 @@ export function PlanSightWorkspace({
                   type="button"
                   onClick={exportWorkbook}
                   disabled={isExporting}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-dark transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Download className="h-4 w-4" />
                   {isExporting ? "Exporting..." : "Export Excel"}
@@ -443,36 +450,33 @@ export function PlanSightWorkspace({
                   key={filter}
                   type="button"
                   onClick={() => setQuickViewFilter(filter)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`h-9 rounded-md px-3 text-body font-semibold transition ${
                     quickViewFilter === filter
-                      ? "bg-dark text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-navy text-slate-100"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
                   {filter === "all"
                     ? "All"
                     : filter === "in-progress"
-                      ? "In Progress"
+                      ? "In progress"
                       : filter === "late"
                         ? "Late"
                         : filter === "at-risk"
-                          ? "At Risk"
+                          ? "At risk"
                           : filter === "critical-path"
-                            ? "Critical Path"
+                            ? "Critical path"
                           : "Completed"}
                 </button>
               ))}
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm font-medium text-dark">
-                <span aria-hidden="true">👤</span>
-                Resource:
-              </label>
+              <label className="text-body font-semibold text-ink">Resource:</label>
               <select
                 value={resourceFilter}
                 onChange={(event) => setResourceFilter(event.target.value)}
-                className="min-w-[180px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-dark outline-none transition focus:border-primary"
+                className="h-9 min-w-[180px] rounded-md border border-slate-200 bg-white px-3 text-body text-ink outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
               >
                 <option value="all">All</option>
                 {resourceOptions.values.map((value) => (
@@ -490,10 +494,10 @@ export function PlanSightWorkspace({
                 key={mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`h-9 rounded-md px-3 text-body font-semibold transition ${
                   viewMode === mode
-                    ? "bg-secondary text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-cyan-700 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 {renderViewLabel(mode)}
@@ -504,7 +508,7 @@ export function PlanSightWorkspace({
 
         <div
           ref={splitRef}
-          className="mt-6 flex h-[72vh] min-h-[640px] gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft"
+          className="mt-6 flex h-[72vh] min-h-[640px] gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white"
         >
           <div
             className="min-w-0 shrink-0 h-full overflow-hidden bg-white"
@@ -528,16 +532,14 @@ export function PlanSightWorkspace({
           {!isMobilePortrait ? (
             <>
               <div
-                className={`group relative z-10 w-3 cursor-col-resize border-x border-slate-200 bg-slate-100 transition hover:bg-primary/10 ${
-                  isDraggingDivider ? "bg-primary/15" : ""
+                className={`group relative z-10 w-px cursor-col-resize bg-slate-200 transition hover:bg-cyan-400 ${
+                  isDraggingDivider ? "bg-cyan-400" : ""
                 }`}
                 onPointerDown={() => setIsDraggingDivider(true)}
                 role="separator"
                 aria-orientation="vertical"
                 aria-label="Resize task table and Gantt chart"
-              >
-                <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-300 group-hover:bg-primary" />
-              </div>
+              />
 
               <div className="min-w-0 flex-1 shrink-0 h-full overflow-hidden bg-white">
                 <GanttChart

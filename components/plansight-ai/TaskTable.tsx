@@ -209,22 +209,24 @@ export function TaskTable({
   }
 
   return (
-    <div className="flex h-full w-full max-w-full flex-col rounded-2xl border border-slate-200 bg-white shadow-soft">
+    <div className="flex h-full w-full max-w-full flex-col bg-white">
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-normal text-primary">Tasks</p>
-          <p className="text-xs text-slate-500">Task ID, name, dates, duration, predecessors, resources, and notes</p>
+          <p className="text-micro text-cyan-700">Tasks</p>
+          <p className="text-caption text-slate-500">
+            ID, name, dates, duration, predecessors, resources, and notes
+          </p>
         </div>
         <button
           type="button"
           onClick={onToggleAll}
-          className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-200"
+          className="h-8 rounded-md bg-slate-100 px-3 text-body font-semibold text-slate-700 transition hover:bg-slate-200"
         >
           {allExpanded ? "Collapse all" : "Expand all"}
         </button>
       </div>
 
-      <div className="min-w-max border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-normal text-slate-500" style={{ width: totalWidth }}>
+      <div className="min-w-max border-b border-slate-200 bg-slate-50 text-micro tracking-wider uppercase text-slate-500" style={{ width: totalWidth }}>
         <div
           className="grid h-full transition-transform"
           style={{ gridTemplateColumns, height: PLAN_TABLE_HEADER_HEIGHT, transform: `translateX(-${scrollLeft}px)` }}
@@ -278,13 +280,13 @@ export function TaskTable({
               ref={(element) => {
                 rowRefs.current[index] = element;
               }}
-              className={`grid border-b text-sm last:border-b-0 ${
-                highlighted ? "border-secondary/30 bg-secondary/5" : "border-slate-100"
+              className={`grid border-b border-l-2 text-body last:border-b-0 ${
+                highlighted ? "border-l-cyan-400 border-b-slate-200 bg-cyan-50" : "border-l-transparent border-b-slate-100"
               }`}
               style={{ gridTemplateColumns, minHeight: PLAN_TABLE_ROW_HEIGHT }}
             >
               <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2 text-slate-500">
-                <span className="whitespace-nowrap font-medium leading-5">{task.id}</span>
+                <span className="whitespace-nowrap font-mono leading-5">{task.id}</span>
               </div>
 
               <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2">
@@ -308,8 +310,8 @@ export function TaskTable({
 
                   <div className="min-w-0">
                     <div
-                      className={`whitespace-normal break-words leading-5 font-medium ${
-                        task.summary ? "text-dark" : "text-slate-700"
+                      className={`whitespace-normal break-words leading-5 ${
+                        task.summary ? "font-semibold text-ink" : "text-slate-700"
                       }`}
                     >
                       {task.name}

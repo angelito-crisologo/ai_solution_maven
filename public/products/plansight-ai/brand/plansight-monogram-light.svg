@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="PlanSight AI">
+  <title>PlanSight AI</title>
+  <rect x="0" y="0" width="180" height="180" rx="40" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <!-- Bracket (the plan frame) -->
+  <path d="M40 48 L40 132" stroke="#0B1220" stroke-width="8" stroke-linecap="round"/>
+  <path d="M40 48 L66 48" stroke="#0B1220" stroke-width="8" stroke-linecap="round"/>
+  <path d="M40 132 L66 132" stroke="#0B1220" stroke-width="8" stroke-linecap="round"/>
+  <!-- Sightline + focused eye in cyan accent -->
+  <line x1="82" y1="90" x2="124" y2="90" stroke="#0891B2" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="134" cy="90" r="14" fill="none" stroke="#0891B2" stroke-width="7"/>
+  <circle cx="134" cy="90" r="4" fill="#0891B2"/>
+</svg>
