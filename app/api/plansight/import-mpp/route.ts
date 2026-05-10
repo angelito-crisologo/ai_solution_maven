@@ -3,10 +3,12 @@ import {
   normalizeParsedProject,
   type ParsedProject
 } from "@/lib/plansight-ai/adapters/mpp";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getCurrentUser } from "@/lib/auth/session";
+import { formatBytesMb, getLimitsForTier } from "@/lib/plansight-ai/limits";
 
 export const runtime = "nodejs";
 
-const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
 const PARSER_TIMEOUT_MS = 25_000; // 25s, leaves headroom under Vercel Hobby's 10s ceiling for the typical case
 
 // MS Compound Document magic bytes — every .mpp file starts with this.
@@ -66,9 +68,29 @@ export async function POST(request: Request) {
     );
   }
 
-  if (file.size > MAX_FILE_BYTES) {
+  // Tier-aware file cap: Free / anonymous / not-activated all get the 5 MB
+  // limit; Pro gets 25 MB. The activation lookup is best-effort — if it
+  // throws we fall back to Free limits rather than blocking the upload.
+  let tier: "free" | "pro" = "free";
+  try {
+    const user = await getCurrentUser();
+    if (user) {
+      const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
+      if (activation?.tier === "pro") tier = "pro";
+    }
+  } catch {
+    // keep tier='free'
+  }
+
+  const limits = getLimitsForTier(tier);
+  if (file.size > limits.maxFileBytes) {
     return NextResponse.json(
-      { error: "File exceeds maximum size of 25 MB." },
+      {
+        error:
+          tier === "pro"
+            ? `File exceeds the Pro maximum of ${formatBytesMb(limits.maxFileBytes)}.`
+            : `File exceeds the Free maximum of ${formatBytesMb(limits.maxFileBytes)}. Upgrade to Pro for ${formatBytesMb(getLimitsForTier("pro").maxFileBytes)} uploads.`
+      },
       { status: 413 }
     );
   }

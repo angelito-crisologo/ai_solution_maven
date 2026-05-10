@@ -9,7 +9,8 @@ import {
   type UIEvent,
   type PointerEvent as ReactPointerEvent
 } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { ExplainTaskModal } from "./ExplainTaskModal";
 import type { TaskNode } from "./plansight-utils";
 import { parsePlanDate, PLAN_TABLE_HEADER_HEIGHT, PLAN_TABLE_ROW_HEIGHT } from "./plansight-utils";
 type Props = {
@@ -22,6 +23,10 @@ type Props = {
   onRowHeightsChange?: (heights: number[]) => void;
   scrollContainerRef?: (element: HTMLDivElement | null) => void;
   onScroll?: (event: UIEvent<HTMLDivElement>) => void;
+  /** Pro-only: when true, renders an Explain-with-AI icon on each row. */
+  canExplainTask?: boolean;
+  /** Required when canExplainTask is true; identifies the plan to the API. */
+  shareId?: string;
 };
 
 type ResizeState = {
@@ -97,11 +102,15 @@ export function TaskTable({
   highlightedTaskIds,
   onRowHeightsChange,
   scrollContainerRef,
-  onScroll
+  onScroll,
+  canExplainTask = false,
+  shareId
 }: Props) {
   const [columnWidths, setColumnWidths] = useState<number[]>(DEFAULT_COLUMN_WIDTHS);
   const [resizeState, setResizeState] = useState<ResizeState>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [explainingTask, setExplainingTask] = useState<{ id: number; name: string } | null>(null);
+  const explainEnabled = canExplainTask && !!shareId;
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const lastReportedHeights = useRef<number[]>([]);
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
@@ -209,6 +218,7 @@ export function TaskTable({
   }
 
   return (
+    <>
     <div className="flex h-full w-full max-w-full flex-col bg-white">
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
         <div>
@@ -308,13 +318,28 @@ export function TaskTable({
                     <span className="inline-flex h-5 w-5 shrink-0" />
                   )}
 
-                  <div className="min-w-0">
-                    <div
-                      className={`whitespace-normal break-words leading-5 ${
-                        task.summary ? "font-semibold text-ink" : "text-slate-700"
-                      }`}
-                    >
-                      {task.name}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start gap-1.5">
+                      <div
+                        className={`flex-1 whitespace-normal break-words leading-5 ${
+                          task.summary ? "font-semibold text-ink" : "text-slate-700"
+                        }`}
+                      >
+                        {task.name}
+                      </div>
+                      {explainEnabled ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExplainingTask({ id: task.id, name: task.name })
+                          }
+                          className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-cyan-50 hover:text-cyan-700"
+                          title="Explain this task with AI"
+                          aria-label={`Explain task ${task.id} with AI`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -349,5 +374,14 @@ export function TaskTable({
         </div>
       </div>
     </div>
+    {explainEnabled && explainingTask ? (
+      <ExplainTaskModal
+        shareId={shareId!}
+        taskId={explainingTask.id}
+        taskName={explainingTask.name}
+        onClose={() => setExplainingTask(null)}
+      />
+    ) : null}
+    </>
   );
 }
