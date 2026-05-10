@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  ArrowRight,
   BellRing,
+  CreditCard,
   GitCompareArrows,
   History,
   LayoutDashboard,
-  Mail,
   Palette,
   RefreshCcw,
   Users
@@ -69,9 +70,19 @@ const PRO_FEATURES = [
   }
 ];
 
-export default async function UpgradePage() {
+type CheckoutSearchParams = {
+  checkout?: string;
+};
+
+export default async function UpgradePage({
+  searchParams
+}: {
+  searchParams?: CheckoutSearchParams;
+}) {
   const user = await getCurrentUser();
   const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
+  const isPro = activation?.tier === "pro";
+  const cancelled = searchParams?.checkout === "cancelled";
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -98,29 +109,69 @@ export default async function UpgradePage() {
 
       <section className="px-6 py-12">
         <div className="mx-auto max-w-[1200px]">
-          <div className="rounded-xl border border-slate-200 bg-white p-6">
-            <p className="text-micro text-cyan-700">Self-serve checkout</p>
-            <h2 className="mt-2 text-h2 text-ink">Want Pro early? Email us.</h2>
-            <p className="mt-2 text-body-lg text-slate-700">
-              Stripe checkout ships in the next phase. Until then, email and we&apos;ll
-              flip your account to Pro manually — same features, no billing yet
-              while we validate pricing.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                href="mailto:angelito.crisologo@aisolutionmaven.com?subject=PlanSight%20AI%20Pro%20access"
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
-              >
-                <Mail className="h-4 w-4" />
-                Email for Pro access
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                Or use the contact form
-              </Link>
+          {cancelled ? (
+            <div className="mb-5 rounded-md border border-amber-300 bg-amber-50 p-4 text-body text-amber-900">
+              Checkout was cancelled. Nothing was charged. You can try again any time.
             </div>
+          ) : null}
+
+          <div className="rounded-xl border border-slate-200 bg-white p-6">
+            <p className="text-micro text-cyan-700">PlanSight Pro</p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-2">
+              <span className="text-display text-ink">$19</span>
+              <span className="text-body text-slate-600">USD / month</span>
+            </div>
+            <p className="mt-3 text-body-lg text-slate-700">
+              Cancel any time from the billing portal. All Pro features unlock
+              immediately after checkout.
+            </p>
+
+            {isPro ? (
+              <div className="mt-5">
+                <p className="mb-3 rounded-md border border-cyan-200 bg-cyan-50 p-3 text-body text-cyan-900">
+                  You&apos;re already on Pro. Manage or cancel your subscription
+                  from the billing portal.
+                </p>
+                <form action="/api/billing/portal" method="post">
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Manage billing
+                  </button>
+                </form>
+              </div>
+            ) : !user ? (
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/signin?product=plansight-ai&redirectTo=/upgrade"
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
+                >
+                  Sign up to upgrade
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  href="/signin?redirectTo=/upgrade"
+                  className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  I already have an account
+                </Link>
+              </div>
+            ) : (
+              <form action="/api/billing/checkout" method="post" className="mt-5">
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Upgrade to Pro
+                </button>
+                <p className="mt-3 text-caption text-slate-500">
+                  Secure checkout via Stripe. We never see your card details.
+                </p>
+              </form>
+            )}
           </div>
         </div>
       </section>
