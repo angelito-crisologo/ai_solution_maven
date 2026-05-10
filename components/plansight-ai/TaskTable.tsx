@@ -286,7 +286,7 @@ export function TaskTable({
               style={{ gridTemplateColumns, minHeight: PLAN_TABLE_ROW_HEIGHT }}
             >
               <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2 text-slate-500">
-                <span className="whitespace-nowrap font-mono leading-5">{`t-${String(task.id).padStart(4, "0")}`}</span>
+                <span className="whitespace-nowrap font-mono leading-5">{task.id}</span>
               </div>
 
               <div className="flex items-start overflow-hidden border-r border-slate-100 px-3 py-2">

@@ -296,7 +296,7 @@ function RisksList({
                     Tasks:{" "}
                     {taskIds.map((id, i) => (
                       <span key={id} className="font-mono text-caption text-slate-700">
-                        {`t-${String(id).padStart(4, "0")}`}
+                        {id}
                         {i < taskIds.length - 1 ? ", " : ""}
                       </span>
                     ))}
