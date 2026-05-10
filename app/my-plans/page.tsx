@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import {
   ArrowRight,
   CalendarRange,
+  CheckCircle2,
+  CreditCard,
   ExternalLink,
   FileText,
   LayoutDashboard,
@@ -43,7 +45,15 @@ function formatDate(value: string | null) {
   });
 }
 
-export default async function MyPlansPage() {
+type MyPlansSearchParams = {
+  checkout?: string;
+};
+
+export default async function MyPlansPage({
+  searchParams
+}: {
+  searchParams?: MyPlansSearchParams;
+}) {
   const user = await getCurrentUser();
   if (!user) {
     redirect("/signin?product=plansight-ai&redirectTo=/my-plans");
@@ -61,6 +71,7 @@ export default async function MyPlansPage() {
   const isPro = activation.tier === "pro";
   const visiblePlans = plans;
   const hiddenCount = isPro ? 0 : Math.max(0, plans.length - 1);
+  const checkoutSuccess = searchParams?.checkout === "success";
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -73,27 +84,40 @@ export default async function MyPlansPage() {
 
       <section className="bg-navy text-slate-100">
         <div className="mx-auto max-w-[1200px] px-6 py-12">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-slate-800 bg-navy-800 text-cyan-400">
-              <LayoutDashboard className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-micro text-cyan-400">My plans</p>
-                <span
-                  className={
-                    isPro
-                      ? "rounded border border-cyan-700 bg-cyan-900/30 px-2 py-0.5 text-micro text-cyan-300"
-                      : "rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-micro text-slate-300"
-                  }
-                >
-                  {isPro ? "Pro plan" : "Free plan"}
-                </span>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-slate-800 bg-navy-800 text-cyan-400">
+                <LayoutDashboard className="h-5 w-5" />
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-micro text-cyan-400">My plans</p>
+                  <span
+                    className={
+                      isPro
+                        ? "rounded border border-cyan-700 bg-cyan-900/30 px-2 py-0.5 text-micro text-cyan-300"
+                        : "rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-micro text-slate-300"
+                    }
+                  >
+                    {isPro ? "Pro plan" : "Free plan"}
+                  </span>
+                </div>
+                <h1 className="mt-1 text-h1 text-slate-100">
+                  {isPro ? "Your plan workspace" : "Your most recent plan"}
+                </h1>
               </div>
-              <h1 className="mt-1 text-h1 text-slate-100">
-                {isPro ? "Your plan workspace" : "Your most recent plan"}
-              </h1>
             </div>
+            {isPro ? (
+              <form action="/api/billing/portal" method="post">
+                <button
+                  type="submit"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  Manage billing
+                </button>
+              </form>
+            ) : null}
           </div>
           {isPro ? (
             <p className="mt-3 max-w-2xl text-body-lg text-slate-300">
@@ -122,6 +146,20 @@ export default async function MyPlansPage() {
 
       <section className="px-6 py-12">
         <div className="mx-auto max-w-[1200px]">
+          {checkoutSuccess ? (
+            <div className="mb-6 flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-body text-emerald-900">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+              <div>
+                <p className="font-semibold">Welcome to PlanSight Pro.</p>
+                <p className="mt-0.5 text-emerald-800">
+                  Your subscription is active. Multi-plan retention, regenerate,
+                  and the rest of Pro are unlocked. Manage billing any time from
+                  the button above.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-body text-slate-600">
               {plans.length === 0
