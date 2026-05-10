@@ -139,4 +139,14 @@ theme: {
 ---
 
 ## 12. Product Alignment
-All products (e.g., PlanSight AI) must follow the same design system to maintain brand consistency.
+
+This brand kit defines AI Solution Maven — the portfolio site and parent brand.
+Each product under AISM owns its **own** brand kit and may diverge in colors,
+typography, and voice. See `/branding/<product>/BRANDKIT.md`.
+
+The AISM brand applies only to AISM-scoped pages (Home, Work, Services,
+Products listing, Projects, Contact, Feedback) and to the small
+"Powered by AI Solution Maven" attribution that appears inside product
+headers.
+
+Implementation tokens live at `/lib/branding/aism.ts`.

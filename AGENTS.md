@@ -1,10 +1,17 @@
 # AI Solution Maven — Project Instructions
 
 ## 🔗 Reference
-Follow the design system defined in:
-👉 BRANDKIT.md  [oai_citation:0‡BRANDKIT.md](sediment://file_00000000089c71fa9897deed9b160949)
+Per-product brand kits live under `/branding/<product>/BRANDKIT.md`. Each
+product owns its own brand and may diverge from AISM in colors, typography,
+and voice.
 
-This is the single source of truth for:
+- AISM (parent / portfolio): `/branding/ai-solution-maven/BRANDKIT.md`
+- PlanSight AI: `/branding/plansight-ai/BRANDKIT.md`
+
+Implementation tokens for code: `/lib/branding/<product>.ts`. Web-served
+assets: `/public/products/<product>/`.
+
+The brand kit is the single source of truth for:
 - Colors
 - Typography
 - Spacing
@@ -52,7 +59,7 @@ The website must:
 
 # 🎨 DESIGN RULES (STRICT)
 
-- Follow BRANDKIT.md exactly
+- Follow the relevant `branding/<product>/BRANDKIT.md` exactly for the page being built (AISM brand for portfolio pages, product brand for product pages)
 - Use defined color palette and gradient
 - Use Inter font (primary)
 - Use consistent spacing (8pt grid)
