@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
@@ -6,6 +7,7 @@ import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysis
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 import { getCurrentUser } from "@/lib/auth/session";
+import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
 
 export const metadata: Metadata = {
   title: "PlanSight AI",
@@ -22,8 +24,45 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PlanSightAIPage() {
+type Props = {
+  searchParams?: { shareId?: string };
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function PlanSightAIPage({ searchParams }: Props) {
   const user = await getCurrentUser();
+
+  // Deep-link from /my-plans: when ?shareId is present, server-side load the
+  // plan for the signed-in owner and pre-populate the workspace. Stakeholders
+  // who pasted the share URL can't reach this branch — loadPlanForOwner
+  // requires owner_user_id to match. Mismatches redirect to /my-plans.
+  let initialPlan = null;
+  let initialShareId: string | null = null;
+  const requestedShareId = searchParams?.shareId?.trim();
+  if (requestedShareId) {
+    if (!user) {
+      redirect(
+        `/signin?redirectTo=${encodeURIComponent(
+          `/products/plansight-ai?shareId=${requestedShareId}`
+        )}`
+      );
+    }
+    try {
+      const owned = await loadPlanForOwner(requestedShareId, user.id);
+      if (!owned) {
+        redirect("/my-plans?error=not-found");
+      }
+      initialPlan = owned;
+      initialShareId = requestedShareId;
+    } catch (error) {
+      // Don't crash the page on a transient load failure — fall through to
+      // the empty-state workspace and let the user re-import.
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[plansight-ai] failed to load owned plan", error);
+      }
+    }
+  }
 
   return (
     <main className="min-h-screen bg-light">
@@ -49,6 +88,8 @@ export default async function PlanSightAIPage() {
       <PlanSightProductShell
         signedIn={!!user}
         userTier={user?.tier ?? null}
+        initialPlan={initialPlan}
+        initialShareId={initialShareId}
       />
 
       <section className="px-6 py-20">

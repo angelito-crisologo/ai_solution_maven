@@ -25,14 +25,28 @@ type Props = {
   signedIn: boolean;
   /** Tier from the public.users row. null when anonymous. */
   userTier: "free" | "pro" | null;
+  /** Pre-loaded plan from a /my-plans deep-link. When set, the shell starts
+   * already showing the workspace + view tabs instead of the empty-state
+   * import form. */
+  initialPlan?: Plan | null;
+  initialShareId?: string | null;
 };
 
-export function PlanSightProductShell({ signedIn, userTier }: Props) {
+export function PlanSightProductShell({
+  signedIn,
+  userTier,
+  initialPlan = null,
+  initialShareId = null
+}: Props) {
   const isAnonymous = !signedIn;
   const isFreeSignedIn = signedIn && userTier !== "pro";
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [shareId, setShareId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("Ready to import an MPP plan.");
+  const [plan, setPlan] = useState<Plan | null>(initialPlan);
+  const [shareId, setShareId] = useState<string | null>(initialShareId);
+  const [status, setStatus] = useState<string>(
+    initialPlan
+      ? `Loaded ${initialPlan.title}.`
+      : "Ready to import an MPP plan."
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<"plan" | "project-insights" | "ai-analysis">("plan");

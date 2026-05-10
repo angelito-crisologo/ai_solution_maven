@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarRange, FileText, LayoutDashboard, Lock, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarRange,
+  ExternalLink,
+  FileText,
+  LayoutDashboard,
+  Lock,
+  Sparkles
+} from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButton";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listPlansForUser } from "@/lib/plansight-ai/share-storage";
 
@@ -95,6 +104,8 @@ export default async function MyPlansPage() {
             <ul className="space-y-3">
               {visiblePlans.map((plan, index) => {
                 const lockedForFree = !isPro && index > 0;
+                const workspaceHref = `/products/plansight-ai?shareId=${plan.share_id}`;
+                const sharePath = `/share/${plan.share_id}`;
                 return (
                   <li
                     key={plan.share_id}
@@ -104,9 +115,18 @@ export default async function MyPlansPage() {
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-dark">
-                          {plan.title}
-                        </p>
+                        {lockedForFree ? (
+                          <p className="truncate text-base font-semibold text-dark">
+                            {plan.title}
+                          </p>
+                        ) : (
+                          <Link
+                            href={workspaceHref}
+                            className="block truncate text-base font-semibold text-dark transition hover:text-primary"
+                          >
+                            {plan.title}
+                          </Link>
+                        )}
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                           <span className="inline-flex items-center gap-1">
                             <CalendarRange className="h-3.5 w-3.5" />
@@ -131,12 +151,26 @@ export default async function MyPlansPage() {
                             Pro only
                           </span>
                         ) : (
-                          <Link
-                            href={`/share/${plan.share_id}`}
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                          >
-                            Open share view
-                          </Link>
+                          <>
+                            <Link
+                              href={workspaceHref}
+                              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
+                            >
+                              Open
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                            <CopyShareLinkButton sharePath={sharePath} />
+                            <Link
+                              href={sharePath}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                              title="Open the read-only stakeholder view in a new tab"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              Stakeholder view
+                            </Link>
+                          </>
                         )}
                       </div>
                     </div>

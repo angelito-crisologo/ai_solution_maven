@@ -163,6 +163,53 @@ export async function listPlansForUser(userId: string) {
 }
 
 /**
+ * Load a plan only when it belongs to the given user. Used by the workspace
+ * deep-link (/products/plansight-ai?shareId=...) so a stakeholder who pasted
+ * the share URL into the PM workspace can't sneak into someone else's
+ * insights/AI-analysis surface. Returns null if the plan doesn't exist or
+ * belongs to someone else.
+ */
+export async function loadPlanForOwner(shareId: string, userId: string): Promise<Plan | null> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data: planRow, error: planError } = await client
+    .from("plans")
+    .select("*")
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .maybeSingle<SharedPlanRow>();
+
+  if (planError) {
+    throw planError;
+  }
+
+  if (!planRow) {
+    return null;
+  }
+
+  const { data: taskRows, error: taskError } = await client
+    .from("plan_tasks")
+    .select("*")
+    .eq("share_id", shareId)
+    .order("task_order", { ascending: true });
+
+  if (taskError) {
+    throw taskError;
+  }
+
+  return buildPlanFromRows(planRow, (taskRows ?? []) as SharedPlanTaskRow[]);
+}
+
+/**
  * Hard-delete a single plan by share_id and owner. owner_user_id is enforced
  * to prevent users from deleting plans they don't own. Returns true if a
  * row was deleted.
