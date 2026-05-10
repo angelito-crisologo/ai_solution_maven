@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { computePlanContentHash, generateAiAnalysis } from "@/lib/plansight-ai/ai";
 import {
@@ -41,7 +42,10 @@ export async function POST(request: Request) {
 
     if (force && !DEV_BYPASS_ENABLED) {
       const user = await getCurrentUser();
-      if (!user || user.tier !== "pro") {
+      const activation = user
+        ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT)
+        : null;
+      if (!activation || activation.tier !== "pro") {
         return NextResponse.json(
           { error: "Regenerate is a Pro feature. Upgrade to re-run the AI analysis." },
           { status: 403 }

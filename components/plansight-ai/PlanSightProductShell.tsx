@@ -20,11 +20,14 @@ import { PlanSightProjectInsightsPanel } from "./PlanSightProjectInsightsPanel";
 import { PlanSightAIAnalysisPanel } from "./PlanSightAIAnalysisPanel";
 
 type Props = {
-  /** True when a Supabase auth session exists. Drives the sign-in CTA vs the
-   * Pro upsell banner on plan replacement. */
+  /** True when a Supabase auth session exists. Used to distinguish "no
+   * session" (sign-up CTA) from "signed in but not activated for PlanSight"
+   * (one-click activate CTA). */
   signedIn: boolean;
-  /** Tier from the public.users row. null when anonymous. */
-  userTier: "free" | "pro" | null;
+  /** True when the user has activated PlanSight specifically. */
+  plansightActivated: boolean;
+  /** Tier on the activation row when activated. null otherwise. */
+  plansightTier: "free" | "pro" | null;
   /** Pre-loaded plan from a /my-plans deep-link. When set, the shell starts
    * already showing the workspace + view tabs instead of the empty-state
    * import form. */
@@ -34,12 +37,14 @@ type Props = {
 
 export function PlanSightProductShell({
   signedIn,
-  userTier,
+  plansightActivated,
+  plansightTier,
   initialPlan = null,
   initialShareId = null
 }: Props) {
   const isAnonymous = !signedIn;
-  const isFreeSignedIn = signedIn && userTier !== "pro";
+  const isSignedInNotActivated = signedIn && !plansightActivated;
+  const isFreeActivated = plansightActivated && plansightTier !== "pro";
   const [plan, setPlan] = useState<Plan | null>(initialPlan);
   const [shareId, setShareId] = useState<string | null>(initialShareId);
   const [status, setStatus] = useState<string>(
@@ -129,11 +134,12 @@ export function PlanSightProductShell({
         // Ignore storage failures and fall back to the database.
       }
 
-      // Free signed-in users have a single-plan slot. When they import a new
+      // Free activated users have a single-plan slot. When they import a new
       // plan, the previous one is hard-deleted server-side and we surface a
-      // Pro upsell banner. Anonymous users had no persistent plan to begin
-      // with; Pro users keep all plans, so the banner doesn't fire for them.
-      if (isFreeSignedIn && plan && plan.title !== payload.plan.title) {
+      // Pro upsell banner. Anonymous and not-activated users had no
+      // persistent plan to begin with; Pro users keep all plans, so the
+      // banner doesn't fire for them.
+      if (isFreeActivated && plan && plan.title !== payload.plan.title) {
         setReplacedPlanTitle(plan.title);
       } else {
         setReplacedPlanTitle(null);
@@ -266,21 +272,42 @@ export function PlanSightProductShell({
                       Want this plan still here next time?
                     </p>
                     <p className="mt-0.5 text-sm leading-6 text-slate-600">
-                      Sign in to keep your most recent plan, its insights, and AI analysis
-                      ready when you return. Upgrade to Pro to keep every plan you upload.
+                      Sign up for PlanSight to keep your most recent plan, its insights, and
+                      AI analysis ready when you return. Upgrade to Pro to keep every plan
+                      you upload.
                     </p>
                   </div>
                 </div>
                 <Link
-                  href="/signin?redirectTo=/products/plansight-ai"
+                  href="/signin?product=plansight-ai&redirectTo=/products/plansight-ai"
                   className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
                 >
-                  Sign in
+                  Sign up for PlanSight
                 </Link>
               </div>
             ) : null}
 
-            {isFreeSignedIn && replacedPlanTitle ? (
+            {isSignedInNotActivated ? (
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-dark">
+                      You&apos;re already signed in. Activate PlanSight in one click.
+                    </p>
+                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
+                      Adds PlanSight to your account so this plan, its insights, and AI
+                      analysis stay accessible when you return.
+                    </p>
+                  </div>
+                </div>
+                <ActivatePlanSightInlineButton />
+              </div>
+            ) : null}
+
+            {isFreeActivated && replacedPlanTitle ? (
               <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-secondary/30 bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
                   <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
@@ -341,7 +368,7 @@ export function PlanSightProductShell({
             <PlanSightAIAnalysisPanel
               shareId={share.shareId}
               selectedTaskIds={selectedTaskIds}
-              canRegenerate={userTier === "pro"}
+              canRegenerate={plansightTier === "pro"}
               onSelectTasks={(taskIds) => {
                 setSelectedTaskIds(new Set(taskIds));
                 setActiveTab("plan");
@@ -406,5 +433,41 @@ function TabButton({
       {icon}
       {label}
     </button>
+  );
+}
+
+function ActivatePlanSightInlineButton() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/plansight/activate", { method: "POST" });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Failed to activate PlanSight.");
+      }
+      window.location.reload();
+    } catch (err) {
+      setBusy(false);
+      setError(err instanceof Error ? err.message : "Failed to activate PlanSight.");
+    }
+  };
+
+  return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={busy}
+        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+        {busy ? "Activating..." : "Activate PlanSight"}
+      </button>
+      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+    </div>
   );
 }

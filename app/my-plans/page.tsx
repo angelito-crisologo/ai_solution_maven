@@ -11,8 +11,9 @@ import {
   Sparkles
 } from "lucide-react";
 import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
 import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButton";
+import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listPlansForUser } from "@/lib/plansight-ai/share-storage";
 
@@ -37,18 +38,32 @@ function formatDate(value: string | null) {
 export default async function MyPlansPage() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/signin?redirectTo=/my-plans");
+    redirect("/signin?product=plansight-ai&redirectTo=/my-plans");
+  }
+
+  const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
+  if (!activation) {
+    // Signed in but never activated PlanSight (e.g. signed up via another
+    // product). Send them to the product page where the Activate button
+    // lives.
+    redirect("/products/plansight-ai");
   }
 
   const plans = await listPlansForUser(user.id);
-  const isPro = user.tier === "pro";
+  const isPro = activation.tier === "pro";
   const visiblePlans = plans;
   const hiddenCount = isPro ? 0 : Math.max(0, plans.length - 1);
 
   return (
     <main className="min-h-screen bg-light">
+      <PlanSightNavbar
+        signedIn
+        activated
+        tier={activation.tier}
+        signupRedirectTo="/my-plans"
+      />
+
       <section className="bg-dark text-white">
-        <Navbar />
         <div className="mx-auto max-w-[1200px] px-6 py-12">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-white">

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
 import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysisTeaser";
+import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
 
@@ -32,6 +33,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PlanSightAIPage({ searchParams }: Props) {
   const user = await getCurrentUser();
+  const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
 
   // Deep-link from /my-plans: when ?shareId is present, server-side load the
   // plan for the signed-in owner and pre-populate the workspace. Stakeholders
@@ -43,7 +45,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
   if (requestedShareId) {
     if (!user) {
       redirect(
-        `/signin?redirectTo=${encodeURIComponent(
+        `/signin?product=plansight-ai&redirectTo=${encodeURIComponent(
           `/products/plansight-ai?shareId=${requestedShareId}`
         )}`
       );
@@ -66,8 +68,14 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen bg-light">
+      <PlanSightNavbar
+        signedIn={!!user}
+        activated={!!activation}
+        tier={activation?.tier ?? null}
+        signupRedirectTo="/products/plansight-ai"
+      />
+
       <section className="bg-dark text-white">
-        <Navbar />
         <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-14">
           <div>
             <p className="text-sm font-semibold uppercase tracking-normal text-emerald-300">
@@ -87,7 +95,8 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
 
       <PlanSightProductShell
         signedIn={!!user}
-        userTier={user?.tier ?? null}
+        plansightActivated={!!activation}
+        plansightTier={activation?.tier ?? null}
         initialPlan={initialPlan}
         initialShareId={initialShareId}
       />

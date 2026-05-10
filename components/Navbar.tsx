@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
-import { NavbarAuthControls } from "@/components/auth/NavbarAuthControls";
 
 const navItems = [
   { label: "Work", href: "/#work" },
@@ -44,7 +43,12 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <NavbarAuthControls variant="desktop" />
+          <Link
+            href="/#work"
+            className="rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-white transition hover:border-white/25 hover:bg-white/5"
+          >
+            View Work
+          </Link>
           <Link
             href="/contact"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-dark transition hover:bg-slate-100"
@@ -83,7 +87,13 @@ export function Navbar() {
               ))}
             </div>
             <div className="mt-4 grid gap-3 border-t border-white/10 pt-4">
-              <NavbarAuthControls variant="mobile" onAfter={() => setIsOpen(false)} />
+              <Link
+                href="/#work"
+                onClick={() => setIsOpen(false)}
+                className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white"
+              >
+                View Work
+              </Link>
               <Link
                 href="/contact"
                 onClick={() => setIsOpen(false)}

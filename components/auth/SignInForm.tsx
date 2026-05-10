@@ -6,6 +6,10 @@ import { createSupabaseBrowserClient } from "@/lib/auth/supabase-browser";
 
 type Props = {
   redirectTo: string;
+  /** Product slug to record an activation for after the magic link is
+   * confirmed. Empty string means the user is signing in to the AISM
+   * portfolio directly without a specific product context. */
+  product?: string;
 };
 
 type Status =
@@ -14,7 +18,7 @@ type Status =
   | { kind: "sent"; email: string }
   | { kind: "error"; message: string };
 
-export function SignInForm({ redirectTo }: Props) {
+export function SignInForm({ redirectTo, product = "" }: Props) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
@@ -29,6 +33,9 @@ export function SignInForm({ redirectTo }: Props) {
       const supabase = createSupabaseBrowserClient();
       const callbackUrl = new URL("/auth/callback", window.location.origin);
       callbackUrl.searchParams.set("redirectTo", redirectTo);
+      if (product) {
+        callbackUrl.searchParams.set("product", product);
+      }
 
       const { error } = await supabase.auth.signInWithOtp({
         email: trimmed,

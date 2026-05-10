@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { generateShareId } from "@/lib/plansight-ai/share";
 import {
@@ -64,25 +65,30 @@ export async function POST(request: Request) {
 
     const user = await getCurrentUser();
 
-    // Free single-plan slot: hard-delete every previous plan this user owns
-    // before saving the new one. plan_tasks cascades, and any old share_id
-    // becomes a 404 (which the stakeholder loader renders as a friendly
-    // "plan no longer available" message). Pro users skip this step and
-    // accumulate plans in /my-plans.
-    if (user && user.tier !== "pro") {
-      try {
-        await deleteAllPlansForUser(user.id);
-      } catch {
-        // Don't block the import on a cleanup failure; the new plan still
-        // saves and Pro upsell prompts the user to upgrade. Logged via the
-        // outer try/catch if it happens to throw before this point.
+    // Anonymous and signed-in-but-not-activated-for-PlanSight users both
+    // save as guest (ephemeral, no /my-plans linkage). Activated users
+    // own the plan; Free activated users get the single-plan-slot
+    // replacement on each new import.
+    let ownerUserId: string | null = null;
+    let ownerType: "guest" | "user" = "guest";
+
+    if (user) {
+      const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
+      if (activation) {
+        ownerUserId = user.id;
+        ownerType = "user";
+        if (activation.tier !== "pro") {
+          try {
+            await deleteAllPlansForUser(user.id);
+          } catch {
+            // Don't block the import on a cleanup failure; the new plan
+            // still saves and the Pro upsell prompts the user to upgrade.
+          }
+        }
       }
     }
 
-    await saveSharedPlan(shareId, plan, {
-      ownerUserId: user?.id ?? null,
-      ownerType: user ? "user" : "guest"
-    });
+    await saveSharedPlan(shareId, plan, { ownerUserId, ownerType });
 
     return NextResponse.json({ shareId, ok: true });
   } catch (error) {

@@ -13,12 +13,16 @@ import {
 } from "lucide-react";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
+import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
+import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Upgrade to Pro",
   description: "Upgrade PlanSight AI to Pro for the multi-plan dashboard and daily-PM features."
 };
+
+export const dynamic = "force-dynamic";
 
 const PRO_FEATURES = [
   {
@@ -58,11 +62,20 @@ const PRO_FEATURES = [
   }
 ];
 
-export default function UpgradePage() {
+export default async function UpgradePage() {
+  const user = await getCurrentUser();
+  const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
+
   return (
     <main className="min-h-screen bg-light">
+      <PlanSightNavbar
+        signedIn={!!user}
+        activated={!!activation}
+        tier={activation?.tier ?? null}
+        signupRedirectTo="/upgrade"
+      />
+
       <section className="bg-dark text-white">
-        <Navbar />
         <div className="mx-auto max-w-[1200px] px-6 py-14">
           <p className="text-sm font-semibold uppercase tracking-normal text-amber-300">
             PlanSight AI Pro
