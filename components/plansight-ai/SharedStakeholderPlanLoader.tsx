@@ -150,17 +150,15 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
   if (state.kind === "not-found") {
     return (
       <section className="px-6 py-10">
-        <div className="mx-auto w-full max-w-[1600px] rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-soft">
-          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+        <div className="mx-auto w-full max-w-[1600px] rounded-xl border border-slate-200 bg-white p-10 text-center">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-md bg-slate-100 text-slate-500">
             <FileX2 className="h-7 w-7" />
           </div>
-          <p className="mt-5 text-sm font-semibold uppercase tracking-normal text-primary">
-            Shared plan
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-dark">
+          <p className="mt-5 text-micro text-cyan-700">Shared plan</p>
+          <h2 className="mt-2 text-h1 text-ink">
             This plan is no longer available for viewing
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-slate-600">
+          <p className="mx-auto mt-3 max-w-xl text-body-lg text-slate-700">
             The project manager may have replaced this plan with a newer version or
             removed it. Reach out to them for an up-to-date share link.
           </p>
@@ -179,20 +177,18 @@ export function SharedStakeholderPlanLoader({ shareId }: Props) {
 
   return (
     <section className="px-6 py-10">
-      <div className="mx-auto w-full max-w-[1600px] rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
+      <div className="mx-auto w-full max-w-[1600px] rounded-xl border border-slate-200 bg-white p-8">
         <div className="flex items-center gap-3">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <Loader2 className="h-5 w-5 animate-spin text-cyan-700" />
           <div>
-            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-              Shared plan
-            </p>
-            <h2 className="text-2xl font-semibold text-dark">Loading stakeholder view</h2>
+            <p className="text-micro text-cyan-700">Shared plan</p>
+            <h2 className="text-h2 text-ink">Loading stakeholder view</h2>
           </div>
         </div>
-        <p className="mt-4 text-sm leading-6 text-slate-600">{message}</p>
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          If this was just published, wait a moment and refresh. Guest plans stay available for
-          30 days.
+        <p className="mt-4 text-body text-slate-700">{message}</p>
+        <p className="mt-2 text-body text-slate-500">
+          If this was just published, wait a moment and refresh. Guest plans stay
+          available for 30 days.
         </p>
       </div>
     </section>
