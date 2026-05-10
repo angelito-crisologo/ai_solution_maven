@@ -210,6 +210,54 @@ export async function loadPlanForOwner(shareId: string, userId: string): Promise
 }
 
 /**
+ * Find every plan owned by the given user that matches the title exactly.
+ * Used by the duplicate-name detection on import: when a Pro user imports
+ * a plan whose title matches one already on their account, we surface a
+ * "replace existing?" prompt before saving. Match is case-sensitive and
+ * trims whitespace at the edges so " Plan A " collides with "Plan A".
+ *
+ * Returns an array sorted newest first so the caller can show the most
+ * recent in the conflict UI when there are multiple existing dupes.
+ */
+export async function findPlansByTitleForUser(
+  userId: string,
+  title: string
+): Promise<{ shareId: string; title: string; importedAt: string }[]> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const trimmed = title.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const { data, error } = await client
+    .from("plans")
+    .select("share_id, title, imported_at")
+    .eq("owner_user_id", userId)
+    .eq("title", trimmed)
+    .order("imported_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((row) => ({
+    shareId: row.share_id,
+    title: row.title,
+    importedAt: row.imported_at
+  }));
+}
+
+/**
  * Hard-delete a single plan by share_id and owner. owner_user_id is enforced
  * to prevent users from deleting plans they don't own. Returns true if a
  * row was deleted.

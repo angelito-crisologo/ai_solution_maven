@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { generateShareId } from "@/lib/plansight-ai/share";
 import {
   deleteAllPlansForUser,
+  deletePlanForUser,
+  findPlansByTitleForUser,
   loadSharedPlan,
   loadSharedPlanWithDebug,
   saveSharedPlan
@@ -15,7 +17,8 @@ import { MAX_PLAN_BODY_BYTES, planSchema } from "@/lib/plansight-ai/validation";
 export const runtime = "nodejs";
 
 const postBodySchema = z.object({
-  plan: planSchema
+  plan: planSchema,
+  replaceExisting: z.boolean().optional()
 });
 
 function formatError(error: unknown) {
@@ -61,6 +64,7 @@ export async function POST(request: Request) {
     }
 
     const plan = parsed.data.plan as Plan;
+    const replaceExisting = parsed.data.replaceExisting === true;
     const shareId = generateShareId();
 
     const user = await getCurrentUser();
@@ -68,16 +72,19 @@ export async function POST(request: Request) {
     // Anonymous and signed-in-but-not-activated-for-PlanSight users both
     // save as guest (ephemeral, no /my-plans linkage). Activated users
     // own the plan; Free activated users get the single-plan-slot
-    // replacement on each new import.
+    // replacement on each new import. Pro users may hit the duplicate-
+    // title flow below.
     let ownerUserId: string | null = null;
     let ownerType: "guest" | "user" = "guest";
+    let isProActivated = false;
 
     if (user) {
       const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
       if (activation) {
         ownerUserId = user.id;
         ownerType = "user";
-        if (activation.tier !== "pro") {
+        isProActivated = activation.tier === "pro";
+        if (!isProActivated) {
           try {
             await deleteAllPlansForUser(user.id);
           } catch {
@@ -85,6 +92,34 @@ export async function POST(request: Request) {
             // still saves and the Pro upsell prompts the user to upgrade.
           }
         }
+      }
+    }
+
+    // Pro path: detect duplicate-title plans on this user's account.
+    // Free users don't reach here (the deleteAllPlansForUser above already
+    // cleared their slot), and guests have no /my-plans listing to dupe.
+    if (ownerUserId && isProActivated) {
+      const dupes = await findPlansByTitleForUser(ownerUserId, plan.title);
+
+      if (dupes.length > 0 && !replaceExisting) {
+        return NextResponse.json(
+          {
+            error: "duplicate_title",
+            duplicates: dupes,
+            existingShareId: dupes[0].shareId,
+            existingTitle: dupes[0].title
+          },
+          { status: 409 }
+        );
+      }
+
+      if (dupes.length > 0 && replaceExisting) {
+        // Delete every dupe, not just the first — handles the case where
+        // the user already had multiple plans with the same title before
+        // we shipped this check.
+        await Promise.all(
+          dupes.map((dupe) => deletePlanForUser(dupe.shareId, ownerUserId!))
+        );
       }
     }
 
@@ -96,6 +131,47 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: message ? `Failed to store shared plan: ${message}` : "Failed to store shared plan."
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Delete a single plan owned by the current user. Used by the Remove
+ * button on /my-plans. Returns 200 + { ok: true } when a row was deleted,
+ * 404 when the plan doesn't exist or doesn't belong to this user.
+ */
+export async function DELETE(request: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "You must be signed in to remove plans." },
+        { status: 401 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const shareId = url.searchParams.get("shareId");
+    if (!shareId) {
+      return NextResponse.json({ error: "Missing shareId." }, { status: 400 });
+    }
+
+    const deleted = await deletePlanForUser(shareId, user.id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Plan not found or not owned by this user." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = formatError(error);
+    return NextResponse.json(
+      {
+        error: message ? `Failed to remove plan: ${message}` : "Failed to remove plan."
       },
       { status: 500 }
     );

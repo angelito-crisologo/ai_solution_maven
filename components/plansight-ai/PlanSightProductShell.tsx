@@ -4,6 +4,7 @@ import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  AlertTriangle,
   BarChart3,
   Check,
   KeyRound,
@@ -60,6 +61,15 @@ export function PlanSightProductShell({
   // their slot. Triggers the Pro-upsell banner. Anonymous users don't keep
   // any plan across imports, so this never fires for them.
   const [replacedPlanTitle, setReplacedPlanTitle] = useState<string | null>(null);
+  // Duplicate-title prompt state. Pro users hit a 409 from /api/plansight/share
+  // when a plan with the same title already exists; we cache the parsed Plan
+  // so the modal Confirm can re-POST without re-uploading the .mpp.
+  const [pendingDuplicate, setPendingDuplicate] = useState<{
+    plan: Plan;
+    fileName: string;
+    existingTitle: string;
+    duplicateCount: number;
+  } | null>(null);
   const importedPlanTabsRef = useRef<HTMLElement | null>(null);
 
   const metrics = useMemo(() => (plan ? summarizePlan(plan) : null), [plan]);
@@ -77,6 +87,83 @@ export function PlanSightProductShell({
       importedPlanTabsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [plan, shareId]);
+
+  /**
+   * POST the parsed Plan to /api/plansight/share. Returns the new shareId on
+   * success, the 409 conflict body when a Pro user already owns a plan
+   * with the same title, or throws on any other failure. The caller decides
+   * whether to surface a duplicate-replace prompt or treat it as a success.
+   */
+  async function persistPlan(
+    parsedPlan: Plan,
+    fileName: string,
+    options: { replaceExisting?: boolean } = {}
+  ): Promise<
+    | { kind: "saved"; shareId: string }
+    | { kind: "duplicate"; existingTitle: string; duplicateCount: number }
+  > {
+    const saveResponse = await fetch("/api/plansight/share", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        plan: parsedPlan,
+        replaceExisting: options.replaceExisting === true
+      })
+    });
+
+    const savePayload = (await saveResponse.json().catch(() => ({}))) as {
+      shareId?: string;
+      error?: string;
+      existingTitle?: string;
+      duplicates?: { shareId: string; title: string; importedAt: string }[];
+    };
+
+    if (saveResponse.status === 409 && savePayload.error === "duplicate_title") {
+      return {
+        kind: "duplicate",
+        existingTitle: savePayload.existingTitle ?? parsedPlan.title,
+        duplicateCount: savePayload.duplicates?.length ?? 1
+      };
+    }
+
+    if (!saveResponse.ok || !savePayload.shareId) {
+      throw new Error(
+        savePayload.error || "Imported the plan, but failed to persist it to the database."
+      );
+    }
+
+    const newShareId = savePayload.shareId;
+
+    try {
+      window.localStorage.setItem(
+        `plansight-share:${newShareId}`,
+        JSON.stringify({ plan: parsedPlan })
+      );
+    } catch {
+      // Ignore storage failures and fall back to the database.
+    }
+
+    // Free activated users have a single-plan slot. When they import a new
+    // plan, the previous one is hard-deleted server-side and we surface a
+    // Pro upsell banner. Anonymous and not-activated users had no
+    // persistent plan to begin with; Pro users keep all plans, so the
+    // banner doesn't fire for them.
+    if (isFreeActivated && plan && plan.title !== parsedPlan.title) {
+      setReplacedPlanTitle(plan.title);
+    } else {
+      setReplacedPlanTitle(null);
+    }
+
+    setPlan(parsedPlan);
+    setShareId(newShareId);
+    setSelectedTaskIds(new Set());
+    setStatus(`Imported ${fileName} and saved it.`);
+    setActiveTab("plan");
+
+    return { kind: "saved", shareId: newShareId };
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -101,55 +188,26 @@ export function PlanSightProductShell({
       const payload = (await response.json()) as { plan: Plan } | { error?: string };
 
       if (!response.ok || !("plan" in payload)) {
-        throw new Error("error" in payload && payload.error ? payload.error : "Failed to import the MPP file.");
-      }
-
-      const saveResponse = await fetch("/api/plansight/share", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          plan: payload.plan
-        })
-      });
-
-      const savePayload = (await saveResponse.json().catch(() => ({}))) as {
-        shareId?: string;
-        error?: string;
-      };
-
-      if (!saveResponse.ok || !savePayload.shareId) {
-        throw new Error(savePayload.error || "Imported the plan, but failed to persist it to the database.");
-      }
-
-      const newShareId = savePayload.shareId;
-
-      try {
-        window.localStorage.setItem(
-          `plansight-share:${newShareId}`,
-          JSON.stringify({ plan: payload.plan })
+        throw new Error(
+          "error" in payload && payload.error
+            ? payload.error
+            : "Failed to import the MPP file."
         );
-      } catch {
-        // Ignore storage failures and fall back to the database.
       }
 
-      // Free activated users have a single-plan slot. When they import a new
-      // plan, the previous one is hard-deleted server-side and we surface a
-      // Pro upsell banner. Anonymous and not-activated users had no
-      // persistent plan to begin with; Pro users keep all plans, so the
-      // banner doesn't fire for them.
-      if (isFreeActivated && plan && plan.title !== payload.plan.title) {
-        setReplacedPlanTitle(plan.title);
-      } else {
-        setReplacedPlanTitle(null);
-      }
+      const result = await persistPlan(payload.plan, selectedFile.name);
 
-      setPlan(payload.plan);
-      setShareId(newShareId);
-      setSelectedTaskIds(new Set());
-      setStatus(`Imported ${selectedFile.name} and saved it.`);
-      setActiveTab("plan");
+      if (result.kind === "duplicate") {
+        setPendingDuplicate({
+          plan: payload.plan,
+          fileName: selectedFile.name,
+          existingTitle: result.existingTitle,
+          duplicateCount: result.duplicateCount
+        });
+        setStatus(
+          `A plan named "${result.existingTitle}" already exists on your account.`
+        );
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to import the MPP file.");
     } finally {
@@ -157,8 +215,100 @@ export function PlanSightProductShell({
     }
   }
 
+  async function confirmReplaceDuplicate() {
+    if (!pendingDuplicate) return;
+    setIsSubmitting(true);
+    setStatus(`Replacing "${pendingDuplicate.existingTitle}"...`);
+    try {
+      const result = await persistPlan(
+        pendingDuplicate.plan,
+        pendingDuplicate.fileName,
+        { replaceExisting: true }
+      );
+      if (result.kind === "duplicate") {
+        // Shouldn't happen — server should accept replaceExisting=true. If
+        // it does, surface as an error rather than looping the modal.
+        setStatus(
+          "The server still reports a duplicate. Refresh the page and try again."
+        );
+        return;
+      }
+      setPendingDuplicate(null);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to replace existing plan.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function cancelDuplicate() {
+    setPendingDuplicate(null);
+    setStatus("Import cancelled. Rename the .mpp file or remove the existing plan first.");
+  }
+
   return (
     <>
+      {pendingDuplicate ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="duplicate-plan-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/70 px-4"
+        >
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-modal">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-700">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
+              <div className="flex-1">
+                <h3 id="duplicate-plan-title" className="text-h3 text-ink">
+                  Plan with that name already exists
+                </h3>
+                <p className="mt-2 text-body text-slate-700">
+                  You already have{" "}
+                  {pendingDuplicate.duplicateCount > 1
+                    ? `${pendingDuplicate.duplicateCount} plans`
+                    : "a plan"}{" "}
+                  named{" "}
+                  <span className="font-mono text-body text-ink">
+                    {pendingDuplicate.existingTitle}
+                  </span>
+                  . Importing will replace{" "}
+                  {pendingDuplicate.duplicateCount > 1 ? "them all" : "it"} with this
+                  new version.
+                </p>
+                <p className="mt-2 text-body text-amber-800">
+                  Existing share links for the previous version will stop working —
+                  stakeholders will see &ldquo;This plan is no longer available for
+                  viewing.&rdquo;
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={cancelDuplicate}
+                className="inline-flex h-10 items-center rounded-md border border-slate-200 bg-white px-4 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel import
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={confirmReplaceDuplicate}
+                className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800 disabled:opacity-60"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
+                {isSubmitting ? "Replacing..." : "Replace existing plan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <section className="px-6 py-10">
         <div className="mx-auto max-w-[1200px] rounded-xl border border-slate-200 bg-white p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
