@@ -43,25 +43,25 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
     <header className="border-b border-slate-800 bg-navy text-slate-100">
       <nav
         aria-label="PlanSight AI"
-        className="relative mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-6"
+        className="relative mx-auto flex h-20 max-w-[1200px] items-center justify-between gap-4 px-6"
       >
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/products/plansight-ai"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-3"
             aria-label="PlanSight AI home"
           >
             <Image
               src="/products/plansight-ai/brand/plansight-monogram-dark.svg"
               alt=""
-              width={28}
-              height={28}
+              width={36}
+              height={36}
               priority
             />
-            <span className="font-semibold tracking-tight">
-              <span className="text-slate-400">Plan</span>
+            <span className="text-lg font-semibold tracking-tight leading-none">
+              <span className="text-slate-300">Plan</span>
               <span className="text-cyan-400">Sight</span>
-              <span className="ml-1 text-xs text-slate-500 tracking-wider uppercase">
+              <span className="ml-1.5 text-caption text-slate-500 tracking-wider uppercase">
                 AI
               </span>
             </span>
@@ -109,7 +109,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
         </button>
 
         {isOpen ? (
-          <div className="absolute left-6 right-6 top-[72px] z-20 rounded-xl border border-slate-800 bg-navy-800 p-4 shadow-modal md:hidden">
+          <div className="absolute left-6 right-6 top-[88px] z-20 rounded-xl border border-slate-800 bg-navy-800 p-4 shadow-modal md:hidden">
             <div className="grid gap-1">
               {productNav.map((item) => (
                 <Link
@@ -207,17 +207,27 @@ function PlanSightAuthCTA({
     return <ActivatePlanSightButton variant={variant} onAfter={onAfter} />;
   }
 
-  // Anonymous — show Sign up CTA
+  // Anonymous — show Sign in (existing users) + Sign up (new PlanSight users)
   const signupHref = `/signin?product=plansight-ai&redirectTo=${encodeURIComponent(signupRedirectTo)}`;
+  const signinHref = `/signin?redirectTo=${encodeURIComponent(signupRedirectTo)}`;
   return (
-    <Link
-      href={signupHref}
-      onClick={onAfter}
-      className={`${base} bg-cyan-400 font-semibold text-ink transition hover:bg-cyan-300`}
-    >
-      Sign up for PlanSight
-      <ArrowRight className="h-4 w-4" />
-    </Link>
+    <>
+      <Link
+        href={signinHref}
+        onClick={onAfter}
+        className={`${base} text-slate-300 transition hover:text-slate-100`}
+      >
+        Sign in
+      </Link>
+      <Link
+        href={signupHref}
+        onClick={onAfter}
+        className={`${base} bg-cyan-400 font-semibold text-ink transition hover:bg-cyan-300`}
+      >
+        Sign up for PlanSight
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </>
   );
 }
 

@@ -34,15 +34,16 @@ export default async function SharePage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white">
-      <header className="h-14 border-b border-slate-200 bg-white px-6">
-        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between">
-          <Link href="/products/plansight-ai" aria-label="PlanSight AI">
+      <header className="h-16 border-b border-slate-200 bg-white px-6">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-4">
+          <Link href="/products/plansight-ai" aria-label="PlanSight AI" className="shrink-0">
             <Image
               src="/products/plansight-ai/brand/plansight-logo-primary.svg"
               alt="PlanSight AI"
-              width={140}
-              height={28}
+              width={180}
+              height={36}
               priority
+              className="h-8 w-auto sm:h-9"
             />
           </Link>
           <Link

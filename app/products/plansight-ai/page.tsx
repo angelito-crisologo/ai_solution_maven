@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysisTeaser";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
@@ -88,7 +89,15 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
       <section className="bg-navy text-slate-100">
         <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <p className="text-micro text-cyan-400">Product</p>
+            <Image
+              src="/products/plansight-ai/brand/plansight-logo-primary-dark.svg"
+              alt="PlanSight AI"
+              width={280}
+              height={56}
+              priority
+              className="h-12 w-auto md:h-14"
+            />
+            <p className="mt-6 text-micro text-cyan-400">AI project-plan analysis</p>
             <h1 className="mt-3 text-display text-slate-100">
               Your project plan, finally legible.
             </h1>
