@@ -16,10 +16,21 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/products/plansight-ai",
   },
+  // PlanSight pages override the AISM-wide icons set in app/layout.tsx so
+  // browser tabs and the iOS home screen show the PlanSight mark instead.
+  icons: {
+    icon: [
+      { url: "/products/plansight-ai/favicon.ico", sizes: "any" },
+      { url: "/products/plansight-ai/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/products/plansight-ai/favicon-16.png", type: "image/png", sizes: "16x16" }
+    ],
+    apple: { url: "/products/plansight-ai/favicon-180.png", sizes: "180x180" }
+  },
+  manifest: "/products/plansight-ai/site.webmanifest",
   openGraph: {
-    title: "PlanSight AI",
+    title: "PlanSight AI — your project plan, finally legible.",
     description:
-      "Your project plan, finally legible. Upload an .mpp file, review the critical path, share a stakeholder-ready view.",
+      "Upload an .mpp file, review the critical path, share a stakeholder-ready view.",
     url: "/products/plansight-ai",
   },
 };

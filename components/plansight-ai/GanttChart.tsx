@@ -214,17 +214,17 @@ export function GanttChart({
   }, []);
 
   return (
-    <div className="flex h-full w-full max-w-full flex-col rounded-2xl border border-slate-200 bg-white shadow-soft">
+    <div className="flex h-full w-full max-w-full flex-col bg-white">
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold uppercase tracking-normal text-secondary">
-            Gantt
-          </p>
-          <p className="truncate text-xs text-slate-500">
-            {formatShortDate(start.toISOString())} - {formatShortDate(end.toISOString())}
+          <p className="truncate text-micro text-cyan-700">Gantt</p>
+          <p className="truncate text-caption text-slate-500">
+            <span className="font-mono">
+              {formatShortDate(start.toISOString())} – {formatShortDate(end.toISOString())}
+            </span>
           </p>
         </div>
-        <div className="max-w-[8.5rem] truncate rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+        <div className="max-w-[8.5rem] truncate rounded-md bg-slate-100 px-2 py-1 text-caption font-semibold text-slate-700">
           {viewMode === "day" ? "Daily view" : viewMode === "week" ? "Weekly view" : "Monthly view"}
         </div>
       </div>
@@ -239,7 +239,7 @@ export function GanttChart({
               {buckets.map((bucket) => (
                 <div
                   key={bucket.toISOString()}
-                  className="flex h-full items-center justify-center border-r border-slate-200 px-1 text-center text-[11px] font-semibold uppercase tracking-normal text-slate-500"
+                  className="flex h-full items-center justify-center border-r border-slate-200 px-1 text-center font-mono text-caption text-slate-500"
                   style={{ width, height: PLAN_GANTT_HEADER_HEIGHT }}
                 >
                   {viewMode === "day" ? (
@@ -336,16 +336,16 @@ export function GanttChart({
                 const highlighted = highlightedTaskIds?.has(task.id) ?? false;
                 const barColor =
                   (task.percentComplete ?? 0) >= 100
-                    ? "bg-emerald-500"
+                    ? "bg-emerald-400"
                     : task.summary
-                      ? "bg-primary"
-                      : "bg-secondary";
+                      ? "bg-slate-700"
+                      : "bg-cyan-400";
 
                 return (
                   <div
                     key={task.id}
                     className={`absolute left-0 right-0 box-border border-b ${
-                      highlighted ? "border-secondary/40 bg-secondary/5" : "border-slate-100"
+                      highlighted ? "border-cyan-200 bg-cyan-50" : "border-slate-100"
                     }`}
                     style={{ top: rowTop, height: rowHeight }}
                   >
@@ -353,7 +353,7 @@ export function GanttChart({
                       task.milestone ? (
                         <div
                           className={`absolute h-3.5 w-3.5 rotate-45 rounded-[2px] ${
-                            highlighted ? "ring-2 ring-secondary/40 ring-offset-1 ring-offset-transparent" : ""
+                            highlighted ? "ring-2 ring-cyan-400 ring-offset-1 ring-offset-transparent" : ""
                           } ${barColor}`}
                           style={{
                             left: bar.left + bar.barWidth / 2 - 7,
@@ -364,8 +364,8 @@ export function GanttChart({
                         />
                       ) : (
                         <div
-                          className={`absolute rounded-md ${barColor} ${
-                            highlighted ? "ring-2 ring-secondary/40 ring-offset-1 ring-offset-transparent" : ""
+                          className={`absolute rounded-[3px] ${barColor} ${
+                            highlighted ? "ring-2 ring-cyan-400 ring-offset-1 ring-offset-transparent" : ""
                           }`}
                           style={{
                             left: bar.left,

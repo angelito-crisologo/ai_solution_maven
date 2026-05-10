@@ -42,9 +42,9 @@ export function PlanSightProjectInsightsPanel({
   const health = useMemo(() => {
     if (isApproximateMode) {
       return {
-        label: "Project Health (Timeline-Based)",
-        tone: "bg-amber-50 text-amber-800 border-amber-100",
-        banner: "⚠️ Limited Analysis Mode (No Task Dependencies)",
+        label: "Approximate (no dependencies)",
+        tone: "bg-amber-50 text-amber-800 border-amber-200",
+        banner: "Limited analysis: no task dependencies in source plan",
         explanation:
           "Task dependencies are not available. Showing approximate impact analysis."
       };
@@ -52,9 +52,9 @@ export function PlanSightProjectInsightsPanel({
 
     if (analysis.summary.healthStatus === "red") {
       return {
-        label: "Red",
-        tone: "bg-red-50 text-red-700 border-red-100",
-        banner: "Project health is red",
+        label: "At risk",
+        tone: "bg-red-50 text-red-800 border-red-200",
+        banner: "Project health: at risk",
         explanation:
           "The plan has critical lateness or a critical-path delay and needs immediate attention."
       };
@@ -62,18 +62,18 @@ export function PlanSightProjectInsightsPanel({
 
     if (analysis.summary.healthStatus === "amber") {
       return {
-        label: "Amber",
-        tone: "bg-amber-50 text-amber-800 border-amber-100",
-        banner: "Project health is amber",
+        label: "Watch",
+        tone: "bg-amber-50 text-amber-800 border-amber-200",
+        banner: "Project health: watch",
         explanation:
           "The plan has near-term risk or lagging work and should be monitored closely."
       };
     }
 
     return {
-      label: "Green",
-      tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      banner: "Project health is green",
+      label: "On track",
+      tone: "bg-emerald-50 text-emerald-800 border-emerald-200",
+      banner: "Project health: on track",
       explanation: "The plan is tracking cleanly with no major late or critical-path issues."
     };
   }, [analysis.summary.healthStatus, isApproximateMode]);
@@ -180,8 +180,8 @@ export function PlanSightProjectInsightsPanel({
     const items: string[] = [];
 
     if (isApproximateMode) {
-      items.push("⚠️ Limited Analysis Mode (No Task Dependencies).");
-      items.push("Task dependencies are not available. Showing approximate impact analysis.");
+      items.push("Limited analysis: no task dependencies in source plan.");
+      items.push("Showing approximate impact analysis based on task position in the timeline.");
       items.push("Tasks near project completion are more likely to impact delivery if delayed.");
     }
 
@@ -193,13 +193,13 @@ export function PlanSightProjectInsightsPanel({
     }
     if (isApproximateMode) {
       if (visibleCriticalTasks.length > 0) {
-        items.push(`🔥 ${visibleCriticalTasks.length} potential critical tasks detected near project completion.`);
+        items.push(`${visibleCriticalTasks.length} potential critical tasks detected near project completion.`);
       }
     } else if (criticalPathCount > 0) {
       const criticalPathMessage =
-        `🔥 ${criticalPathCount} critical paths detected with a total of ${visibleCriticalTasks.length} tasks.` +
+        `${criticalPathCount} critical path${criticalPathCount === 1 ? "" : "s"} detected with ${visibleCriticalTasks.length} task${visibleCriticalTasks.length === 1 ? "" : "s"} total.` +
         (criticalPathCount > 1
-          ? " ⚠️ Multiple critical paths detected. This increases project risk and reduces scheduling flexibility."
+          ? " Multiple critical paths increase project risk and reduce scheduling flexibility."
           : "");
       items.push(criticalPathMessage);
     }
@@ -229,7 +229,7 @@ export function PlanSightProjectInsightsPanel({
     <section className="px-6 py-10">
       <div className="mx-auto max-w-[1200px] space-y-6">
         <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-          <div className={`rounded-2xl border p-6 shadow-soft ${health.tone}`}>
+          <div className={`rounded-md border p-6 ${health.tone}`}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-normal">Project Insights</p>
@@ -252,7 +252,7 @@ export function PlanSightProjectInsightsPanel({
                 return (
                   <div
                     key={card.label}
-                    className={`flex h-full min-h-[120px] flex-col rounded-2xl border p-4 shadow-soft ${card.tone}`}
+                    className={`flex h-full min-h-[120px] flex-col rounded-md border p-4 ${card.tone}`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-normal">{card.label}</p>
@@ -268,20 +268,20 @@ export function PlanSightProjectInsightsPanel({
 
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
+          <div className="rounded-md border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-3">
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
                 <Link2 className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-normal text-secondary">
+                <p className="text-sm font-semibold uppercase tracking-normal text-cyan-700">
                   Stakeholder sharing
                 </p>
                 <h3 className="text-lg font-semibold text-dark">Read-only plan link</h3>
               </div>
             </div>
 
-            <div className="mt-3 rounded-2xl bg-dark p-3 text-white">
+            <div className="mt-3 rounded-md bg-navy p-3 text-white">
               <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
                 {share.shareUrl}
               </div>
@@ -289,7 +289,7 @@ export function PlanSightProjectInsightsPanel({
                 <button
                   type="button"
                   onClick={copyShareLink}
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   {copyState === "copied" ? "Copied" : "Copy"}
@@ -298,7 +298,7 @@ export function PlanSightProjectInsightsPanel({
                   href={share.shareUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open
@@ -306,19 +306,19 @@ export function PlanSightProjectInsightsPanel({
               </div>
             </div>
 
-            <div className="mt-3 rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+            <div className="mt-3 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-600">
               Share a read-only version of this project without exposing the editing surface.
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+        <div className="rounded-md border border-slate-200 bg-white p-6">
           <p className="text-sm font-semibold uppercase tracking-normal text-dark">Key insights</p>
           <ul className="mt-4 space-y-3">
             {keyInsights.map((insight) => (
               <li
                 key={insight}
-                className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700"
+                className="rounded-md border border-slate-100 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700"
               >
                 {insight}
               </li>
@@ -449,7 +449,7 @@ function InsightSection({
   emptyText: string;
 }) {
   return (
-    <details open className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+    <details open className="rounded-md border border-slate-200 bg-white p-6">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ function InsightSection({
         {items.length > 0 ? (
           items
         ) : (
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</div>
+          <div className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</div>
         )}
       </div>
     </details>
@@ -492,7 +492,7 @@ function CriticalTasksCard({
   showPaths: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+    <div className="rounded-md border border-slate-200 bg-white p-6">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-slate-500" />
         <p className="text-sm font-semibold uppercase tracking-normal text-dark">{title}</p>
@@ -512,18 +512,18 @@ function CriticalTasksCard({
             <div className="mt-4 max-h-[180px] space-y-3 overflow-y-auto pr-1">
               {paths.length > 0 ? (
                 paths.map((path) => (
-                  <div key={path.key} className="rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                  <div key={path.key} className="rounded-md bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
                     <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">
                       Path {path.pathIndex}
                     </p>
-                    <p className="mt-1 font-medium text-dark">{path.label}</p>
+                    <p className="mt-1 font-semibold text-dark">{path.label}</p>
                     <p className="mt-1 text-xs font-semibold uppercase tracking-normal text-slate-500">
                       Duration: {path.durationDays} days
                     </p>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <div className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-500">
                   No ordered critical path sequence could be computed from the imported schedule.
                 </div>
               )}
@@ -536,7 +536,7 @@ function CriticalTasksCard({
         {tasks.length > 0 ? (
           tasks
         ) : (
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</div>
+          <div className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</div>
         )}
       </div>
     </div>
@@ -585,12 +585,12 @@ function TaskRow({
       type="button"
       onClick={() => onSelect(task.id)}
       title={`${task.name} · ${detail} · ${meta}`}
-      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-        selected ? "border-secondary/40 bg-secondary/5" : "border-slate-100 bg-slate-50 hover:bg-slate-100"
+      className={`w-full rounded-md border px-4 py-3 text-left transition ${
+        selected ? "border-cyan-200 bg-cyan-50" : "border-slate-100 bg-slate-50 hover:bg-slate-100"
       }`}
     >
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-medium text-dark">
+        <p className="font-semibold text-dark">
           {task.id} · {task.name}
         </p>
         <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">{meta}</p>

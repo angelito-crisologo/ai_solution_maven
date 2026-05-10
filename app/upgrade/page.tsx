@@ -17,7 +17,16 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Upgrade to Pro",
-  description: "PlanSight Pro for PMs who live in project plans every day."
+  description: "PlanSight Pro for PMs who live in project plans every day.",
+  icons: {
+    icon: [
+      { url: "/products/plansight-ai/favicon.ico", sizes: "any" },
+      { url: "/products/plansight-ai/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/products/plansight-ai/favicon-16.png", type: "image/png", sizes: "16x16" }
+    ],
+    apple: { url: "/products/plansight-ai/favicon-180.png", sizes: "180x180" }
+  },
+  manifest: "/products/plansight-ai/site.webmanifest"
 };
 
 export const dynamic = "force-dynamic";
