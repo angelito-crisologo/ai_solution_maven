@@ -40,7 +40,8 @@ async function syncSubscriptionToTier(sub: Stripe.Subscription): Promise<void> {
   await upsertBillingFromSubscription(customerId, {
     subscriptionId: sub.id,
     status: sub.status,
-    currentPeriodEnd: periodEndIso(sub)
+    currentPeriodEnd: periodEndIso(sub),
+    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false
   });
 
   const userId = await getUserIdForCustomer(customerId);

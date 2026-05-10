@@ -46,6 +46,7 @@ export type UserBilling = {
   stripeSubscriptionId: string | null;
   subscriptionStatus: string | null;
   currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
 };
 
 type UserBillingRow = {
@@ -54,7 +55,11 @@ type UserBillingRow = {
   stripe_subscription_id: string | null;
   subscription_status: string | null;
   current_period_end: string | null;
+  cancel_at_period_end: boolean | null;
 };
+
+const BILLING_SELECT =
+  "user_id, stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end, cancel_at_period_end";
 
 function rowToBilling(row: UserBillingRow): UserBilling {
   return {
@@ -62,7 +67,8 @@ function rowToBilling(row: UserBillingRow): UserBilling {
     stripeCustomerId: row.stripe_customer_id,
     stripeSubscriptionId: row.stripe_subscription_id,
     subscriptionStatus: row.subscription_status,
-    currentPeriodEnd: row.current_period_end
+    currentPeriodEnd: row.current_period_end,
+    cancelAtPeriodEnd: row.cancel_at_period_end ?? false
   };
 }
 
@@ -83,9 +89,7 @@ export async function getUserBilling(userId: string): Promise<UserBilling | null
   const client = requireServiceClient();
   const { data, error } = await client
     .from("user_billing")
-    .select(
-      "user_id, stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end"
-    )
+    .select(BILLING_SELECT)
     .eq("user_id", userId)
     .maybeSingle<UserBillingRow>();
 
@@ -104,9 +108,7 @@ export async function getUserBillingByCustomerId(
   const client = requireServiceClient();
   const { data, error } = await client
     .from("user_billing")
-    .select(
-      "user_id, stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end"
-    )
+    .select(BILLING_SELECT)
     .eq("stripe_customer_id", customerId)
     .maybeSingle<UserBillingRow>();
 
@@ -159,6 +161,7 @@ type SubscriptionState = {
   subscriptionId: string | null;
   status: string | null;
   currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
 };
 
 /**
@@ -193,6 +196,7 @@ export async function upsertBillingFromSubscription(
       stripe_subscription_id: state.subscriptionId,
       subscription_status: state.status,
       current_period_end: state.currentPeriodEnd,
+      cancel_at_period_end: state.cancelAtPeriodEnd,
       updated_at: new Date().toISOString()
     })
     .eq("user_id", existing.user_id);

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CalendarRange,
   CheckCircle2,
+  CircleAlert,
   CreditCard,
   ExternalLink,
   FileText,
@@ -16,6 +17,7 @@ import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserBilling } from "@/lib/billing/stripe";
 import { listPlansForUser } from "@/lib/plansight-ai/share-storage";
 
 export const metadata: Metadata = {
@@ -72,6 +74,19 @@ export default async function MyPlansPage({
   const visiblePlans = plans;
   const hiddenCount = isPro ? 0 : Math.max(0, plans.length - 1);
   const checkoutSuccess = searchParams?.checkout === "success";
+
+  // Pull billing only for Pro users — that's the only state where the
+  // cancellation-pending banner is meaningful.
+  const billing = isPro ? await getUserBilling(user.id) : null;
+  const cancelPending =
+    !!billing?.cancelAtPeriodEnd && !!billing.currentPeriodEnd;
+  const cancelDate = cancelPending
+    ? new Date(billing!.currentPeriodEnd!).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })
+    : null;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -156,6 +171,30 @@ export default async function MyPlansPage({
                   and the rest of Pro are unlocked. Manage billing any time from
                   the button above.
                 </p>
+              </div>
+            </div>
+          ) : null}
+
+          {cancelPending ? (
+            <div className="mb-6 flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-body text-amber-900">
+              <CircleAlert className="mt-0.5 h-5 w-5 text-amber-600" />
+              <div className="flex-1">
+                <p className="font-semibold">Cancellation scheduled.</p>
+                <p className="mt-0.5 text-amber-800">
+                  Pro is active until{" "}
+                  <span className="font-mono">{cancelDate}</span>. After that,
+                  this account drops to Free and only your most recent plan
+                  stays accessible. Changed your mind?
+                </p>
+                <form action="/api/billing/portal" method="post" className="mt-3">
+                  <button
+                    type="submit"
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-amber-300 bg-white px-3 text-caption font-semibold text-amber-900 transition hover:border-amber-400 hover:bg-amber-100"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Reactivate subscription
+                  </button>
+                </form>
               </div>
             </div>
           ) : null}

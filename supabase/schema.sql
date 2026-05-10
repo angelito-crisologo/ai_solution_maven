@@ -195,8 +195,12 @@ create table if not exists public.user_billing (
   stripe_subscription_id text unique,
   subscription_status text,
   current_period_end timestamptz,
+  cancel_at_period_end boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+alter table public.user_billing
+  add column if not exists cancel_at_period_end boolean not null default false;
 
 create index if not exists user_billing_customer_idx
   on public.user_billing (stripe_customer_id);
