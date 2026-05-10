@@ -12,6 +12,7 @@ import {
   Lock
 } from "lucide-react";
 import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButton";
+import { DeletePlanButton } from "@/components/plansight-ai/DeletePlanButton";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
@@ -270,6 +271,10 @@ export default async function MyPlansPage({
                               <ExternalLink className="h-3.5 w-3.5" />
                               Stakeholder view
                             </Link>
+                            <DeletePlanButton
+                              shareId={plan.share_id}
+                              title={plan.title}
+                            />
                           </>
                         )}
                       </div>
