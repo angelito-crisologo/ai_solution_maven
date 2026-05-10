@@ -160,18 +160,17 @@ export function PlanSightProductShell({
   return (
     <>
       <section className="px-6 py-10">
-        <div className="mx-auto max-w-[1200px] rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+        <div className="mx-auto max-w-[1200px] rounded-xl border border-slate-200 bg-white p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-                Import MPP
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-dark">
+              <p className="text-micro text-cyan-700">Import plan</p>
+              <h2 className="mt-2 text-h2 text-ink">
                 Upload a Microsoft Project file
               </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                This version supports `.mpp` files only. The file is parsed into the PlanSight
-                schema, then rendered as an analyzed plan with a stakeholder share view.
+              <p className="mt-2 max-w-2xl text-body text-slate-700">
+                <span className="font-mono text-body">.mpp</span> files only. The file is
+                parsed into the PlanSight schema, then rendered as an analyzed plan with a
+                stakeholder share view.
               </p>
             </div>
 
@@ -180,25 +179,25 @@ export function PlanSightProductShell({
                 type="file"
                 accept=".mpp"
                 onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-dark file:px-4 file:py-2 file:text-sm file:font-medium file:text-white"
+                className="block w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-body text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-navy file:px-4 file:py-2 file:text-body file:font-semibold file:text-slate-100"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Upload className="h-4 w-4" />
                 )}
-                {isSubmitting ? "Importing..." : "Import MPP"}
+                {isSubmitting ? "Importing..." : "Import plan"}
               </button>
             </form>
           </div>
 
-          <p className="mt-4 text-sm text-slate-500">{status}</p>
-          <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-caption text-slate-500">{status}</p>
+          <div className="mt-4 rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-body text-slate-700">
             Need to report an issue or request a feature?{" "}
             <Link
               href={{
@@ -210,7 +209,7 @@ export function PlanSightProductShell({
                   planTitle: plan?.title ?? ""
                 }
               }}
-              className="font-semibold text-primary transition hover:text-secondary"
+              className="font-semibold text-cyan-700 transition hover:text-cyan-800"
             >
               Send feedback
             </Link>
@@ -227,60 +226,60 @@ export function PlanSightProductShell({
             aria-label="Plan view switcher"
           >
             <div className="mx-auto flex max-w-[1200px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <div className="flex items-center gap-2 text-body">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
                   <Check className="h-3.5 w-3.5" />
                 </span>
-                <span className="font-semibold text-dark">Plan loaded</span>
+                <span className="font-semibold text-ink">Plan loaded</span>
                 <span className="text-slate-500">— pick a view</span>
               </div>
 
               <div
                 role="tablist"
                 aria-label="Plan views"
-                className="inline-flex flex-wrap items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1.5 shadow-soft"
+                className="inline-flex flex-wrap items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-1"
               >
                 <TabButton
                   active={activeTab === "plan"}
                   onClick={() => setActiveTab("plan")}
                   icon={<List className="h-4 w-4" />}
-                  label="Imported plan"
+                  label="Plan"
                 />
                 <TabButton
                   active={activeTab === "project-insights"}
                   onClick={() => setActiveTab("project-insights")}
                   icon={<BarChart3 className="h-4 w-4" />}
-                  label="Project Insights"
+                  label="Insights"
                 />
                 <TabButton
                   active={activeTab === "ai-analysis"}
                   onClick={() => setActiveTab("ai-analysis")}
                   icon={<Sparkles className="h-4 w-4" />}
-                  label="AI Analysis"
+                  label="AI analysis"
                 />
               </div>
             </div>
 
             {isAnonymous ? (
-              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
                     <KeyRound className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-dark">
+                    <p className="text-h3 text-ink">
                       Want this plan still here next time?
                     </p>
-                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
-                      Sign up for PlanSight to keep your most recent plan, its insights, and
-                      AI analysis ready when you return. Upgrade to Pro to keep every plan
-                      you upload.
+                    <p className="mt-1 text-body text-slate-700">
+                      Sign up for PlanSight to keep your most recent plan, its insights,
+                      and AI analysis ready when you return. Upgrade to Pro to keep every
+                      plan you upload.
                     </p>
                   </div>
                 </div>
                 <Link
                   href="/signin?product=plansight-ai&redirectTo=/products/plansight-ai"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
+                  className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                 >
                   Sign up for PlanSight
                 </Link>
@@ -288,16 +287,16 @@ export function PlanSightProductShell({
             ) : null}
 
             {isSignedInNotActivated ? (
-              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-dark">
+                    <p className="text-h3 text-ink">
                       You&apos;re already signed in. Activate PlanSight in one click.
                     </p>
-                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 text-body text-slate-700">
                       Adds PlanSight to your account so this plan, its insights, and AI
                       analysis stay accessible when you return.
                     </p>
@@ -308,16 +307,16 @@ export function PlanSightProductShell({
             ) : null}
 
             {isFreeActivated && replacedPlanTitle ? (
-              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-2xl border border-secondary/30 bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-dark">
+                    <p className="text-h3 text-ink">
                       Replaced your previous plan: &ldquo;{replacedPlanTitle}&rdquo;
                     </p>
-                    <p className="mt-0.5 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 text-body text-slate-700">
                       Free includes one plan slot, so the previous plan was deleted —
                       any share link you sent for it no longer works. Upgrade to Pro to
                       keep every plan you upload, with a full multi-plan dashboard.
@@ -327,15 +326,14 @@ export function PlanSightProductShell({
                 <div className="flex shrink-0 gap-2">
                   <Link
                     href="/upgrade"
-                    className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white transition hover:bg-secondary/90"
+                    className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
                     Upgrade to Pro
                   </Link>
                   <button
                     type="button"
                     onClick={() => setReplacedPlanTitle(null)}
-                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                    className="inline-flex h-10 items-center rounded-md border border-slate-200 bg-white px-3 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                   >
                     Dismiss
                   </button>
@@ -378,26 +376,24 @@ export function PlanSightProductShell({
         </>
       ) : (
         <section className="px-6 pb-16 pt-4">
-          <div className="mx-auto max-w-[1200px] rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
-            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-              Imported plan
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold text-dark">
+          <div className="mx-auto max-w-[1200px] rounded-xl border border-slate-200 bg-white p-8">
+            <p className="text-micro text-cyan-700">Imported plan</p>
+            <h2 className="mt-2 text-h1 text-ink">
               Import a plan to continue
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              No project is loaded yet. Import an MPP plan to display the task table, Gantt chart,
-              and project insights.
+            <p className="mt-4 max-w-2xl text-body-lg text-slate-700">
+              No project is loaded yet. Import an .mpp plan to display the task table,
+              Gantt chart, and project insights.
             </p>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                Upload a Microsoft Project file
+              <div className="rounded-md bg-slate-50 p-4 text-body text-slate-700">
+                Upload a Microsoft Project file.
               </div>
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                Review the imported schedule
+              <div className="rounded-md bg-slate-50 p-4 text-body text-slate-700">
+                Review the imported schedule.
               </div>
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                Share the plan with stakeholders
+              <div className="rounded-md bg-slate-50 p-4 text-body text-slate-700">
+                Share the plan with stakeholders.
               </div>
             </div>
           </div>
@@ -426,8 +422,8 @@ function TabButton({
       onClick={onClick}
       className={
         active
-          ? "inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25"
-          : "inline-flex items-center gap-2 rounded-xl bg-transparent px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-dark hover:shadow-sm"
+          ? "inline-flex h-9 items-center gap-2 rounded-md bg-white px-3 text-body font-semibold text-ink shadow-card"
+          : "inline-flex h-9 items-center gap-2 rounded-md bg-transparent px-3 text-body font-semibold text-slate-600 transition hover:text-ink"
       }
     >
       {icon}
@@ -447,12 +443,12 @@ function ActivatePlanSightInlineButton() {
       const response = await fetch("/api/plansight/activate", { method: "POST" });
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(payload.error || "Failed to activate PlanSight.");
+        throw new Error(payload.error || "Could not activate PlanSight.");
       }
       window.location.reload();
     } catch (err) {
       setBusy(false);
-      setError(err instanceof Error ? err.message : "Failed to activate PlanSight.");
+      setError(err instanceof Error ? err.message : "Could not activate PlanSight.");
     }
   };
 
@@ -462,12 +458,12 @@ function ActivatePlanSightInlineButton() {
         type="button"
         onClick={handleClick}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+        className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800 disabled:opacity-60"
       >
         <Sparkles className="h-3.5 w-3.5" />
         {busy ? "Activating..." : "Activate PlanSight"}
       </button>
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="text-caption text-red-700">{error}</span> : null}
     </div>
   );
 }

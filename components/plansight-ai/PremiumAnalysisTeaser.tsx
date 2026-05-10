@@ -133,8 +133,8 @@ const STATUS_LABELS: Record<AvailabilityStatus, string> = {
 };
 
 const STATUS_BADGE_CLASSES: Record<AvailabilityStatus, string> = {
-  live: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  pro: "border-secondary/30 bg-secondary/10 text-secondary",
+  live: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  pro: "border-cyan-200 bg-cyan-50 text-cyan-700",
   "coming-soon": "border-slate-200 bg-slate-50 text-slate-600"
 };
 
@@ -163,33 +163,32 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group w-full rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg ${className}`.trim()}
+        className={`group w-full rounded-xl border border-slate-200 bg-white p-6 text-left transition hover:border-slate-300 ${className}`.trim()}
       >
         <div className="flex items-start justify-between gap-4">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-dark text-white">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-md bg-navy text-cyan-400">
             <BrainCircuit className="h-6 w-6" />
           </div>
           <div className="flex flex-col items-end gap-2">
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-normal text-emerald-700">
+            <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-micro text-emerald-800">
               AI is live
             </span>
-            <span className="rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-normal text-secondary">
+            <span className="rounded border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-micro text-cyan-700">
               Pro tier ahead
             </span>
           </div>
         </div>
 
         <div className="mt-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-            Free vs Pro
-          </p>
-          <h3 className="mt-2 text-2xl font-semibold text-dark md:text-[28px]">
-            Click to compare what&apos;s live and what comes with Pro
+          <p className="text-micro text-cyan-700">Free vs Pro</p>
+          <h3 className="mt-2 text-h1 text-ink">
+            Compare what&apos;s live and what comes with Pro
           </h3>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-            Free signed-in PMs keep one plan slot — the latest import is always available
-            when they return. Pro adds the multi-plan dashboard, regeneration, version
-            compare, stakeholder analytics, health alerts, and branded shares.
+          <p className="mt-3 max-w-2xl text-body-lg text-slate-700">
+            Free signed-in PMs keep one plan slot — the latest import is always
+            available when they return. Pro adds the multi-plan dashboard,
+            regeneration, version compare, stakeholder analytics, health alerts,
+            and branded shares.
           </p>
         </div>
 
@@ -199,14 +198,14 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
             return (
               <div
                 key={feature.name}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-dark"
+                className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-body font-semibold text-ink"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <Icon className="h-4 w-4 shrink-0 text-slate-500" />
                   <span className="truncate">{feature.name}</span>
                 </span>
                 <span
-                  className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_BADGE_CLASSES[feature.status]}`}
+                  className={`rounded border px-2 py-0.5 text-micro ${STATUS_BADGE_CLASSES[feature.status]}`}
                 >
                   {STATUS_LABELS[feature.status]}
                 </span>
@@ -215,7 +214,7 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
           })}
         </div>
 
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-caption text-slate-500">
           + {features.length - 9} more features in the comparison →
         </p>
       </button>
@@ -224,28 +223,27 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/70 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/70 px-4 py-6 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
           <div
-            className="my-auto w-full max-w-4xl rounded-3xl border border-white/10 bg-dark p-6 text-white shadow-2xl"
+            className="my-auto w-full max-w-4xl rounded-xl border border-slate-800 bg-navy p-6 text-slate-100 shadow-modal"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-normal text-emerald-300">
-                  Free vs Pro
-                </p>
-                <h3 className="mt-2 text-2xl font-semibold">Plan tiers</h3>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                  PlanSight runs Claude Haiku 4.5 on every imported plan. Pro unlocks the
-                  workspace and stakeholder features PMs need to use it as a daily tool.
+                <p className="text-micro text-cyan-400">Free vs Pro</p>
+                <h3 className="mt-2 text-h2 text-slate-100">Plan tiers</h3>
+                <p className="mt-3 max-w-2xl text-body text-slate-300">
+                  PlanSight runs Claude Haiku 4.5 on every imported plan. Pro unlocks
+                  the workspace and stakeholder features PMs need to use it as a
+                  daily tool.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-800 bg-navy-800 text-slate-200 transition hover:border-slate-700 hover:bg-slate-800"
                 aria-label="Close tier comparison"
               >
                 <X className="h-5 w-5" />
@@ -255,26 +253,24 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <TierColumn
                 badge="Free"
-                badgeClassName="border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
+                badgeClassName="border-emerald-700 bg-emerald-900/40 text-emerald-200"
                 title="Use the full workspace today"
                 description="Anyone can upload, view, and read the AI analysis. Sign in to keep your most recent plan accessible across sessions — one plan slot, replaced when you import a new one."
                 features={FREE_FEATURES}
               />
               <TierColumn
                 badge="Pro"
-                badgeClassName="border-secondary/40 bg-secondary/15 text-amber-200"
+                badgeClassName="border-cyan-700 bg-cyan-900/30 text-cyan-300"
                 title="Multi-plan workflow for daily PMs"
                 description="Pro keeps every plan you upload, plus everything PMs need to use PlanSight as a daily tool — regeneration, analytics, alerts, and branded shares."
                 features={PRO_FEATURES}
               />
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="mt-6 rounded-md border border-slate-800 bg-navy-800 p-5">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-200" />
-                <p className="text-sm font-semibold uppercase tracking-normal text-amber-200">
-                  Coming with Pro
-                </p>
+                <Sparkles className="h-4 w-4 text-cyan-400" />
+                <p className="text-micro text-cyan-400">Coming with Pro</p>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {SOON_FEATURES.map((feature) => {
@@ -282,13 +278,13 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
                   return (
                     <div
                       key={feature.name}
-                      className="rounded-xl border border-white/10 bg-white/5 p-3"
+                      className="rounded-md border border-slate-800 bg-navy p-3"
                     >
-                      <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                        <Icon className="h-4 w-4 text-amber-200" />
+                      <div className="flex items-center gap-2 text-body font-semibold text-slate-100">
+                        <Icon className="h-4 w-4 text-cyan-400" />
                         {feature.name}
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-slate-300">
+                      <p className="mt-1 text-caption text-slate-400">
                         {feature.description}
                       </p>
                     </div>
@@ -317,28 +313,28 @@ function TierColumn({
   features: AnalysisFeature[];
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+    <div className="rounded-md border border-slate-800 bg-navy-800 p-5">
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-lg font-semibold text-white">{title}</h4>
+        <h4 className="text-h3 text-slate-100">{title}</h4>
         <span
-          className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-wide ${badgeClassName}`}
+          className={`rounded border px-2 py-0.5 text-micro ${badgeClassName}`}
         >
           {badge}
         </span>
       </div>
-      <p className="mt-2 text-sm leading-6 text-slate-300">{description}</p>
+      <p className="mt-2 text-body text-slate-400">{description}</p>
 
       <ul className="mt-4 space-y-2.5">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
-            <li key={feature.name} className="flex items-start gap-3 text-sm leading-6">
-              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
+            <li key={feature.name} className="flex items-start gap-3 text-body">
+              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-800 text-cyan-400">
                 <Icon className="h-3.5 w-3.5" />
               </span>
               <div className="min-w-0">
-                <p className="font-medium text-white">{feature.name}</p>
-                <p className="mt-0.5 text-slate-300">{feature.description}</p>
+                <p className="font-semibold text-slate-100">{feature.name}</p>
+                <p className="mt-0.5 text-slate-400">{feature.description}</p>
               </div>
             </li>
           );

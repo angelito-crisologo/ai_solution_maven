@@ -35,13 +35,13 @@ export function CopyShareLinkButton({ sharePath }: Props) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+      className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
       title="Copy the stakeholder share link to your clipboard"
     >
       {copied ? (
         <>
           <Check className="h-3.5 w-3.5 text-emerald-600" />
-          Copied!
+          Copied
         </>
       ) : (
         <>
