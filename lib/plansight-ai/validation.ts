@@ -1,7 +1,10 @@
 import { z } from "zod";
 
-export const MAX_PLAN_TASKS = 5000;
-export const MAX_PLAN_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
+// Absolute ceilings used by the Zod schema and by raw-body content-length
+// checks. Tier-aware caps (Free vs Pro) live in lib/plansight-ai/limits.ts
+// and are applied in the route handlers after we know who the user is.
+export const MAX_PLAN_TASKS = 25_000;
+export const MAX_PLAN_BODY_BYTES = 25 * 1024 * 1024; // 25 MB
 
 export const planDependencySchema = z.object({
   predecessorTaskId: z.number().int().nullable(),

@@ -11,6 +11,7 @@ import {
   loadSharedPlanWithDebug,
   saveSharedPlan
 } from "@/lib/plansight-ai/share-storage";
+import { formatBytesMb, getLimitsForTier } from "@/lib/plansight-ai/limits";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { MAX_PLAN_BODY_BYTES, planSchema } from "@/lib/plansight-ai/validation";
 
@@ -46,10 +47,14 @@ function formatError(error: unknown) {
 
 export async function POST(request: Request) {
   try {
+    // Hard ceiling — Pro users get the bigger 25 MB cap; non-Pro will be
+    // re-checked below against the Free 5 MB cap once we know the tier.
     const contentLength = Number(request.headers.get("content-length") ?? "0");
     if (Number.isFinite(contentLength) && contentLength > MAX_PLAN_BODY_BYTES) {
       return NextResponse.json(
-        { error: "Request body exceeds maximum size of 5 MB." },
+        {
+          error: `Request body exceeds maximum size of ${formatBytesMb(MAX_PLAN_BODY_BYTES)}.`
+        },
         { status: 413 }
       );
     }
@@ -93,6 +98,33 @@ export async function POST(request: Request) {
           }
         }
       }
+    }
+
+    // Tier-aware caps. Anonymous, not-activated, and Free activated users
+    // share the Free limits (5 MB body, 5000 tasks). Pro raises both.
+    const limits = getLimitsForTier(isProActivated ? "pro" : "free");
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > limits.maxBodyBytes
+    ) {
+      return NextResponse.json(
+        {
+          error: isProActivated
+            ? `Request body exceeds the Pro maximum of ${formatBytesMb(limits.maxBodyBytes)}.`
+            : `Request body exceeds the Free maximum of ${formatBytesMb(limits.maxBodyBytes)}. Upgrade to Pro to upload larger plans.`
+        },
+        { status: 413 }
+      );
+    }
+    if (plan.tasks.length > limits.maxTasks) {
+      return NextResponse.json(
+        {
+          error: isProActivated
+            ? `Plan exceeds the Pro maximum of ${limits.maxTasks.toLocaleString()} tasks.`
+            : `Plan exceeds the Free maximum of ${limits.maxTasks.toLocaleString()} tasks. Upgrade to Pro to import larger plans.`
+        },
+        { status: 413 }
+      );
     }
 
     // Pro path: detect duplicate-title plans on this user's account.

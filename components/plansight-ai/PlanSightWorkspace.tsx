@@ -23,6 +23,9 @@ type Props = {
   /** Pro-only Export PDF + Weekly snapshot buttons. Defaults to false so
    * the stakeholder share view stays unchanged. */
   canExportPdf?: boolean;
+  /** Pro-only inline AI in the task table. Defaults to false so the
+   * stakeholder share view stays clean. */
+  canExplainTask?: boolean;
 };
 
 type QuickViewFilter = "all" | "in-progress" | "late" | "at-risk" | "critical-path" | "completed";
@@ -96,7 +99,8 @@ export function PlanSightWorkspace({
   onStakeholderNameChange,
   containerMaxWidthClassName = "max-w-[1200px]",
   outerSectionClassName = "px-6 py-10",
-  canExportPdf = false
+  canExportPdf = false,
+  canExplainTask = false
 }: Props) {
   const [quickViewFilter, setQuickViewFilter] = useState<QuickViewFilter>("all");
   const [resourceFilter, setResourceFilter] = useState("all");
@@ -622,6 +626,8 @@ export function PlanSightWorkspace({
                 taskPaneRef.current = element;
               }}
               onScroll={handleTaskScroll}
+              canExplainTask={canExplainTask}
+              shareId={share.shareId}
             />
           </div>
 

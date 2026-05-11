@@ -501,6 +501,7 @@ export function PlanSightProductShell({
             share={share}
             highlightedTaskIds={selectedTaskIds}
             canExportPdf={plansightTier === "pro"}
+            canExplainTask={plansightTier === "pro"}
           />
           ) : activeTab === "project-insights" ? (
             <PlanSightProjectInsightsPanel
