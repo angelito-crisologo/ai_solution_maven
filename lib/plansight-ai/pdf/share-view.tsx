@@ -1,21 +1,39 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { buildInsightsReport, summarizePlan } from "../analysis";
-import type { Plan } from "../types";
+import type { Plan, PlanTask } from "../types";
 import { brand, formatPdfDate, pdfStyles, ragStyleFor } from "./styles";
 
 type Props = {
   plan: Plan;
 };
 
+/**
+ * Landscape A4. Columns mirror the on-screen task table layout the PM
+ * already knows. Sized so the Task column gets the most room while the
+ * date/percent columns stay compact and monospaced for visual alignment.
+ */
 const COLUMN_WIDTHS = {
-  id: 36,
-  name: "60%",
-  start: 60,
-  finish: 60,
-  percent: 36
+  id: 32,
+  name: 240,
+  start: 64,
+  finish: 64,
+  percent: 52,
+  resource: 130,
+  notes: 180
 } as const;
 
-const TASKS_PER_PAGE = 28;
+/** Landscape A4 leaves less vertical room than portrait; cap rows
+ * conservatively so wrapped notes / resource lists never overflow. */
+const TASKS_PER_PAGE = 18;
+
+const LANDSCAPE_PAGE = {
+  // Tighter vertical padding than the default portrait template (the
+  // share-view PDF is the only landscape doc; everything else uses the
+  // shared pdfStyles.page defaults).
+  paddingTop: 28,
+  paddingBottom: 40,
+  paddingHorizontal: 36
+};
 
 function chunk<T>(items: T[], size: number): T[][] {
   if (size <= 0) return [items];
@@ -26,14 +44,34 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out;
 }
 
+function indentForOutline(task: PlanTask): string {
+  // 2 character spaces per outline level — matches MS Project's mental
+  // model of WBS indentation. Outline level 0 = no indent.
+  const depth = Math.max(0, task.outlineLevel);
+  return "  ".repeat(depth);
+}
+
+function formatResource(task: PlanTask): string {
+  if (!task.resourceNames || task.resourceNames.length === 0) return "—";
+  return task.resourceNames.join(", ");
+}
+
+function formatNotes(task: PlanTask): string {
+  if (!task.notes) return "";
+  return task.notes;
+}
+
+function formatPercent(task: PlanTask): string {
+  if (task.percentComplete == null) return "—";
+  return `${Math.round(task.percentComplete)}%`;
+}
+
 export function ShareViewPdf({ plan }: Props) {
   const metrics = summarizePlan(plan);
   const report = buildInsightsReport(plan);
   const rag = ragStyleFor(report.summary.healthStatus);
   const generatedAt = new Date();
 
-  // Skip the implicit project root and any zero-task synthetic rows; render
-  // every real task so stakeholders see the same content as the share page.
   const visibleTasks = plan.tasks;
   const pages = chunk(visibleTasks, TASKS_PER_PAGE);
   const totalPages = Math.max(1, pages.length);
@@ -71,7 +109,13 @@ export function ShareViewPdf({ plan }: Props) {
       creator="PlanSight AI"
     >
       {pages.map((tasks, pageIndex) => (
-        <Page key={pageIndex} size="A4" style={pdfStyles.page} wrap={false}>
+        <Page
+          key={pageIndex}
+          size="A4"
+          orientation="landscape"
+          style={[pdfStyles.page, LANDSCAPE_PAGE]}
+          wrap={false}
+        >
           {renderHeader()}
 
           {pageIndex === 0 ? (
@@ -135,6 +179,8 @@ export function ShareViewPdf({ plan }: Props) {
               <Text style={{ width: COLUMN_WIDTHS.start }}>Start</Text>
               <Text style={{ width: COLUMN_WIDTHS.finish }}>Finish</Text>
               <Text style={{ width: COLUMN_WIDTHS.percent, textAlign: "right" }}>%</Text>
+              <Text style={{ width: COLUMN_WIDTHS.resource, paddingHorizontal: 6 }}>Resource</Text>
+              <Text style={{ width: COLUMN_WIDTHS.notes, paddingHorizontal: 6 }}>Notes</Text>
             </View>
             {tasks.map((task) => (
               <View
@@ -153,6 +199,7 @@ export function ShareViewPdf({ plan }: Props) {
                     color: task.summary ? brand.ink : brand.slate700
                   }}
                 >
+                  {indentForOutline(task)}
                   {task.name}
                 </Text>
                 <Text style={[pdfStyles.mono, { width: COLUMN_WIDTHS.start }]}>
@@ -167,7 +214,25 @@ export function ShareViewPdf({ plan }: Props) {
                     { width: COLUMN_WIDTHS.percent, textAlign: "right" }
                   ]}
                 >
-                  {task.percentComplete == null ? "—" : `${Math.round(task.percentComplete)}%`}
+                  {formatPercent(task)}
+                </Text>
+                <Text
+                  style={{
+                    width: COLUMN_WIDTHS.resource,
+                    paddingHorizontal: 6,
+                    color: brand.slate700
+                  }}
+                >
+                  {formatResource(task)}
+                </Text>
+                <Text
+                  style={{
+                    width: COLUMN_WIDTHS.notes,
+                    paddingHorizontal: 6,
+                    color: brand.slate700
+                  }}
+                >
+                  {formatNotes(task)}
                 </Text>
               </View>
             ))}

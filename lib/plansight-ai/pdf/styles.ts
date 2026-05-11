@@ -38,6 +38,38 @@ export const brand = {
   red50: "#FEF2F2"
 };
 
+/**
+ * Stakeholder-report palette. The Weekly Status Report uses a print-
+ * oriented warm beige + dark red/amber scheme distinct from the app's
+ * cyan/navy brand — designed to feel like an executive newsletter that
+ * stakeholders forward via email, not a SaaS dashboard screenshot.
+ *
+ * Source: branding/plansight-ai/plansight_weekly_snapshot_pdf_mockup.html
+ */
+export const reportPalette = {
+  pageInk: "#1A1A1A",
+  bodyInk: "#2C2C2A",
+  mutedInk: "#5F5E5A",
+  faintInk: "#888780",
+  hairline: "#D3D1C7",
+  cardBg: "#F1EFE8",
+
+  amberPillBg: "#FAEEDA",
+  amberPillDot: "#BA7517",
+  amberPillText: "#633806",
+
+  redPillBg: "#FCEBEB",
+  redPillDot: "#A32D2D",
+  redPillText: "#501313",
+  redPillSubtext: "#791F1F",
+
+  greenAccent: "#0F6E56",
+  amberAccent: "#BA7517",
+  redAccent: "#A32D2D",
+
+  linkBlue: "#185FA5"
+};
+
 export const pdfStyles = StyleSheet.create({
   page: {
     backgroundColor: "#FFFFFF",

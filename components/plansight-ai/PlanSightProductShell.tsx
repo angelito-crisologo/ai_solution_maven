@@ -34,6 +34,8 @@ type Props = {
    * import form. */
   initialPlan?: Plan | null;
   initialShareId?: string | null;
+  /** User's week-start preference. Used by the Weekly Report selector. */
+  weekStartDay?: "monday" | "sunday";
 };
 
 export function PlanSightProductShell({
@@ -41,7 +43,8 @@ export function PlanSightProductShell({
   plansightActivated,
   plansightTier,
   initialPlan = null,
-  initialShareId = null
+  initialShareId = null,
+  weekStartDay = "monday"
 }: Props) {
   const isAnonymous = !signedIn;
   const isSignedInNotActivated = signedIn && !plansightActivated;
@@ -502,6 +505,7 @@ export function PlanSightProductShell({
             highlightedTaskIds={selectedTaskIds}
             canExportPdf={plansightTier === "pro"}
             canExplainTask={plansightTier === "pro"}
+            weekStartDay={weekStartDay}
           />
           ) : activeTab === "project-insights" ? (
             <PlanSightProjectInsightsPanel
