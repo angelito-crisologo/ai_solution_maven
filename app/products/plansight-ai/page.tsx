@@ -130,8 +130,9 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
             <p className="mt-4 text-body-lg text-slate-700">
               Every imported plan gets a Claude-generated summary, risks, and
               recommendations at no cost. Pro unlocks the multi-plan dashboard,
-              regeneration on demand, version compare, stakeholder view analytics,
-              plan health alerts, and custom branding for share pages.
+              regeneration on demand, the &ldquo;Explain this task&rdquo; inline
+              AI, landscape PDF export, AI-narrated weekly status reports, and
+              higher upload limits.
             </p>
           </div>
 
@@ -156,8 +157,8 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
             <p className="mt-3 text-body-lg text-slate-700">
               Upload an MPP plan, inspect the imported schedule and project health,
               read a Claude-generated analysis with risks and recommendations, then
-              send stakeholders a read-only share view. Pro unlocks regeneration,
-              version compare, and analytics.
+              send stakeholders a read-only share view. Pro unlocks unlimited plan
+              retention, inline AI per task, PDF exports, and weekly status reports.
             </p>
           </div>
         </div>
