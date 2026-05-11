@@ -58,7 +58,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
   if (requestedShareId) {
     if (!user) {
       redirect(
-        `/signin?product=plansight-ai&redirectTo=${encodeURIComponent(
+        `/signin?redirectTo=${encodeURIComponent(
           `/products/plansight-ai?shareId=${requestedShareId}`
         )}`
       );

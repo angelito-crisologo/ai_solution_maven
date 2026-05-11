@@ -12,10 +12,11 @@ function asProductSlug(raw: string | null): ProductSlug | null {
 }
 
 /**
- * Magic-link callback. Supabase redirects here with ?code=... after the user
- * clicks the email link. We exchange the code for a session (sets the auth
- * cookies) then, if ?product=<slug> was present on the original /signin URL,
- * record a per-product activation row before redirecting.
+ * Email-link callback. Supabase redirects here with ?code=... after the
+ * user clicks a confirmation link (sign-up email confirmation) or a
+ * password-reset link. We exchange the code for a session (sets the auth
+ * cookies) then, if ?product=<slug> is present, record a per-product
+ * activation row before redirecting.
  *
  * Activation failure is non-fatal: the user lands on the product page,
  * where the activation banner will be shown and they can retry with the
