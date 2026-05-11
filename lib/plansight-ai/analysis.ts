@@ -90,7 +90,6 @@ type CriticalPathSequence = {
   durationDays: number;
 };
 
-const MY_TASK_OWNER = "Angelito Crisologo";
 const DEFAULT_AT_RISK_WINDOW_DAYS = 14;
 
 function normalizeDate(value: Date) {
@@ -233,13 +232,18 @@ function buildDependencyGraph(tasks: IndexedTask[]) {
 }
 
 function topologicalOrder(tasks: IndexedTask[], incomingCount: Map<number, number>, outgoing: Map<number, DependencyEdge[]>) {
-  const queue = tasks.filter((task) => (incomingCount.get(task.id) ?? 0) === 0).map((task) => task.id);
+  // Kahn's algorithm. Use an index pointer instead of Array.shift() — shift()
+  // is O(N) on every call because it reindexes the array, which turns Kahn's
+  // into O(V²). Index pointer keeps it O(V + E).
+  const queue: number[] = tasks
+    .filter((task) => (incomingCount.get(task.id) ?? 0) === 0)
+    .map((task) => task.id);
   const order: number[] = [];
   const remaining = new Map(incomingCount);
+  let head = 0;
 
-  while (queue.length > 0) {
-    const id = queue.shift();
-    if (id == null) continue;
+  while (head < queue.length) {
+    const id = queue[head++];
 
     order.push(id);
 
@@ -735,16 +739,12 @@ export function summarizePlan(plan: Plan): PlanMetrics {
   let tasksWithoutDates = 0;
   let dependencyIssues = 0;
   let unassignedTasks = 0;
-  let myTasks = 0;
 
   for (const task of leafTasks) {
     if (task.summary) summaryTasks += 1;
     if (task.milestone) milestoneTasks += 1;
     if (task.start == null || task.finish == null) tasksWithoutDates += 1;
     if (task.resourceNames.length === 0) unassignedTasks += 1;
-    if (task.resourceNames.some((resource) => resource === MY_TASK_OWNER)) {
-      myTasks += 1;
-    }
 
     const progress = getProgressBucket(task);
     if (progress === "completed") completedTasks += 1;
@@ -765,8 +765,7 @@ export function summarizePlan(plan: Plan): PlanMetrics {
     notStartedTasks,
     tasksWithoutDates,
     dependencyIssues,
-    unassignedTasks,
-    myTasks
+    unassignedTasks
   };
 }
 
@@ -789,10 +788,13 @@ export function buildInsightsReport(
   const criticalTasksForHealth = approximateMode
     ? critical.potentialCriticalTasks
     : critical.criticalTasks;
-  const criticalLateCount = criticalTasksForHealth.filter((task) => lateTasks.some((lateTask) => lateTask.id === task.id)).length;
-  const criticalAtRiskCount = criticalTasksForHealth.filter((task) =>
-    atRiskTasks.some((atRiskTask) => atRiskTask.id === task.id)
-  ).length;
+  // Build ID sets once instead of nested .some() lookups — nested .some()
+  // is O(critical × late) and O(critical × atRisk), which becomes ~1M+
+  // comparisons on large plans. Set.has() makes both O(critical).
+  const lateTaskIds = new Set(lateTasks.map((task) => task.id));
+  const atRiskTaskIds = new Set(atRiskTasks.map((task) => task.id));
+  const criticalLateCount = criticalTasksForHealth.filter((task) => lateTaskIds.has(task.id)).length;
+  const criticalAtRiskCount = criticalTasksForHealth.filter((task) => atRiskTaskIds.has(task.id)).length;
   const laggingRatio = leafTasks.length > 0 ? laggingLeafTasks.length / leafTasks.length : 0;
   const approximateNearEndCount = approximateMode
     ? critical.potentialCriticalTasks.filter((task) => task.signals.includes("near-end") || task.signals.includes("project-end")).length
@@ -822,7 +824,11 @@ export function buildInsightsReport(
       healthStatus
     },
     insights: {
-      criticalTasks: approximateMode ? critical.criticalTasks : critical.criticalTasks,
+      // In approximate mode (no dependencies declared) this is empty by
+      // design — CPM has no zero-slack path to compute. Consumers that need
+      // a critical-task list in approximate mode should check `mode` and
+      // read `potentialCriticalTasks` instead.
+      criticalTasks: critical.criticalTasks,
       criticalPaths: critical.criticalPaths,
       potentialCriticalTasks: approximateMode ? critical.potentialCriticalTasks : [],
       projectEndDate: approximateMode ? critical.projectEndDate : null,

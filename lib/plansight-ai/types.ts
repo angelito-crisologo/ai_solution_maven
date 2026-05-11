@@ -43,5 +43,4 @@ export type PlanMetrics = {
   tasksWithoutDates: number;
   dependencyIssues: number;
   unassignedTasks: number;
-  myTasks: number;
 };
