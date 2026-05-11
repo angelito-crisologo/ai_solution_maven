@@ -98,7 +98,7 @@ export default async function MyPlansPage({
         signedIn
         activated
         tier={activation.tier}
-        signupRedirectTo="/my-plans"
+        signinRedirectTo="/my-plans"
       />
 
       <section className="bg-navy text-slate-100">
