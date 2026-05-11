@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Sparkles,
   X
 } from "lucide-react";
 
@@ -203,14 +202,27 @@ function PlanSightAuthCTA({
     );
   }
 
-  // Signed in but not activated — show one-click "Activate"
-  if (signedIn && !activated) {
-    return <ActivatePlanSightButton variant={variant} onAfter={onAfter} />;
-  }
-
-  // Anonymous — show Sign in (existing users) + Sign up (new PlanSight users)
+  // Sign-up CTA is shown to both anonymous users and signed-in users who
+  // haven't yet activated PlanSight. The /signup page detects the session
+  // and either renders the form (anonymous) or auto-activates the product
+  // using the existing credentials (signed-in).
   const signupHref = `/signup?product=plansight-ai&redirectTo=${encodeURIComponent(signupRedirectTo)}`;
   const signinHref = `/signin?redirectTo=${encodeURIComponent(signupRedirectTo)}`;
+
+  if (signedIn && !activated) {
+    return (
+      <Link
+        href={signupHref}
+        onClick={onAfter}
+        className={`${base} bg-cyan-400 font-semibold text-ink transition hover:bg-cyan-300`}
+      >
+        Sign up for PlanSight
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    );
+  }
+
+  // Anonymous — Sign in (existing users) + Sign up (new PlanSight users)
   return (
     <>
       <Link
@@ -229,53 +241,5 @@ function PlanSightAuthCTA({
         <ArrowRight className="h-4 w-4" />
       </Link>
     </>
-  );
-}
-
-function ActivatePlanSightButton({
-  variant,
-  onAfter
-}: {
-  variant: "desktop" | "mobile";
-  onAfter?: () => void;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleClick = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/plansight/activate", { method: "POST" });
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(payload.error || "Could not activate PlanSight.");
-      }
-      window.location.reload();
-      onAfter?.();
-    } catch (err) {
-      setBusy(false);
-      setError(err instanceof Error ? err.message : "Could not activate PlanSight.");
-    }
-  };
-
-  const base =
-    variant === "desktop"
-      ? "inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-body"
-      : "inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-body";
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={busy}
-        className={`${base} bg-cyan-400 font-semibold text-ink transition hover:bg-cyan-300 disabled:opacity-60`}
-      >
-        <Sparkles className="h-3.5 w-3.5" />
-        {busy ? "Activating..." : "Activate PlanSight"}
-      </button>
-      {error ? <span className="text-caption text-red-300">{error}</span> : null}
-    </div>
   );
 }
