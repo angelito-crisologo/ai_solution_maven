@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { computePlanContentHash, generateAiAnalysis } from "@/lib/plansight-ai/ai";
+import { checkAndAlertSpend } from "@/lib/plansight-ai/ai-usage/spend-alert";
+import { logAiUsage } from "@/lib/plansight-ai/ai-usage/usage-log";
 import {
   loadAiAnalysisIfFresh,
   loadSharedPlan,
@@ -28,6 +30,11 @@ const DEV_BYPASS_ENABLED =
   process.env.NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE === "true";
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
+  let loggingUserId: string | null = null;
+  let loggingUserEmail: string | null = null;
+  let loggingShareId: string | null = null;
+
   try {
     const raw = await request.json().catch(() => null);
     const parsed = requestSchema.safeParse(raw);
@@ -39,9 +46,15 @@ export async function POST(request: Request) {
     }
 
     const { shareId, force } = parsed.data;
+    loggingShareId = shareId;
+
+    // Resolve user up-front so we can log every regenerate call (cached + live).
+    // The Pro gate below still applies — only signed-in Pro users can force=true.
+    const user = await getCurrentUser();
+    loggingUserId = user?.id ?? null;
+    loggingUserEmail = user?.email || null;
 
     if (force && !DEV_BYPASS_ENABLED) {
-      const user = await getCurrentUser();
       const activation = user
         ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT)
         : null;
@@ -63,14 +76,38 @@ export async function POST(request: Request) {
     if (!force) {
       const cached = await loadAiAnalysisIfFresh(shareId, contentHash);
       if (cached) {
+        // Only log cache hits for signed-in users so we don't pollute the
+        // table with anonymous-viewer activity. Anonymous viewers cost us $0.
+        if (loggingUserId) {
+          await logAiUsage({
+            userId: loggingUserId,
+            shareId,
+            feature: "regenerate_analysis",
+            cacheHit: true,
+            latencyMs: Date.now() - startedAt
+          });
+        }
         return NextResponse.json({ analysis: cached, cached: true });
       }
     }
 
-    const analysis = await generateAiAnalysis(plan);
-    await saveAiAnalysis(shareId, contentHash, analysis);
+    const result = await generateAiAnalysis(plan);
+    const latencyMs = Date.now() - startedAt;
+    await saveAiAnalysis(shareId, contentHash, result.analysis);
 
-    return NextResponse.json({ analysis, cached: false });
+    if (loggingUserId) {
+      await logAiUsage({
+        userId: loggingUserId,
+        shareId,
+        feature: "regenerate_analysis",
+        cacheHit: false,
+        usage: result.usage,
+        latencyMs
+      });
+      await checkAndAlertSpend(loggingUserId, loggingUserEmail);
+    }
+
+    return NextResponse.json({ analysis: result.analysis, cached: false });
   } catch (error) {
     const message =
       error instanceof Error
@@ -79,6 +116,16 @@ export async function POST(request: Request) {
 
     // Log full error server-side; surface a safe message to the client.
     console.error("[ai-analysis] generation failed", error);
+
+    if (loggingUserId && loggingShareId) {
+      await logAiUsage({
+        userId: loggingUserId,
+        shareId: loggingShareId,
+        feature: "regenerate_analysis",
+        latencyMs: Date.now() - startedAt,
+        error: message.slice(0, 500)
+      });
+    }
 
     if (message.includes("ANTHROPIC_API_KEY is not configured")) {
       return NextResponse.json(

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
+import { checkAndAlertSpend } from "@/lib/plansight-ai/ai-usage/spend-alert";
+import { logAiUsage } from "@/lib/plansight-ai/ai-usage/usage-log";
 import { renderPdfToBuffer } from "@/lib/plansight-ai/pdf/render";
 import { WeeklyReportPdf } from "@/lib/plansight-ai/pdf/weekly-snapshot";
 import {
@@ -33,6 +35,11 @@ function safeFilename(title: string, periodEnd: Date): string {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
+  let loggingUserId: string | null = null;
+  let loggingUserEmail: string | null = null;
+  let loggingShareId: string | null = null;
+
   try {
     const raw = await request.json().catch(() => null);
     const parsed = requestSchema.safeParse(raw);
@@ -50,6 +57,8 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+    loggingUserId = user.id;
+    loggingUserEmail = user.email || null;
 
     const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
     if (!activation || activation.tier !== "pro") {
@@ -59,6 +68,7 @@ export async function POST(request: Request) {
       );
     }
 
+    loggingShareId = parsed.data.shareId;
     const plan = await loadSharedPlan(parsed.data.shareId);
     if (!plan) {
       return NextResponse.json({ error: "Shared plan not found." }, { status: 404 });
@@ -86,11 +96,30 @@ export async function POST(request: Request) {
     const narrative = await generateWeeklyNarrative(reportData);
 
     const buffer = await renderPdfToBuffer(
-      <WeeklyReportPdf data={reportData} narrative={narrative} generatedAt={today.toISOString()} />
+      <WeeklyReportPdf
+        data={reportData}
+        narrative={narrative.text}
+        generatedAt={today.toISOString()}
+      />
     );
 
     const bytes = new Uint8Array(buffer);
     const filename = safeFilename(plan.title, reportingPeriod.end);
+
+    // Log + spend alert AFTER the PDF buffer is built but before the
+    // response goes out. Narrative may have returned null on Anthropic
+    // failure — usage is null in that case so the row records latency only.
+    await logAiUsage({
+      userId: loggingUserId,
+      shareId: loggingShareId,
+      feature: "weekly_snapshot",
+      cacheHit: false,
+      usage: narrative.usage,
+      latencyMs: Date.now() - startedAt
+    });
+    if (narrative.usage) {
+      await checkAndAlertSpend(loggingUserId, loggingUserEmail);
+    }
 
     return new Response(bytes, {
       status: 200,
@@ -105,6 +134,17 @@ export async function POST(request: Request) {
     console.error("[weekly-report] failed", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate weekly report.";
+
+    if (loggingUserId && loggingShareId) {
+      await logAiUsage({
+        userId: loggingUserId,
+        shareId: loggingShareId,
+        feature: "weekly_snapshot",
+        latencyMs: Date.now() - startedAt,
+        error: message.slice(0, 500)
+      });
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

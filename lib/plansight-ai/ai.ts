@@ -1,6 +1,7 @@
 import type { Plan, PlanTask } from "./types";
 import type { PlanInsightsReport } from "./analysis";
 import { buildInsightsReport } from "./analysis";
+import { extractTokenUsage, type TokenUsage } from "./ai-usage/cost";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
@@ -24,6 +25,14 @@ export type AiAnalysis = {
   risks: AiAnalysisRisk[];
   recommendations: AiAnalysisRecommendation[];
   generatedAt: string;
+};
+
+export type AiAnalysisResult = {
+  analysis: AiAnalysis;
+  /** Combined token usage across the two Claude calls (findings + recs).
+   * Surfaced so the API route can write a single ai_usage_log row with the
+   * full cost of the regeneration. */
+  usage: TokenUsage;
 };
 
 /**
@@ -420,7 +429,7 @@ function normalizeRecommendations(value: unknown): AiAnalysisRecommendation[] {
  * Both calls share the deterministic insights as input. Cache_control on the
  * system prompts amortizes input cost when generations are clustered in time.
  */
-export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
+export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysisResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured.");
@@ -486,10 +495,23 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysis> {
     );
   }
 
+  const findingsUsage = extractTokenUsage(findingsData.usage);
+  const recsUsage = extractTokenUsage(recsData.usage);
+
   return {
-    summary: findings.summary,
-    risks: findings.risks,
-    recommendations,
-    generatedAt: new Date().toISOString()
+    analysis: {
+      summary: findings.summary,
+      risks: findings.risks,
+      recommendations,
+      generatedAt: new Date().toISOString()
+    },
+    usage: {
+      inputTokens: findingsUsage.inputTokens + recsUsage.inputTokens,
+      outputTokens: findingsUsage.outputTokens + recsUsage.outputTokens,
+      cacheReadTokens:
+        findingsUsage.cacheReadTokens + recsUsage.cacheReadTokens,
+      cacheWriteTokens:
+        findingsUsage.cacheWriteTokens + recsUsage.cacheWriteTokens
+    }
   };
 }
