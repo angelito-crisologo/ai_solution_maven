@@ -61,7 +61,7 @@ export default async function MyPlansPage({
 }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/signin?product=plansight-ai&redirectTo=/my-plans");
+    redirect("/signin?redirectTo=/my-plans");
   }
 
   const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);

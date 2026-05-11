@@ -209,7 +209,7 @@ function PlanSightAuthCTA({
   }
 
   // Anonymous — show Sign in (existing users) + Sign up (new PlanSight users)
-  const signupHref = `/signin?product=plansight-ai&redirectTo=${encodeURIComponent(signupRedirectTo)}`;
+  const signupHref = `/signup?product=plansight-ai&redirectTo=${encodeURIComponent(signupRedirectTo)}`;
   const signinHref = `/signin?redirectTo=${encodeURIComponent(signupRedirectTo)}`;
   return (
     <>

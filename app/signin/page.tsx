@@ -9,53 +9,56 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams?: { redirectTo?: string; product?: string };
+  searchParams?: { redirectTo?: string; product?: string; error?: string };
 };
 
 export default async function SignInPage({ searchParams }: Props) {
-  const user = await getCurrentUser();
-  const product = searchParams?.product || "";
-  const redirectTo =
-    searchParams?.redirectTo || (product === "plansight-ai" ? "/my-plans" : "/");
+  const redirectTo = searchParams?.redirectTo || "/my-plans";
+  const product = searchParams?.product;
 
+  // Legacy URL: /signin?product=plansight-ai was the old sign-up entry
+  // point. Route it to the new /signup page so old bookmarks/nav links keep
+  // working.
+  if (product) {
+    const params = new URLSearchParams({ product, redirectTo });
+    redirect(`/signup?${params.toString()}`);
+  }
+
+  const user = await getCurrentUser();
   if (user) {
     redirect(redirectTo);
   }
 
-  // Frame the page around the product when one was requested. PlanSight
-  // is the only product today, so the "branded" path is just for it.
-  const isPlansight = product === "plansight-ai";
+  const errorMessage = mapCallbackError(searchParams?.error);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <div className="rounded-xl border border-slate-200 bg-white p-8">
-        <p className="text-micro text-cyan-700">
-          {isPlansight ? "PlanSight AI" : "Sign in"}
-        </p>
-        <h1 className="mt-2 text-h1 text-ink">
-          {isPlansight ? "Sign up for PlanSight" : "Welcome back"}
-        </h1>
+        <p className="text-micro text-cyan-700">Sign in</p>
+        <h1 className="mt-2 text-h1 text-ink">Welcome back</h1>
         <p className="mt-3 text-body text-slate-700">
-          {isPlansight
-            ? "We'll email you a magic link. No password needed. Signing up keeps your most recent imported plan accessible across sessions — Pro unlocks the multi-plan dashboard."
-            : "Enter your email and we'll send you a magic link. The same link works whether you've used PlanSight before or not."}
+          Sign in with your email and password to access your plans.
         </p>
 
-        <SignInForm redirectTo={redirectTo} product={product} />
-
-        {!isPlansight ? (
-          <p className="mt-6 border-t border-slate-200 pt-4 text-caption text-slate-500">
-            New to PlanSight?{" "}
-            <a
-              href={`/signin?product=plansight-ai&redirectTo=${encodeURIComponent(redirectTo)}`}
-              className="font-semibold text-cyan-700 underline-offset-2 transition hover:text-cyan-800 hover:underline"
-            >
-              Sign up here
-            </a>
-            .
+        {errorMessage ? (
+          <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-body text-red-800">
+            {errorMessage}
           </p>
         ) : null}
+
+        <SignInForm redirectTo={redirectTo} />
       </div>
     </main>
   );
+}
+
+function mapCallbackError(error: string | undefined): string | null {
+  if (!error) return null;
+  if (error === "missing_code") {
+    return "That confirmation link was incomplete. Please try again or request a new one.";
+  }
+  if (error === "expired_link") {
+    return "That link has expired. Please request a new one.";
+  }
+  return decodeURIComponent(error);
 }
