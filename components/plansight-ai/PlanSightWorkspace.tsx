@@ -6,6 +6,7 @@ import type { Plan, PlanMetrics } from "@/lib/plansight-ai/types";
 import type { PlanInsight, PlanInsightsReport } from "@/lib/plansight-ai/analysis";
 import type { SharePayload } from "@/lib/plansight-ai/share";
 import { GanttChart } from "./GanttChart";
+import { ReportingPeriodPicker } from "./ReportingPeriodPicker";
 import { TaskTable } from "./TaskTable";
 import { buildTaskTree, collectNodeIdsWithChildren, filterTaskTree, formatLongDate, ViewMode } from "./plansight-utils";
 
@@ -20,12 +21,15 @@ type Props = {
   onStakeholderNameChange?: (value: string) => void;
   containerMaxWidthClassName?: string;
   outerSectionClassName?: string;
-  /** Pro-only Export PDF + Weekly snapshot buttons. Defaults to false so
+  /** Pro-only Export PDF + Weekly report buttons. Defaults to false so
    * the stakeholder share view stays unchanged. */
   canExportPdf?: boolean;
   /** Pro-only inline AI in the task table. Defaults to false so the
    * stakeholder share view stays clean. */
   canExplainTask?: boolean;
+  /** User's week-start preference (controls the Weekly Report reporting
+   * period). Defaults to "monday". */
+  weekStartDay?: "monday" | "sunday";
 };
 
 type QuickViewFilter = "all" | "in-progress" | "late" | "at-risk" | "critical-path" | "completed";
@@ -100,7 +104,8 @@ export function PlanSightWorkspace({
   containerMaxWidthClassName = "max-w-[1200px]",
   outerSectionClassName = "px-6 py-10",
   canExportPdf = false,
-  canExplainTask = false
+  canExplainTask = false,
+  weekStartDay = "monday"
 }: Props) {
   const [quickViewFilter, setQuickViewFilter] = useState<QuickViewFilter>("all");
   const [resourceFilter, setResourceFilter] = useState("all");
@@ -113,7 +118,10 @@ export function PlanSightWorkspace({
   const [isExporting, setIsExporting] = useState(false);
   // Pro PDF surfaces. Each tracks its own loading state so users can see
   // which button they pressed if a request is slow.
-  const [pdfPending, setPdfPending] = useState<null | "share" | "snapshot">(null);
+  const [pdfPending, setPdfPending] = useState<null | "share" | "report">(null);
+  // ISO start date (YYYY-MM-DD) of the user-chosen reporting period for
+  // the Weekly Report. null means "default to last completed week."
+  const [weeklyOverrideStart, setWeeklyOverrideStart] = useState<string | null>(null);
   const splitRef = useRef<HTMLDivElement | null>(null);
   const taskPaneRef = useRef<HTMLDivElement | null>(null);
   const ganttPaneRef = useRef<HTMLDivElement | null>(null);
@@ -373,7 +381,7 @@ export function PlanSightWorkspace({
     endpoint: "/api/plansight/export-pdf" | "/api/plansight/weekly-snapshot",
     body: Record<string, unknown>,
     fallbackSuffix: string,
-    kind: "share" | "snapshot"
+    kind: "share" | "report"
   ) {
     setPdfPending(kind);
     try {
@@ -417,12 +425,15 @@ export function PlanSightWorkspace({
     );
   }
 
-  async function exportWeeklySnapshot() {
+  async function exportWeeklyReport() {
     await downloadPdf(
       "/api/plansight/weekly-snapshot",
-      { shareId: share.shareId },
-      "status",
-      "snapshot"
+      {
+        shareId: share.shareId,
+        ...(weeklyOverrideStart ? { weekStart: weeklyOverrideStart } : {})
+      },
+      "weekly-report",
+      "report"
     );
   }
 
@@ -516,21 +527,30 @@ export function PlanSightWorkspace({
                     </button>
                     <button
                       type="button"
-                      onClick={exportWeeklySnapshot}
+                      onClick={exportWeeklyReport}
                       disabled={pdfPending !== null}
                       className="inline-flex h-9 items-center gap-2 rounded-md bg-cyan-700 px-3 text-body font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
-                      title="One-page weekly status snapshot for stakeholder email"
+                      title="One-page weekly status report covering the last completed week"
                     >
-                      {pdfPending === "snapshot" ? (
+                      {pdfPending === "report" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <FileBarChart className="h-4 w-4" />
                       )}
-                      {pdfPending === "snapshot" ? "Generating..." : "Weekly snapshot"}
+                      {pdfPending === "report" ? "Generating..." : "Weekly report"}
                     </button>
                   </>
                 ) : null}
               </div>
+              {canExportPdf ? (
+                <div className="flex justify-end">
+                  <ReportingPeriodPicker
+                    weekStartDay={weekStartDay}
+                    overrideStart={weeklyOverrideStart}
+                    onChange={setWeeklyOverrideStart}
+                  />
+                </div>
+              ) : null}
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard label="Total tasks" value={displayedTotalTaskCount} />
                 <StatCard label="Not started" value={filteredStatusCounts.notStarted} />

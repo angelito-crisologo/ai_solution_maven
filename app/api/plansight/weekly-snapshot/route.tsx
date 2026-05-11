@@ -1,26 +1,35 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
 import { renderPdfToBuffer } from "@/lib/plansight-ai/pdf/render";
-import { WeeklySnapshotPdf } from "@/lib/plansight-ai/pdf/weekly-snapshot";
+import { WeeklyReportPdf } from "@/lib/plansight-ai/pdf/weekly-snapshot";
+import {
+  resolveReportingPeriod,
+  snapOverrideToWeek
+} from "@/lib/plansight-ai/reporting-period";
 import { loadSharedPlan } from "@/lib/plansight-ai/share-storage";
 import { generateWeeklyNarrative } from "@/lib/plansight-ai/weekly-narrative";
+import { buildWeeklyReportData } from "@/lib/plansight-ai/weekly-report-data";
 
 // React-PDF + Anthropic call → Node runtime, default 10s on Hobby.
 export const runtime = "nodejs";
 
 const requestSchema = z.object({
-  shareId: z.string().min(1).max(200)
+  shareId: z.string().min(1).max(200),
+  /** Optional ISO date (YYYY-MM-DD) — any day inside the desired week.
+   * The server snaps it to the user's week-start boundary. */
+  weekStart: z.string().min(8).max(40).optional()
 });
 
-function safeFilename(title: string): string {
+function safeFilename(title: string, periodEnd: Date): string {
   const base = title
     .replace(/[^\w\s.-]+/g, "")
     .trim()
     .slice(0, 64) || "plan";
-  const stamp = new Date().toISOString().slice(0, 10);
-  return `${base}-status-${stamp}.pdf`;
+  const stamp = periodEnd.toISOString().slice(0, 10);
+  return `${base}-weekly-report-${stamp}.pdf`;
 }
 
 export async function POST(request: Request) {
@@ -29,7 +38,7 @@ export async function POST(request: Request) {
     const parsed = requestSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid request. Expected { shareId }." },
+        { error: "Invalid request. Expected { shareId, weekStart? }." },
         { status: 400 }
       );
     }
@@ -37,7 +46,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
-        { error: "Sign in to generate weekly snapshots." },
+        { error: "Sign in to generate weekly reports." },
         { status: 401 }
       );
     }
@@ -45,7 +54,7 @@ export async function POST(request: Request) {
     const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
     if (!activation || activation.tier !== "pro") {
       return NextResponse.json(
-        { error: "Weekly snapshot is a Pro feature. Upgrade to enable it." },
+        { error: "Weekly report is a Pro feature. Upgrade to enable it." },
         { status: 403 }
       );
     }
@@ -55,18 +64,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Shared plan not found." }, { status: 404 });
     }
 
-    const asOf = new Date();
-    // Narrative is best-effort; render the structured PDF either way so
-    // the user always gets a useful artifact.
-    const narrative = await generateWeeklyNarrative(plan, asOf);
+    const preferences = await getUserPreferences(user.id);
+    const today = new Date();
 
-    const buffer = await renderPdfToBuffer(
-      <WeeklySnapshotPdf plan={plan} narrative={narrative} asOf={asOf.toISOString()} />
+    // Resolve reporting period: override snaps to the user's week boundary,
+    // or compute the last completed week.
+    const reportingPeriod =
+      snapOverrideToWeek(
+        parsed.data.weekStart ? { start: parsed.data.weekStart } : null,
+        preferences.weekStartDay
+      ) ?? resolveReportingPeriod(today, preferences.weekStartDay);
+
+    const reportData = buildWeeklyReportData(
+      plan,
+      reportingPeriod,
+      preferences.weekStartDay,
+      today
     );
 
-    const filename = safeFilename(plan.title);
+    // Best-effort narrative — PDF still renders without it.
+    const narrative = await generateWeeklyNarrative(reportData);
+
+    const buffer = await renderPdfToBuffer(
+      <WeeklyReportPdf data={reportData} narrative={narrative} generatedAt={today.toISOString()} />
+    );
 
     const bytes = new Uint8Array(buffer);
+    const filename = safeFilename(plan.title, reportingPeriod.end);
+
     return new Response(bytes, {
       status: 200,
       headers: {
@@ -77,9 +102,9 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error("[weekly-snapshot] failed", error);
+    console.error("[weekly-report] failed", error);
     const message =
-      error instanceof Error ? error.message : "Failed to generate weekly snapshot.";
+      error instanceof Error ? error.message : "Failed to generate weekly report.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

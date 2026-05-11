@@ -7,6 +7,7 @@ import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
 
@@ -45,6 +46,7 @@ export const dynamic = "force-dynamic";
 export default async function PlanSightAIPage({ searchParams }: Props) {
   const user = await getCurrentUser();
   const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
+  const preferences = user ? await getUserPreferences(user.id) : { weekStartDay: "monday" as const };
 
   // Deep-link from /my-plans: when ?shareId is present, server-side load the
   // plan for the signed-in owner and pre-populate the workspace. Stakeholders
@@ -118,6 +120,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         plansightTier={activation?.tier ?? null}
         initialPlan={initialPlan}
         initialShareId={initialShareId}
+        weekStartDay={preferences.weekStartDay}
       />
 
       <section className="px-6 py-20">

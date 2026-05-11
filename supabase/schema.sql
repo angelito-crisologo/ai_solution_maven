@@ -112,12 +112,30 @@ comment on table public.plan_tasks is
 create table if not exists public.users (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
+  week_start_day text not null default 'monday',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.users drop column if exists tier;
 drop index if exists users_tier_idx;
+
+alter table public.users
+  add column if not exists week_start_day text not null default 'monday';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'users_week_start_day_check'
+      and conrelid = 'public.users'::regclass
+  ) then
+    alter table public.users
+      add constraint users_week_start_day_check
+      check (week_start_day in ('monday', 'sunday'));
+  end if;
+end $$;
 
 alter table public.users enable row level security;
 

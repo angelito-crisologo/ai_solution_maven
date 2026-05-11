@@ -16,7 +16,9 @@ import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButt
 import { DeletePlanButton } from "@/components/plansight-ai/DeletePlanButton";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
+import { WeekStartDayToggle } from "@/components/plansight-ai/WeekStartDayToggle";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
+import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserBilling } from "@/lib/billing/stripe";
 import { listPlansForUser } from "@/lib/plansight-ai/share-storage";
@@ -79,6 +81,7 @@ export default async function MyPlansPage({
   // Pull billing only for Pro users — that's the only state where the
   // cancellation-pending banner is meaningful.
   const billing = isPro ? await getUserBilling(user.id) : null;
+  const preferences = await getUserPreferences(user.id);
   const cancelPending =
     !!billing?.cancelAtPeriodEnd && !!billing.currentPeriodEnd;
   const cancelDate = cancelPending
@@ -123,17 +126,20 @@ export default async function MyPlansPage({
                 </h1>
               </div>
             </div>
-            {isPro ? (
-              <form action="/api/billing/portal" method="post">
-                <button
-                  type="submit"
-                  className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
-                >
-                  <CreditCard className="h-3.5 w-3.5" />
-                  Manage billing
-                </button>
-              </form>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-4">
+              <WeekStartDayToggle initial={preferences.weekStartDay} />
+              {isPro ? (
+                <form action="/api/billing/portal" method="post">
+                  <button
+                    type="submit"
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Manage billing
+                  </button>
+                </form>
+              ) : null}
+            </div>
           </div>
           {isPro ? (
             <p className="mt-3 max-w-2xl text-body-lg text-slate-300">
