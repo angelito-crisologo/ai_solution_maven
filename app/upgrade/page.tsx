@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  BellRing,
   CreditCard,
-  GitCompareArrows,
+  FileBarChart,
+  FileText,
   History,
   LayoutDashboard,
-  Palette,
   RefreshCcw,
-  Users
+  Sparkles,
+  Upload
 } from "lucide-react";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
@@ -35,38 +35,45 @@ export const dynamic = "force-dynamic";
 const PRO_FEATURES = [
   {
     name: "Multi-plan dashboard",
-    description: "Keep every plan you upload. Open any past plan with its insights and AI analysis.",
+    description:
+      "Keep every plan you upload. Open any past plan with its insights and AI analysis. Free is one plan slot only.",
     icon: LayoutDashboard
   },
   {
-    name: "Plan retention",
-    description: "Free replaces your previous plan when you import. Pro keeps them all.",
+    name: "Unlimited plan retention",
+    description:
+      "Free replaces your previous plan when you import a new one and breaks its share link. Pro retains them all with stable share URLs.",
     icon: History
   },
   {
     name: "Regenerate AI analysis",
-    description: "Re-run Claude on demand after a plan update. Free caches the first generation only.",
+    description:
+      "Re-run Claude on demand after a plan update. Free caches the first generation only — Pro keeps the analysis in sync with the plan.",
     icon: RefreshCcw
   },
   {
-    name: "Version compare",
-    description: "Upload an updated plan and see what changed — moves, slips, critical-path shifts.",
-    icon: GitCompareArrows
+    name: "Explain this task — inline AI",
+    description:
+      "Click the spark on any task in the workspace and Claude explains it in plain language using its dependency neighbourhood.",
+    icon: Sparkles
   },
   {
-    name: "Stakeholder analytics",
-    description: "Know when share links are opened, by whom, and which views they hit.",
-    icon: Users
+    name: "Export PDF",
+    description:
+      "Landscape A4 with ID, task name, dates, % complete, resource, and notes — outline-indented like MS Project. For stakeholder email and audits.",
+    icon: FileText
   },
   {
-    name: "Health alerts",
-    description: "Email notifications when a plan flips amber/red or a critical task slips.",
-    icon: BellRing
+    name: "Weekly Status Report",
+    description:
+      "One-page PDF covering the last completed week: RAG, slips, at-risk tasks, milestone hit/miss, and an AI-written Status Summary you can forward.",
+    icon: FileBarChart
   },
   {
-    name: "Custom branding",
-    description: "Your logo and colors on stakeholder share pages and exported reports.",
-    icon: Palette
+    name: "Higher upload limits",
+    description:
+      "25 MB files and up to 25,000 tasks per plan, vs. 5 MB and 5,000 on Free. Built for enterprise programs and consolidated portfolios.",
+    icon: Upload
   }
 ];
 
@@ -101,8 +108,8 @@ export default async function UpgradePage({
           </h1>
           <p className="mt-4 max-w-2xl text-lead text-slate-300">
             Free is built for one-off plan reviews. Pro adds the multi-plan
-            dashboard, regeneration on demand, version compare, stakeholder
-            analytics, health alerts, and branded share pages.
+            dashboard, regeneration on demand, inline AI explanations,
+            landscape PDF export, and AI-narrated weekly status reports.
           </p>
         </div>
       </section>
