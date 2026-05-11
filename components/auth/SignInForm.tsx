@@ -36,7 +36,9 @@ export function SignInForm({ redirectTo }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   const forgotHref = `/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`;
-  const signupHref = `/signup?product=plansight-ai&redirectTo=${encodeURIComponent(redirectTo)}`;
+  // Sign-up always lands on /my-plans (new account = dashboard landing),
+  // regardless of where the sign-in attempt was headed.
+  const signupHref = "/signup?product=plansight-ai&redirectTo=%2Fmy-plans";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

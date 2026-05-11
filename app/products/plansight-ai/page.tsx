@@ -85,7 +85,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         signedIn={!!user}
         activated={!!activation}
         tier={activation?.tier ?? null}
-        signupRedirectTo="/products/plansight-ai"
+        signinRedirectTo="/products/plansight-ai"
       />
 
       <section className="bg-navy text-slate-100">

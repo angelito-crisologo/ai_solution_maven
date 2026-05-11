@@ -18,8 +18,12 @@ type Props = {
   activated: boolean;
   /** "free" | "pro" when activated; null otherwise. */
   tier: "free" | "pro" | null;
-  /** Callback URL to redirect to after sign-up. */
-  signupRedirectTo: string;
+  /**
+   * Where to send the user after a successful sign-in started from this
+   * page. Sign-up always lands on /my-plans (the universal new-account
+   * dashboard) regardless of this prop.
+   */
+  signinRedirectTo: string;
 };
 
 /**
@@ -29,7 +33,7 @@ type Props = {
  * accent, restrained type. AISM is acknowledged via the small "Powered
  * by" attribution.
  */
-export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }: Props) {
+export function PlanSightNavbar({ signedIn, activated, tier, signinRedirectTo }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Account-scoped destinations (My plans, Sign out) live in the right-side
@@ -94,7 +98,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
             signedIn={signedIn}
             activated={activated}
             tier={tier}
-            signupRedirectTo={signupRedirectTo}
+            signinRedirectTo={signinRedirectTo}
           />
         </div>
 
@@ -129,7 +133,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signupRedirectTo }:
                 signedIn={signedIn}
                 activated={activated}
                 tier={tier}
-                signupRedirectTo={signupRedirectTo}
+                signinRedirectTo={signinRedirectTo}
                 onAfter={() => setIsOpen(false)}
               />
             </div>
@@ -155,7 +159,7 @@ function PlanSightAuthCTA({
   signedIn,
   activated,
   tier,
-  signupRedirectTo,
+  signinRedirectTo,
   variant = "desktop",
   onAfter
 }: Props & {
@@ -206,8 +210,12 @@ function PlanSightAuthCTA({
   // haven't yet activated PlanSight. The /signup page detects the session
   // and either renders the form (anonymous) or auto-activates the product
   // using the existing credentials (signed-in).
-  const signupHref = `/signup?product=plansight-ai&redirectTo=${encodeURIComponent(signupRedirectTo)}`;
-  const signinHref = `/signin?redirectTo=${encodeURIComponent(signupRedirectTo)}`;
+  //
+  // Sign-up always redirects to /my-plans after confirmation. New
+  // accounts land on their dashboard regardless of entry point — they
+  // can navigate elsewhere from there. Sign-in keeps "where I was".
+  const signupHref = "/signup?product=plansight-ai&redirectTo=%2Fmy-plans";
+  const signinHref = `/signin?redirectTo=${encodeURIComponent(signinRedirectTo)}`;
 
   if (signedIn && !activated) {
     return (
