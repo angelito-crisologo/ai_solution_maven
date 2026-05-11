@@ -122,7 +122,9 @@ Single-sheet `.xlsx` export with a summary block (plan name, dates, total/not-st
 
 Replaces a previously-templated "AI analysis" panel with actual Claude integration. Edge runtime, two sequential Haiku calls (findings → recommendations) for reliable structured output, prompt caching on the system prompt, content-hash response cache so re-views never re-burn tokens.
 
-The two-call architecture was chosen after iteration: a single call consistently produced empty recommendations because the model treated risks as covering both descriptive and prescriptive concerns. Splitting the calls — one tool for summary+risks, a separate tool whose only output is recommendations — eliminated the failure mode. Cost: still under a cent per analysis. Latency: 5–8s total.
+The two-call architecture was chosen after iteration: a single call consistently produced empty recommendations because the model treated risks as covering both descriptive and prescriptive concerns. Splitting the calls — one tool for summary+risks, a separate tool whose only output is recommendations — eliminated the failure mode.
+
+A follow-up bounded-payload refactor (see `branding/plansight-ai/AI_PAYLOAD_SPEC.md`) keeps AI cost and latency roughly flat across plan sizes — a 25,000-task plan analyzes for the same cost as a 100-task plan. Measured cost: 3–8¢ per first generation. Cached re-views (content-hash cache on `public.plans.ai_analysis`) are free — no Claude call. Latency: 5–8s end-to-end on first generation, sub-second on cached views.
 
 The Regenerate button is gated as a Pro-tier feature. A preview-only env var (`NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE`) bypasses the gate during development.
 
@@ -160,6 +162,7 @@ Stripe Checkout for Pro upgrade, webhook updates user tier in DB, paywall on Pro
 |---|---|
 | `PlanSightAI.md` | Product strategy and positioning |
 | `INSIGHTS_SYSTEM.md` | PMP-aligned insights engine spec (CPM math, RAG thresholds) |
+| `branding/plansight-ai/AI_PAYLOAD_SPEC.md` | Bounded AI payload contract (sections, caps, sort orders, token budget) |
 | `EXCEL_EXPORT_SPEC.md` | Excel export acceptance criteria |
 | `PLANSIGHT_MIGRATION_MAP.md` | Migration map from the original `mpp_viewer` codebase |
 | `branding/<product>/BRANDKIT.md` | Per-product design system (colors, typography, voice). AISM brand at `branding/ai-solution-maven/BRANDKIT.md`. Tokens in `lib/branding/`. |

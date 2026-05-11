@@ -118,7 +118,7 @@
 
 ### 9. Higher upload limits
 
-**What it does.** Raises the file size cap (currently 5 MB) and task count cap (currently 5,000) for Pro users. Specific Pro limits TBD — likely 25 MB / 25,000 tasks or similar.
+**What it does.** Raises the file size cap (5 MB → 25 MB) and task count cap (5,000 → 25,000) for Pro users. These are **parsing and rendering** caps — what the MPP parser proxy will accept and what the workspace UI can render performantly. They are **not** AI-cost caps: the bounded AI payload (see `branding/plansight-ai/AI_PAYLOAD_SPEC.md`) keeps AI cost roughly flat regardless of plan size.
 
 **Why a PM cares.** Most plans fit comfortably under the existing free-tier caps. The ones that don't — large enterprise programs, consolidated portfolio plans, multi-year roadmaps — belong to exactly the kind of PM most likely to pay. Higher limits are invisible to free users and meaningful to the segment with the highest willingness to pay.
 
