@@ -1,25 +1,22 @@
 "use client";
 
 import {
-  BellRing,
   BrainCircuit,
   Check,
-  FileSpreadsheet,
-  GitCompareArrows,
+  FileBarChart,
+  FileText,
   History,
   LayoutDashboard,
-  MessageCircleQuestion,
-  Palette,
   RefreshCcw,
   Sparkles,
   TriangleAlert,
-  Users,
+  Upload,
   X
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 
-type AvailabilityStatus = "live" | "pro" | "coming-soon";
+type AvailabilityStatus = "live" | "pro";
 
 type AnalysisFeature = {
   name: string;
@@ -56,86 +53,63 @@ const features: AnalysisFeature[] = [
     status: "pro",
     icon: LayoutDashboard,
     description:
-      "Upload unlimited plans, see them all in one place, rename, archive, or delete. Free signed-in users see only their most recent plan; Pro keeps every plan."
+      "Open any past plan from one place — workspace, insights, and AI analysis. Free signed-in users see only their most recent plan; Pro keeps them all."
   },
   {
     name: "Multi-plan retention",
     status: "pro",
     icon: History,
     description:
-      "Pro keeps every plan you upload. Free signed-in users have a single plan slot — importing a new plan replaces the previous one in their workspace."
+      "Pro keeps every plan you import with stable share URLs. Free replaces your previous plan on each import and breaks the old share link."
   },
   {
     name: "Regenerate AI",
     status: "pro",
     icon: RefreshCcw,
     description:
-      "Re-run the Claude analysis any time after a plan update. Free tier caches the first generation."
+      "Re-run the Claude analysis any time after a plan update. Free caches the first generation only — Pro keeps the analysis in sync."
   },
   {
-    name: "Version compare",
+    name: "Explain this task",
     status: "pro",
-    icon: GitCompareArrows,
+    icon: Sparkles,
     description:
-      "Upload an updated plan and see what changed — task moves, critical-path shifts, slipping milestones."
+      "Click the spark on any task in the workspace and Claude explains it in plain language using its dependency neighbourhood."
   },
   {
-    name: "Share analytics",
+    name: "Export PDF",
     status: "pro",
-    icon: Users,
+    icon: FileText,
     description:
-      "Know when stakeholders opened your share link, how long they stayed, and which views they hit."
+      "Landscape A4 with ID, task name, dates, % complete, resource, and notes — outline-indented like MS Project."
   },
   {
-    name: "Health alerts",
+    name: "Weekly Status Report",
     status: "pro",
-    icon: BellRing,
+    icon: FileBarChart,
     description:
-      "Email notifications when a plan flips to amber or red, or when a critical task goes overdue."
+      "One-page PDF covering the last completed week: RAG, slips, at-risk tasks, milestone hit/miss, and an AI-written Status Summary."
   },
   {
-    name: "Custom branding",
+    name: "Higher upload limits",
     status: "pro",
-    icon: Palette,
+    icon: Upload,
     description:
-      "Your logo, colors, and footer on stakeholder share pages and exported reports."
-  },
-
-  // Coming with Pro
-  {
-    name: "Delay simulation",
-    status: "coming-soon",
-    icon: BrainCircuit,
-    description: "Explore how slipping one task changes downstream timing."
-  },
-  {
-    name: "Natural language Q&A",
-    status: "coming-soon",
-    icon: MessageCircleQuestion,
-    description: "Ask questions about the plan in plain language and get a direct answer."
-  },
-  {
-    name: "XLSX / Smartsheet import",
-    status: "coming-soon",
-    icon: FileSpreadsheet,
-    description: "Import schedules from Excel and Smartsheet alongside .mpp."
+      "25 MB files and up to 25,000 tasks per plan, vs 5 MB / 5,000 on Free. Built for enterprise programs and consolidated portfolios."
   }
 ];
 
 const FREE_FEATURES = features.filter((f) => f.status === "live");
 const PRO_FEATURES = features.filter((f) => f.status === "pro");
-const SOON_FEATURES = features.filter((f) => f.status === "coming-soon");
 
 const STATUS_LABELS: Record<AvailabilityStatus, string> = {
   live: "Live",
-  pro: "Pro",
-  "coming-soon": "Soon"
+  pro: "Pro"
 };
 
 const STATUS_BADGE_CLASSES: Record<AvailabilityStatus, string> = {
   live: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  pro: "border-cyan-200 bg-cyan-50 text-cyan-700",
-  "coming-soon": "border-slate-200 bg-slate-50 text-slate-600"
+  pro: "border-cyan-200 bg-cyan-50 text-cyan-700"
 };
 
 type Props = {
@@ -187,8 +161,8 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
           <p className="mt-3 max-w-2xl text-body-lg text-slate-700">
             Free signed-in PMs keep one plan slot — the latest import is always
             available when they return. Pro adds the multi-plan dashboard,
-            regeneration, version compare, stakeholder analytics, health alerts,
-            and branded shares.
+            regeneration on demand, inline AI per task, landscape PDF export,
+            AI-narrated weekly status reports, and higher upload limits.
           </p>
         </div>
 
@@ -214,9 +188,16 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
           })}
         </div>
 
-        <p className="mt-3 text-caption text-slate-500">
-          + {features.length - 9} more features in the comparison →
-        </p>
+        {features.length > 9 ? (
+          <p className="mt-3 text-caption text-slate-500">
+            + {features.length - 9} more feature
+            {features.length - 9 === 1 ? "" : "s"} in the comparison →
+          </p>
+        ) : (
+          <p className="mt-3 text-caption text-slate-500">
+            Open the full comparison →
+          </p>
+        )}
       </button>
 
       {open ? (
@@ -262,36 +243,11 @@ export function PremiumAnalysisTeaser({ className = "" }: Props) {
                 badge="Pro"
                 badgeClassName="border-cyan-700 bg-cyan-900/30 text-cyan-300"
                 title="Multi-plan workflow for daily PMs"
-                description="Pro keeps every plan you upload, plus everything PMs need to use PlanSight as a daily tool — regeneration, analytics, alerts, and branded shares."
+                description="Pro keeps every plan you upload, regenerates the AI on demand, adds Explain-this-task inline AI, exports landscape PDFs, generates weekly status reports, and raises upload limits to 25 MB / 25,000 tasks."
                 features={PRO_FEATURES}
               />
             </div>
 
-            <div className="mt-6 rounded-md border border-slate-800 bg-navy-800 p-5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-cyan-400" />
-                <p className="text-micro text-cyan-400">Coming with Pro</p>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                {SOON_FEATURES.map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div
-                      key={feature.name}
-                      className="rounded-md border border-slate-800 bg-navy p-3"
-                    >
-                      <div className="flex items-center gap-2 text-body font-semibold text-slate-100">
-                        <Icon className="h-4 w-4 text-cyan-400" />
-                        {feature.name}
-                      </div>
-                      <p className="mt-1 text-caption text-slate-400">
-                        {feature.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </div>
       ) : null}
