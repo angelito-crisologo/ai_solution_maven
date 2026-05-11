@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { buildInsightsReport } from "@/lib/plansight-ai/analysis";
 import type { PlanMetrics } from "@/lib/plansight-ai/types";
@@ -21,25 +20,6 @@ export function SharedStakeholderPlanView({ plan, metrics, share }: Props) {
   return (
     <section className="px-4 pt-2 pb-6 sm:px-6">
       <div className="mx-auto w-full max-w-[1600px]">
-        <div className="mb-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-body text-slate-700">
-          Have a comment or want to flag something on this plan?{" "}
-          <Link
-            href={{
-              pathname: "/feedback",
-              query: {
-                product: "PlanSight AI",
-                source: "shared-plan",
-                pagePath: `/share/${share.shareId}`,
-                shareId: share.shareId,
-                planTitle: plan.title
-              }
-            }}
-            className="font-semibold text-cyan-700 transition hover:text-cyan-800"
-          >
-            Send feedback
-          </Link>
-          .
-        </div>
         <PlanSightWorkspace
           plan={plan}
           metrics={metrics}

@@ -46,12 +46,6 @@ export default async function SharePage({ params }: Props) {
               className="h-8 w-auto sm:h-9"
             />
           </Link>
-          <Link
-            href="/products/plansight-ai"
-            className="text-body font-semibold text-cyan-700 transition hover:text-cyan-800"
-          >
-            View on PlanSight →
-          </Link>
         </div>
       </header>
 
