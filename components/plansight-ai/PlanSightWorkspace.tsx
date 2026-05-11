@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, FileBarChart, FileText, Loader2 } from "lucide-react";
 import type { Plan, PlanMetrics } from "@/lib/plansight-ai/types";
 import type { PlanInsight, PlanInsightsReport } from "@/lib/plansight-ai/analysis";
 import type { SharePayload } from "@/lib/plansight-ai/share";
@@ -20,6 +20,9 @@ type Props = {
   onStakeholderNameChange?: (value: string) => void;
   containerMaxWidthClassName?: string;
   outerSectionClassName?: string;
+  /** Pro-only Export PDF + Weekly snapshot buttons. Defaults to false so
+   * the stakeholder share view stays unchanged. */
+  canExportPdf?: boolean;
 };
 
 type QuickViewFilter = "all" | "in-progress" | "late" | "at-risk" | "critical-path" | "completed";
@@ -92,7 +95,8 @@ export function PlanSightWorkspace({
   stakeholderName,
   onStakeholderNameChange,
   containerMaxWidthClassName = "max-w-[1200px]",
-  outerSectionClassName = "px-6 py-10"
+  outerSectionClassName = "px-6 py-10",
+  canExportPdf = false
 }: Props) {
   const [quickViewFilter, setQuickViewFilter] = useState<QuickViewFilter>("all");
   const [resourceFilter, setResourceFilter] = useState("all");
@@ -103,6 +107,9 @@ export function PlanSightWorkspace({
   const [rowHeights, setRowHeights] = useState<number[]>([]);
   const [isMobilePortrait, setIsMobilePortrait] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  // Pro PDF surfaces. Each tracks its own loading state so users can see
+  // which button they pressed if a request is slow.
+  const [pdfPending, setPdfPending] = useState<null | "share" | "snapshot">(null);
   const splitRef = useRef<HTMLDivElement | null>(null);
   const taskPaneRef = useRef<HTMLDivElement | null>(null);
   const ganttPaneRef = useRef<HTMLDivElement | null>(null);
@@ -358,6 +365,63 @@ export function PlanSightWorkspace({
     });
   }
 
+  async function downloadPdf(
+    endpoint: "/api/plansight/export-pdf" | "/api/plansight/weekly-snapshot",
+    body: Record<string, unknown>,
+    fallbackSuffix: string,
+    kind: "share" | "snapshot"
+  ) {
+    setPdfPending(kind);
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Failed to generate the PDF.");
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition") ?? "";
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+      const filename = filenameMatch?.[1] ?? `${plan.title}-${fallbackSuffix}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Failed to generate the PDF.");
+    } finally {
+      setPdfPending(null);
+    }
+  }
+
+  async function exportSharePdf() {
+    await downloadPdf(
+      "/api/plansight/export-pdf",
+      { shareId: share.shareId, format: "share" },
+      "share",
+      "share"
+    );
+  }
+
+  async function exportWeeklySnapshot() {
+    await downloadPdf(
+      "/api/plansight/weekly-snapshot",
+      { shareId: share.shareId },
+      "status",
+      "snapshot"
+    );
+  }
+
   async function exportWorkbook() {
     setIsExporting(true);
 
@@ -420,7 +484,7 @@ export function PlanSightWorkspace({
             </div>
 
             <div className="flex flex-col gap-3 lg:ml-auto">
-              <div className="flex justify-end">
+              <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
                   onClick={exportWorkbook}
@@ -430,6 +494,38 @@ export function PlanSightWorkspace({
                   <Download className="h-4 w-4" />
                   {isExporting ? "Exporting..." : "Export Excel"}
                 </button>
+                {canExportPdf ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={exportSharePdf}
+                      disabled={pdfPending !== null}
+                      className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-body font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      title="Download a PDF version of the share view (stakeholder-friendly)"
+                    >
+                      {pdfPending === "share" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+                      {pdfPending === "share" ? "Generating..." : "Export PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportWeeklySnapshot}
+                      disabled={pdfPending !== null}
+                      className="inline-flex h-9 items-center gap-2 rounded-md bg-cyan-700 px-3 text-body font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      title="One-page weekly status snapshot for stakeholder email"
+                    >
+                      {pdfPending === "snapshot" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileBarChart className="h-4 w-4" />
+                      )}
+                      {pdfPending === "snapshot" ? "Generating..." : "Weekly snapshot"}
+                    </button>
+                  </>
+                ) : null}
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard label="Total tasks" value={displayedTotalTaskCount} />
