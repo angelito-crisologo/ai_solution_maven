@@ -544,6 +544,14 @@ function dedupeCriticalPaths(paths: CriticalPathSequence[]) {
   });
 }
 
+// Hard cap on the number of critical paths the DFS will enumerate. The
+// recursive walk below copies path + visited per recursion step, so a
+// graph with N parallel critical chains converging can produce
+// exponential blow-up. In practice 50 paths is far more than any UI or
+// AI consumer needs (dedupeCriticalPaths trims further to the longest
+// equal-duration set); the cap is a safety net for pathological inputs.
+const MAX_CRITICAL_PATHS = 50;
+
 function buildCriticalPaths({
   criticalTaskIds,
   incoming,
@@ -581,13 +589,14 @@ function buildCriticalPaths({
       });
 
   const walk = (currentId: number, path: number[], visited: Set<number>) => {
+    if (paths.length >= MAX_CRITICAL_PATHS) return;
+
     const successors = getCriticalSuccessors(currentId).filter((successorId) => !visited.has(successorId));
 
     if (successors.length === 0) {
       const key = path.join(">");
       if (!seen.has(key)) {
         seen.add(key);
-        const firstId = path[0];
         const durationDays = path.reduce((sum, taskId) => {
           const task = taskById.get(taskId);
           return sum + (task?.durationDays ?? 0);
@@ -601,6 +610,7 @@ function buildCriticalPaths({
     }
 
     for (const successorId of successors) {
+      if (paths.length >= MAX_CRITICAL_PATHS) return;
       const nextVisited = new Set(visited);
       nextVisited.add(successorId);
       walk(successorId, [...path, successorId], nextVisited);
@@ -608,6 +618,7 @@ function buildCriticalPaths({
   };
 
   for (const startId of entryIds) {
+    if (paths.length >= MAX_CRITICAL_PATHS) break;
     walk(startId, [startId], new Set([startId]));
   }
 
