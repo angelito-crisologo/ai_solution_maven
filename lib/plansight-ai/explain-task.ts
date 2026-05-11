@@ -1,9 +1,15 @@
 import type { Plan, PlanTask } from "./types";
+import { extractTokenUsage, type TokenUsage } from "./ai-usage/cost";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
 const MODEL_ID = "claude-haiku-4-5-20251001";
 const MAX_OUTPUT_TOKENS = 350;
+
+export type ExplainTaskResult = {
+  explanation: string;
+  usage: TokenUsage;
+};
 
 const SYSTEM_PROMPT = `You are a project-management analyst helping a PM understand one task in their plan. The PM will paste a task plus its immediate dependency neighbourhood (predecessors, successors, parent summary). Reply with a short, plain-language explanation in this exact shape, no headings, no markdown:
 
@@ -16,6 +22,7 @@ Total length: 3 sentences, ~80 words. No bullets. No emoji. Do not invent contex
 type AnthropicResponse = {
   content: Array<{ type: string; text?: string }>;
   stop_reason?: string | null;
+  usage?: unknown;
 };
 
 function pickTaskById(plan: Plan, taskId: number): PlanTask | null {
@@ -82,7 +89,7 @@ function buildUserMessage(plan: Plan, focus: PlanTask) {
   );
 }
 
-export async function explainTask(plan: Plan, taskId: number): Promise<string> {
+export async function explainTask(plan: Plan, taskId: number): Promise<ExplainTaskResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured.");
@@ -138,5 +145,8 @@ export async function explainTask(plan: Plan, taskId: number): Promise<string> {
     throw new Error("Claude returned an empty explanation.");
   }
 
-  return textBlock.text.trim();
+  return {
+    explanation: textBlock.text.trim(),
+    usage: extractTokenUsage(data.usage)
+  };
 }

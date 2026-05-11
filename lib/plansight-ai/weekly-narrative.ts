@@ -1,3 +1,4 @@
+import { extractTokenUsage, type TokenUsage } from "./ai-usage/cost";
 import { formatPeriodLabel } from "./reporting-period";
 import type { WeeklyReportData } from "./weekly-report-data";
 
@@ -5,6 +6,11 @@ const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
 const MODEL_ID = "claude-haiku-4-5-20251001";
 const MAX_OUTPUT_TOKENS = 300;
+
+export type WeeklyNarrativeResult = {
+  text: string | null;
+  usage: TokenUsage | null;
+};
 
 const SYSTEM_PROMPT = `You write the Status Summary paragraph for a PM's Weekly Status Report. The PM will paste a structured snapshot: reporting period (the week being reviewed), current week (the week we are now in), project health, what slipped last week, what's at risk now, milestones in the reporting period (hit/miss), milestones coming up.
 
@@ -18,6 +24,7 @@ Be factual. Don't invent context the PM didn't give you. Don't use words like "A
 
 type AnthropicResponse = {
   content: Array<{ type: string; text?: string }>;
+  usage?: unknown;
 };
 
 function buildPromptInput(data: WeeklyReportData) {
@@ -62,13 +69,14 @@ function buildPromptInput(data: WeeklyReportData) {
 
 /**
  * Generate the Status Summary paragraph for the weekly report. Returns
- * null on any failure — the PDF still renders without it.
+ * { text: null, usage: null } on any failure — the PDF still renders without
+ * it. Usage tokens are surfaced for ai_usage_log accounting.
  */
 export async function generateWeeklyNarrative(
   data: WeeklyReportData
-): Promise<string | null> {
+): Promise<WeeklyNarrativeResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) return { text: null, usage: null };
 
   try {
     const requestBody = {
@@ -99,14 +107,17 @@ export async function generateWeeklyNarrative(
       body: JSON.stringify(requestBody)
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) return { text: null, usage: null };
     const json = (await response.json()) as AnthropicResponse;
     const text = json.content.find(
       (block): block is { type: string; text: string } =>
         block.type === "text" && typeof block.text === "string"
     );
-    return text?.text.trim() || null;
+    return {
+      text: text?.text.trim() || null,
+      usage: extractTokenUsage(json.usage)
+    };
   } catch {
-    return null;
+    return { text: null, usage: null };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Sparkles, X } from "lucide-react";
+import { Loader2, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -12,17 +12,52 @@ type Props = {
 
 type Status =
   | { kind: "loading" }
-  | { kind: "loaded"; explanation: string }
+  | { kind: "loaded"; explanation: string; softCapShown: boolean }
+  | { kind: "rate_limited"; message: string }
   | { kind: "error"; message: string };
+
+/** localStorage key recording the date on which the user dismissed the
+ * soft-cap nudge. We include the date so dismissal resets at UTC midnight,
+ * matching the server-side rate-limit reset window. */
+const SOFT_CAP_DISMISS_KEY = "plansight:explain-task:soft-cap-dismissed";
+
+function todayUtcKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function readDismissedToday(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SOFT_CAP_DISMISS_KEY) === todayUtcKey();
+  } catch {
+    return false;
+  }
+}
+
+function markDismissedToday() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SOFT_CAP_DISMISS_KEY, todayUtcKey());
+  } catch {
+    // Ignore — telemetry is best-effort.
+  }
+}
 
 /**
  * Modal that calls /api/plansight/explain-task when mounted and renders
  * the AI explanation. Pro-only on the server side; anything that opens
- * this should already gate on `canExplainTask`. Empty cache deliberate —
- * explanations are ~$0.005 per call and a stale one is worse than fresh.
+ * this should already gate on `canExplainTask`.
+ *
+ * Phase 9 — handles three response shapes from the route:
+ *   - 200 with explanation + softCapShown=true: render the answer with a
+ *     dismissable "you've explained a lot today" banner.
+ *   - 200 with explanation: render the answer directly.
+ *   - 429 with rateLimited=true: render the friendly hard-cap message
+ *     (the route already includes the contact line).
  */
 export function ExplainTaskModal({ shareId, taskId, taskName, onClose }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "loading" });
+  const [bannerVisible, setBannerVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,13 +66,28 @@ export function ExplainTaskModal({ shareId, taskId, taskName, onClose }: Props) 
         const response = await fetch("/api/plansight/explain-task", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shareId, taskId })
+          body: JSON.stringify({
+            shareId,
+            taskId,
+            softCapDismissed: readDismissedToday()
+          })
         });
         const payload = (await response.json().catch(() => ({}))) as {
           explanation?: string;
           error?: string;
+          softCapShown?: boolean;
+          rateLimited?: boolean;
         };
         if (cancelled) return;
+
+        if (response.status === 429 || payload.rateLimited) {
+          setStatus({
+            kind: "rate_limited",
+            message: payload.error || "You've hit today's limit."
+          });
+          return;
+        }
+
         if (!response.ok || !payload.explanation) {
           setStatus({
             kind: "error",
@@ -45,7 +95,15 @@ export function ExplainTaskModal({ shareId, taskId, taskName, onClose }: Props) 
           });
           return;
         }
-        setStatus({ kind: "loaded", explanation: payload.explanation });
+
+        const softCapShown =
+          payload.softCapShown === true && !readDismissedToday();
+        setBannerVisible(softCapShown);
+        setStatus({
+          kind: "loaded",
+          explanation: payload.explanation,
+          softCapShown
+        });
       } catch (error) {
         if (cancelled) return;
         setStatus({
@@ -103,11 +161,39 @@ export function ExplainTaskModal({ shareId, taskId, taskName, onClose }: Props) 
           </button>
         </div>
 
+        {status.kind === "loaded" && status.softCapShown && bannerVisible ? (
+          <div className="mt-4 flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-body text-amber-900">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">You&apos;ve explained a lot today.</p>
+              <p className="mt-1 text-amber-800">
+                You can keep going — this is just a check-in. You&apos;ll hit a
+                daily ceiling further on.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                markDismissedToday();
+                setBannerVisible(false);
+              }}
+              className="inline-flex h-8 items-center rounded-md border border-amber-300 bg-white px-3 text-caption font-semibold text-amber-900 transition hover:border-amber-400 hover:bg-amber-100"
+            >
+              Got it
+            </button>
+          </div>
+        ) : null}
+
         <div className="mt-5 min-h-[6rem] rounded-md border border-slate-200 bg-slate-50 p-4">
           {status.kind === "loading" ? (
             <div className="flex items-center gap-2 text-body text-slate-600">
               <Loader2 className="h-4 w-4 animate-spin" />
               Generating explanation...
+            </div>
+          ) : status.kind === "rate_limited" ? (
+            <div className="flex items-start gap-2 text-body text-amber-900">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <p>{status.message}</p>
             </div>
           ) : status.kind === "error" ? (
             <p className="text-body text-red-700">{status.message}</p>
