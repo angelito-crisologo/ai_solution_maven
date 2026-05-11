@@ -44,11 +44,16 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-function indentForOutline(task: PlanTask): string {
-  // 2 character spaces per outline level — matches MS Project's mental
-  // model of WBS indentation. Outline level 0 = no indent.
-  const depth = Math.max(0, task.outlineLevel);
-  return "  ".repeat(depth);
+// Width (in PDF points) of one outline-level step. 8pt is roughly two
+// character widths at 10pt Helvetica, which matches the spec's "indent
+// each contained task by 2 character spaces from parent." We apply this
+// as paddingLeft rather than literal whitespace in <Text> because
+// React-PDF collapses leading spaces during text shaping.
+const INDENT_STEP_PT = 8;
+
+function indentPtForOutline(task: PlanTask, baseLevel: number): number {
+  const depth = Math.max(0, task.outlineLevel - baseLevel);
+  return depth * INDENT_STEP_PT;
 }
 
 function formatResource(task: PlanTask): string {
@@ -75,6 +80,15 @@ export function ShareViewPdf({ plan }: Props) {
   const visibleTasks = plan.tasks;
   const pages = chunk(visibleTasks, TASKS_PER_PAGE);
   const totalPages = Math.max(1, pages.length);
+
+  // MPXJ-parsed plans sometimes start at outlineLevel 0, sometimes at 1
+  // (when a synthetic project root is included). Normalize against the
+  // observed minimum so the shallowest task always renders flush-left.
+  const baseLevel = visibleTasks.reduce(
+    (min, task) => Math.min(min, task.outlineLevel ?? 0),
+    Number.POSITIVE_INFINITY
+  );
+  const normalizedBaseLevel = Number.isFinite(baseLevel) ? baseLevel : 0;
 
   const renderHeader = () => (
     <View style={pdfStyles.header}>
@@ -195,11 +209,13 @@ export function ShareViewPdf({ plan }: Props) {
                 <Text
                   style={{
                     width: COLUMN_WIDTHS.name,
-                    paddingHorizontal: 6,
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    paddingRight: 6,
+                    paddingLeft: 6 + indentPtForOutline(task, normalizedBaseLevel),
                     color: task.summary ? brand.ink : brand.slate700
                   }}
                 >
-                  {indentForOutline(task)}
                   {task.name}
                 </Text>
                 <Text style={[pdfStyles.mono, { width: COLUMN_WIDTHS.start }]}>
