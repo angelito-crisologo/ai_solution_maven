@@ -163,6 +163,7 @@ Stripe Checkout for Pro upgrade, webhook updates user tier in DB, paywall on Pro
 | `PlanSightAI.md` | Product strategy and positioning |
 | `INSIGHTS_SYSTEM.md` | PMP-aligned insights engine spec (CPM math, RAG thresholds) |
 | `branding/plansight-ai/AI_PAYLOAD_SPEC.md` | Bounded AI payload contract (sections, caps, sort orders, token budget) |
+| `branding/plansight-ai/TELEMETRY_SPEC.md` | Upload telemetry contract (schema, failure-stage taxonomy, fire-and-forget rule) |
 | `EXCEL_EXPORT_SPEC.md` | Excel export acceptance criteria |
 | `PLANSIGHT_MIGRATION_MAP.md` | Migration map from the original `mpp_viewer` codebase |
 | `branding/<product>/BRANDKIT.md` | Per-product design system (colors, typography, voice). AISM brand at `branding/ai-solution-maven/BRANDKIT.md`. Tokens in `lib/branding/`. |
