@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Lock
 } from "lucide-react";
+import { ClaimGuestPlanOnMount } from "@/components/plansight-ai/ClaimGuestPlanOnMount";
 import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButton";
 import { DeletePlanButton } from "@/components/plansight-ai/DeletePlanButton";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
@@ -94,6 +95,7 @@ export default async function MyPlansPage({
 
   return (
     <main className="min-h-screen bg-slate-50">
+      <ClaimGuestPlanOnMount />
       <PlanSightNavbar
         signedIn
         activated
