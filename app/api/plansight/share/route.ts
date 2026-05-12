@@ -7,10 +7,12 @@ import {
   deleteAllPlansForUser,
   deletePlanForUser,
   findPlansByTitleForUser,
+  getSharedPlanOwner,
   loadSharedPlan,
   loadSharedPlanWithDebug,
   saveSharedPlan
 } from "@/lib/plansight-ai/share-storage";
+import { recordShareView } from "@/lib/telemetry/share-views";
 import { formatBytesMb, getLimitsForTier } from "@/lib/plansight-ai/limits";
 import type { Plan } from "@/lib/plansight-ai/types";
 import { MAX_PLAN_BODY_BYTES, planSchema } from "@/lib/plansight-ai/validation";
@@ -225,6 +227,10 @@ export async function GET(request: Request) {
       : { plan: await loadSharedPlan(shareId) };
 
     if (!result.plan) {
+      // Not-found views aren't recorded — 404s on this endpoint include
+      // expired guest plans, deleted plans, and share-id guessing attempts.
+      // None of those are signal for "is the share being viewed by
+      // stakeholders". v2 may want to track these separately.
       const responseBody = debug
         ? {
             error: "Shared plan not found.",
@@ -234,6 +240,22 @@ export async function GET(request: Request) {
 
       return NextResponse.json(responseBody, { status: 404 });
     }
+
+    // Successful view — record fire-and-forget telemetry. Both lookups
+    // happen off the critical path; even if one of them fails the user
+    // still gets their plan back. is_owner_view is true only when the
+    // current viewer is signed in AND matches the plan's owner_user_id.
+    const [viewer, ownerUserId] = await Promise.all([
+      getCurrentUser().catch(() => null),
+      getSharedPlanOwner(shareId).catch(() => null)
+    ]);
+    const isOwnerView = !!viewer && !!ownerUserId && viewer.id === ownerUserId;
+    void recordShareView({
+      shareId,
+      viewerUserId: viewer?.id ?? null,
+      isOwnerView,
+      userAgent: request.headers.get("user-agent")?.slice(0, 500) ?? null
+    });
 
     return NextResponse.json(debug ? result : { plan: result.plan });
   } catch (error) {

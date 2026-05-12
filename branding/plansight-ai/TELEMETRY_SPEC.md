@@ -10,25 +10,31 @@ contract.
 
 ---
 
-## Scope (v1)
+## Scope
 
-Upload telemetry on the `.mpp` import pipeline. Backed by the
-`public.upload_events` table. Captured at `POST /api/plansight/import-mpp`.
+Three event surfaces today, each in its own table:
+
+| Surface | Table | Captured at | Question it answers |
+|---|---|---|---|
+| Upload pipeline (v1) | `public.upload_events` | `POST /api/plansight/import-mpp` | Is the parser healthy? Where do uploads fail? |
+| Share-link views (v1) | `public.share_views` | `GET /api/plansight/share` | Are stakeholders actually opening the share links the PM sends? |
+| AI usage (Phase 9) | `public.ai_usage_log` | Every Claude call | Where is the AI budget going? What's the cache hit rate? |
+
+The three tables are intentionally **not** unified. Each event has a
+different cardinality, different lifecycle, different privacy posture.
+Don't fold them together.
 
 Out of scope (deferred to later surfaces):
 
-- Save-stage telemetry at `POST /api/plansight/share`. The
+- Save-stage telemetry at `POST /api/plansight/share` POST. The
   `upload_events` table reserves `share_id`, `db_write_duration_ms`,
   and the `db_write` failure stage for when we extend instrumentation
-  there; v1 leaves them null.
-- Share-link view tracking.
+  there.
+- 404 share-link views (would tell us about expired plans + share-id
+  guessing). Today we only record successful loads.
 - Funnel analytics (anonymous → signed-up → paid).
 - Alerting on failure-rate spikes (defer until a baseline exists).
 - Customer-facing analytics.
-
-AI usage telemetry is **already** captured in a separate table
-(`public.ai_usage_log`, Phase 9). Don't conflate the two: `ai_usage_log`
-is per Claude call, `upload_events` is per .mpp upload attempt.
 
 ---
 
@@ -197,13 +203,17 @@ embarrassing if it leaked?" If yes, hash it or don't store it.
 ## Where it lives
 
 ```
-supabase/migrations/10_phase10_upload_events.sql   — table + indexes + RLS
-lib/telemetry/upload-events.ts                     — helper module (pure)
-lib/telemetry/__tests__/upload-events.test.ts      — 25 unit tests
-app/api/plansight/import-mpp/route.ts              — instrumented (v1)
+supabase/migrations/10_phase10_upload_events.sql   — uploads: table + indexes + RLS
+supabase/migrations/11_phase11_share_views.sql     — share views: table + indexes + RLS
+lib/telemetry/upload-events.ts                     — uploads: helper module (pure)
+lib/telemetry/share-views.ts                       — share views: helper module (pure)
+lib/telemetry/__tests__/upload-events.test.ts      — uploads: 25 unit tests
+lib/telemetry/__tests__/share-views.test.ts        — share views: 3 unit tests
+app/api/plansight/import-mpp/route.ts              — uploads: instrumented
+app/api/plansight/share/route.ts                   — share views: GET instrumented
 ```
 
-`lib/telemetry/` is a new top-level directory, intentionally not under
+`lib/telemetry/` is a top-level directory, intentionally not under
 `lib/plansight-ai/`. Telemetry is product-agnostic infrastructure —
 future products can drop their own event helpers in here.
 
@@ -284,15 +294,116 @@ where success = true
 
 ## Retention
 
-For now: keep all rows indefinitely. Revisit when the table exceeds
-100k rows. At that point a `delete from upload_events where created_at
-< now() - interval '90 days'` job would be the simple answer.
+For now: keep all rows indefinitely. Revisit when either table exceeds
+100k rows. At that point a `delete from <table> where created_at <
+now() - interval '90 days'` job would be the simple answer.
+
+---
+
+## Share views (`public.share_views`)
+
+Captured at `GET /api/plansight/share` after a **successful** plan
+load. 404s are not recorded — they include expired guest plans,
+deleted plans, and share-ID guessing attempts, none of which signal
+stakeholder engagement.
+
+### Schema
+
+```sql
+create table public.share_views (
+  id uuid primary key default gen_random_uuid(),
+  viewed_at timestamptz not null default now(),
+  share_id text not null references public.plans(share_id) on delete cascade,
+  viewer_user_id uuid null references auth.users(id) on delete set null,
+  is_owner_view boolean not null default false,
+  user_agent text null
+);
+```
+
+Three indexes: `viewed_at desc` for date-range queries, `(share_id,
+viewed_at desc)` for per-share history, and a partial `viewed_at desc
+where is_owner_view = false` that keeps the headline "share-view rate"
+metric fast as the table grows.
+
+**RLS**: deny-all `"no client access"` policy. Service-role bypasses.
+Anon and authenticated keys read nothing.
+
+### Owner-view rule
+
+`is_owner_view` is `true` when:
+- The viewer is authenticated (`getCurrentUser()` returns a user), **AND**
+- The plan's `owner_user_id` matches the viewer's `id`.
+
+Anonymous stakeholders and authenticated users who don't own the plan
+both produce `is_owner_view = false`. The dashboard's "share-view
+rate" metric filters to `is_owner_view = false` when answering "is
+PlanSight actually working as a stakeholder communication tool?"
+
+### What we don't store
+Same rules as `upload_events`: no IP addresses, no referrer, no
+session fingerprinting. `user_agent` is capped at 500 chars and is
+the only diagnostic field beyond identity and timestamp.
+
+### Helper API
+
+```ts
+import { recordShareView } from "@/lib/telemetry/share-views";
+
+void recordShareView({
+  shareId: "abc-123",
+  viewerUserId: user?.id ?? null,
+  isOwnerView: false,
+  userAgent: request.headers.get("user-agent") ?? null
+});
+```
+
+Never throws. `shareId` is required; everything else nullable.
+
+### Useful queries
+
+Share-view rate over the last 30 days (the headline metric):
+
+```sql
+select
+  count(distinct sv.share_id) filter (where sv.is_owner_view = false)
+    * 100.0 / nullif(count(distinct p.share_id), 0) as pct_with_external_view
+from public.plans p
+left join public.share_views sv on sv.share_id = p.share_id
+where p.created_at > now() - interval '30 days'
+  and p.owner_type = 'user';
+```
+
+Views over time (line chart):
+
+```sql
+select date_trunc('day', viewed_at) as day,
+       count(*) filter (where is_owner_view = false) as external_views,
+       count(*) filter (where is_owner_view = true) as owner_views
+from public.share_views
+where viewed_at > now() - interval '30 days'
+group by 1 order by 1;
+```
+
+Top-viewed shares (table):
+
+```sql
+select share_id,
+       count(*) filter (where is_owner_view = false) as external_views,
+       max(viewed_at) as last_viewed
+from public.share_views
+where viewed_at > now() - interval '30 days'
+group by share_id
+order by external_views desc
+limit 10;
+```
 
 ---
 
 ## See also
 
-- `branding/plansight-ai/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md` — design brief.
-- `lib/telemetry/upload-events.ts` — runtime contract.
-- `lib/telemetry/__tests__/upload-events.test.ts` — unit tests.
-- `supabase/migrations/10_phase10_upload_events.sql` — schema.
+- `branding/plansight-ai/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md` — upload telemetry design brief.
+- `lib/telemetry/upload-events.ts` — uploads runtime contract.
+- `lib/telemetry/share-views.ts` — share-views runtime contract.
+- `lib/telemetry/__tests__/` — unit tests.
+- `supabase/migrations/10_phase10_upload_events.sql` — upload-events schema.
+- `supabase/migrations/11_phase11_share_views.sql` — share-views schema.
