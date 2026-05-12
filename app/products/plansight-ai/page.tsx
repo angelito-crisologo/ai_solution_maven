@@ -66,7 +66,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
     try {
       const owned = await loadPlanForOwner(requestedShareId, user.id);
       if (!owned) {
-        redirect("/my-plans?error=not-found");
+        redirect("/products/plansight-ai/my-plans?error=not-found");
       }
       initialPlan = owned;
       initialShareId = requestedShareId;

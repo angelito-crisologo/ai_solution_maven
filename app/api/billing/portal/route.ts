@@ -37,7 +37,7 @@ export async function POST() {
     const stripe = getStripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: billing.stripeCustomerId,
-      return_url: `${getAppUrl()}/my-plans`
+      return_url: `${getAppUrl()}/products/plansight-ai/my-plans`
     });
 
     return NextResponse.redirect(session.url, { status: 303 });

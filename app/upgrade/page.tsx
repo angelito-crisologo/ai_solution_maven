@@ -152,7 +152,7 @@ export default async function UpgradePage({
             ) : !user ? (
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
-                  href="/signup?product=plansight-ai&redirectTo=/my-plans"
+                  href="/signup?product=plansight-ai&redirectTo=/products/plansight-ai/my-plans"
                   className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                 >
                   Sign up to upgrade

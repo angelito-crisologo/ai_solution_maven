@@ -184,7 +184,7 @@ function PlanSightAuthCTA({
           </Link>
         ) : null}
         <Link
-          href="/my-plans"
+          href="/products/plansight-ai/my-plans"
           onClick={onAfter}
           className={`${base} border border-slate-800 bg-navy-800 text-slate-100 transition hover:border-slate-700 hover:bg-slate-800`}
         >
