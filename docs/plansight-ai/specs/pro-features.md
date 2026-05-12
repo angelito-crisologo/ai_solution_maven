@@ -25,13 +25,7 @@ Shipped (live in production):
 | PDF export | – | ✓ |
 | Upload size cap | 5 MB | **25 MB** |
 
-On the roadmap (not yet built — see "Pro v1.1" below):
-
-| Capability | Status |
-|---|---|
-| Saved filtered views + per-filter share URLs | Planned |
-| Task annotations | Planned |
-| Custom branding | Planned |
+Deferred to Pro v1.1 — see the section at the end of this doc.
 
 ---
 
@@ -57,33 +51,7 @@ On the roadmap (not yet built — see "Pro v1.1" below):
 
 ---
 
-### 3. Saved filtered views + per-filter share URLs — **planned**
-
-**What it does.** Filter the plan by assignee, date range, status (late / at-risk / critical), summary level (milestones only), or custom tag. Save the filter. Each saved filter gets its own share URL the PM can send to a specific stakeholder.
-
-**Why a PM cares.** Different stakeholders need different views of the same plan. The exec sponsor wants milestones. The team lead wants their team's tasks. Finance wants budget-flagged items. Today the PM either sends everyone the whole plan (overwhelming) or builds a custom report for each (time-consuming). Saved filtered views let one source of truth produce many targeted views, each with its own share link.
-
-**Build cost.** Low-medium. Filter logic exists; this adds save + share-URL generation per filter.
-
----
-
-### 4. Task annotations — **planned**
-
-**What it does.** Add per-task commentary the MPP file doesn't carry — context, caveats, status notes. Visible on the share page so stakeholders see what the PM wants them to see.
-
-**Examples of what gets annotated.**
-- "This date is aspirational, real target is +2 weeks"
-- "Waiting on legal sign-off"
-- "Sarah is on leave, watch this one"
-- "Blocked by vendor; escalated Monday"
-
-**Why a PM cares.** MS Project carries the structured data — tasks, dates, dependencies — but not the narrative. The narrative is what makes the plan actually useful in conversations. Annotations capture the PM's tacit knowledge alongside the data, so when a stakeholder views the share page, they see both. This also gives stakeholders something to engage with, which lifts share-link engagement.
-
-**Build cost.** Low. One additional table in Supabase, simple inline UI.
-
----
-
-### 5. Weekly status snapshot (PDF) — **shipped**
+### 3. Weekly status snapshot (PDF) — **shipped**
 
 **What it does.** One click generates a one-page PDF status report: top-line health (RAG), what slipped this week, what's at risk, milestones hitting this week, milestones coming next week. Suitable for emailing directly to stakeholders.
 
@@ -93,7 +61,7 @@ On the roadmap (not yet built — see "Pro v1.1" below):
 
 ---
 
-### 6. "Explain this task" inline AI — **shipped**
+### 4. "Explain this task" inline AI — **shipped**
 
 **What it does.** Click any task to get a short AI-generated explanation: why it matters, what depends on it, what its slipping would mean, where the risk sits. Single-turn, scoped to one task — not a full chat.
 
@@ -103,7 +71,7 @@ On the roadmap (not yet built — see "Pro v1.1" below):
 
 ---
 
-### 7. PDF export — **shipped**
+### 5. PDF export — **shipped**
 
 **What it does.** Export the share-page snapshot or the weekly status snapshot as a clean, well-formatted, landscape PDF.
 
@@ -113,17 +81,7 @@ On the roadmap (not yet built — see "Pro v1.1" below):
 
 ---
 
-### 8. Custom branding — **planned**
-
-**What it does.** PM uploads their company logo, sets brand colors, and adds a footer. Stakeholder share pages and exported PDFs render with the PM's branding instead of PlanSight's.
-
-**Why a PM cares.** Two reasons. First, it makes the share link look like it belongs to the PM's company, not a third-party tool — which raises stakeholder trust. Second, for consultants and freelancers, branded outputs are the difference between "I used a tool" and "I delivered a polished artifact." This is a classic SaaS upgrade lever: high perceived value, near-zero marginal cost to the platform.
-
-**Build cost.** Low. Logo upload (Supabase Storage), color theming via CSS variables, footer text field.
-
----
-
-### 9. Higher upload limits — **shipped**
+### 6. Higher upload limits — **shipped**
 
 **What it does.** Raises the file size cap (5 MB → 25 MB) for Pro users. This is a **parsing and rendering** cap — what the MPP parser proxy will accept and what the workspace UI can render performantly. It is **not** an AI-cost cap: the bounded AI payload (see [ai-payload.md](ai-payload.md)) keeps AI cost roughly flat regardless of plan size.
 

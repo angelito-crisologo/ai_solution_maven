@@ -217,12 +217,12 @@ Backend enforcement: `lib/plansight-ai/guest.ts` exports `getGuestPlanExpiryIso(
 
 ## Open questions / known gaps
 
-- **PremiumAnalysisTeaser.tsx is unused** after this change. Left in place pending explicit removal.
+_None at the moment._
 
 ## Out of scope
 
 - Per-seat or team pricing (Pro is single-seat; team is a future tier).
-- Feature roadmap (custom branding, version compare, AI chat). Marketing only shows what ships today.
+- Pro v1.1 roadmap (version compare, AI chat). Marketing only shows what ships today.
 - Repeating the hero's value prop. The hero answers "what is PlanSight?"; this section answers "what does it cost?".
 
 ## Related docs

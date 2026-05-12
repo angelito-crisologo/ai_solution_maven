@@ -13,6 +13,8 @@ Brand assets (voice, colors, typography, logos) live under
   truth for one domain and should be kept aligned with the code.
   - [pro-features.md](specs/pro-features.md) — Pro tier features, gates,
     cost model
+  - [pricing-section.md](specs/pricing-section.md) — marketing pricing
+    table, dialog content, anonymous TTL + claim-on-signup mechanic
   - [ai-payload.md](specs/ai-payload.md) — what gets sent to Claude,
     payload caps, prompt caching, v1 rollback
   - [telemetry.md](specs/telemetry.md) — `upload_events`,
