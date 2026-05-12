@@ -1,8 +1,8 @@
 -- Phase 10: upload telemetry.
 --
 -- Backs the brief at
--- branding/plansight-ai/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md and the
--- spec at branding/plansight-ai/TELEMETRY_SPEC.md.
+-- docs/plansight-ai/archive/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md and the
+-- spec at docs/plansight-ai/specs/telemetry.md.
 --
 -- One row per .mpp upload attempt, success or failure. Used to answer:
 --   * What's the median parse time? At what file size does it spike?
@@ -85,7 +85,7 @@ create policy "no client access"
   with check (false);
 
 comment on table public.upload_events is
-  'One row per .mpp upload attempt at /api/plansight/import-mpp. Used for parser-pipeline observability: parse latency distribution, cold-start detection, failure-stage rates, file-size scaling. See branding/plansight-ai/TELEMETRY_SPEC.md.';
+  'One row per .mpp upload attempt at /api/plansight/import-mpp. Used for parser-pipeline observability: parse latency distribution, cold-start detection, failure-stage rates, file-size scaling. See docs/plansight-ai/specs/telemetry.md.';
 comment on column public.upload_events.user_tier is
   '"anon" when no Supabase session was present; "free"/"pro" reflects product_activations.tier at upload time.';
 comment on column public.upload_events.failure_stage is

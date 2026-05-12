@@ -10,47 +10,54 @@
 
 ## Tier comparison
 
+Shipped (live in production):
+
 | Capability | Free (signed-up) | **Pro** |
 |---|---|---|
 | Upload `.mpp` files, view, deterministic insights | ✓ | ✓ |
 | Stakeholder share link (read-only) | ✓ | ✓ |
-| Excel export (tasks-only) | ✓ | ✓ |
+| Excel export | ✓ | ✓ |
 | AI analysis | First generation, cached | **Regenerate any time** |
-| Plans saved | 1 (most recent) | **Unlimited** |
+| Plans saved | 1 visible (most recent) | **Unlimited** |
 | My Plans dashboard | – | ✓ |
-| Saved filtered views + per-filter share URLs | – | ✓ |
-| Task annotations | – | ✓ |
-| Weekly status snapshot (PDF) | – | ✓ |
+| Weekly status snapshot (PDF, landscape) | – | ✓ |
 | "Explain this task" inline AI | – | ✓ |
 | PDF export | – | ✓ |
-| Custom branding | – | ✓ |
-| Higher upload limits | – | ✓ |
+| Upload size cap | 5 MB | **25 MB** |
+
+On the roadmap (not yet built — see "Pro v1.1" below):
+
+| Capability | Status |
+|---|---|
+| Saved filtered views + per-filter share URLs | Planned |
+| Task annotations | Planned |
+| Custom branding | Planned |
 
 ---
 
 ## Pro features in detail
 
-### 1. Unlimited plans + My Plans dashboard
+### 1. Unlimited plans + My Plans dashboard — **shipped**
 
-**What it does.** Upload as many plans as you want and see them all in one place. Rename, archive, or delete from a single workspace. Free signed-in users have a single plan slot — importing a new plan replaces the previous one.
+**What it does.** Upload as many plans as you want and see them all in one place at `/products/plansight-ai/my-plans`. Rename, archive, or delete from a single workspace. Free signed-in users have a single plan visible — additional plans show as "Pro only" rows that unlock on upgrade.
 
 **Why a PM cares.** Most PMs run more than one project at a time. The single-plan limit on Free isn't a quota wall — it's a workflow constraint. Pro removes that constraint and gives the PM a home base for everything they're managing. This is the feature that turns PlanSight from "tool I tried" into "tool I use."
 
-**Build cost.** Low. Standard CRUD with Supabase Auth and `owner_user_id` filtering.
+**Implementation.** `app/products/plansight-ai/my-plans/page.tsx`; tier gate at `isPro = activation.tier === "pro"`; free users see `hiddenCount = plans.length - 1` locked rows.
 
 ---
 
-### 2. Regenerate AI analysis
+### 2. Regenerate AI analysis — **shipped**
 
 **What it does.** Re-run the Claude analysis on demand after a plan update. Free tier sees only the first cached generation; Pro can regenerate any time the plan changes.
 
 **Why a PM cares.** Plans evolve weekly. The AI summary that was accurate two weeks ago is stale today. Regenerate keeps the AI insights synchronized with the current state of the project, so the PM is never showing stakeholders an out-of-date analysis.
 
-**Build cost.** Already built in Phase 3. The gate is a session check, nothing more.
+**Implementation.** `app/api/plansight/ai-analysis/route.ts` — Pro gate at `activation.tier !== "pro"` rejects non-Pro callers. UI in `components/plansight-ai/PlanSightAIAnalysisPanel.tsx` shows an upgrade modal for non-Pro users. Each call is logged to `ai_usage_log` (see [abuse-mitigation.md](abuse-mitigation.md)).
 
 ---
 
-### 3. Saved filtered views + per-filter share URLs
+### 3. Saved filtered views + per-filter share URLs — **planned**
 
 **What it does.** Filter the plan by assignee, date range, status (late / at-risk / critical), summary level (milestones only), or custom tag. Save the filter. Each saved filter gets its own share URL the PM can send to a specific stakeholder.
 
@@ -60,7 +67,7 @@
 
 ---
 
-### 4. Task annotations
+### 4. Task annotations — **planned**
 
 **What it does.** Add per-task commentary the MPP file doesn't carry — context, caveats, status notes. Visible on the share page so stakeholders see what the PM wants them to see.
 
@@ -76,37 +83,37 @@
 
 ---
 
-### 5. Weekly status snapshot (PDF)
+### 5. Weekly status snapshot (PDF) — **shipped**
 
 **What it does.** One click generates a one-page PDF status report: top-line health (RAG), what slipped this week, what's at risk, milestones hitting this week, milestones coming next week. Suitable for emailing directly to stakeholders.
 
 **Why a PM cares.** Weekly status reports are something almost every PM produces manually, every week, taking 30–60 minutes each time. The data is already in PlanSight — Pro just packages it into the format the PM was going to produce anyway. This is the single highest-time-saved feature in Pro and arguably justifies the subscription on its own.
 
-**Build cost.** Medium. A structured AI prompt over the existing insights engine plus PDF rendering. Pairs naturally with the PDF export feature (same rendering pipeline).
+**Implementation.** `app/api/plansight/weekly-snapshot/route.ts` with Pro gate. Week start day is user-configurable (Mon/Sun) and stored in `users.week_start_day` (phase 8). PDF rendered via `@react-pdf/renderer` in `lib/plansight-ai/pdf/weekly-report.tsx`.
 
 ---
 
-### 6. "Explain this task" inline AI
+### 6. "Explain this task" inline AI — **shipped**
 
 **What it does.** Click any task to get a short AI-generated explanation: why it matters, what depends on it, what its slipping would mean, where the risk sits. Single-turn, scoped to one task — not a full chat.
 
 **Why a PM cares.** Two audiences benefit. Stakeholders get instant context on a task without having to ask the PM. PMs get a sanity-check on tasks they may not have looked at closely in a while. Different from the broad project-level AI analysis: this is task-level, on-demand, and bounded.
 
-**Build cost.** Low. A focused Haiku prompt with the task plus its dependency neighborhood. Predictable token cost (no chat history to grow).
+**Implementation.** `app/api/plansight/explain-task/route.ts` calling `claude-haiku-4-5-20251001`. Per-task cache keyed on `(plan_content_hash, task_id)` in `explain_task_cache` — generated once per plan content, served free on every subsequent click. See [abuse-mitigation.md](abuse-mitigation.md) for rate limits and spend alerts.
 
 ---
 
-### 7. PDF export
+### 7. PDF export — **shipped**
 
-**What it does.** Export the AI analysis, the share-page snapshot, or the weekly status snapshot as a clean, well-formatted PDF.
+**What it does.** Export the share-page snapshot or the weekly status snapshot as a clean, well-formatted, landscape PDF.
 
-**Why a PM cares.** Stakeholders forward PDFs. They don't forward links — links require the recipient to click, load, possibly authenticate, and trust the source. PDFs land in inboxes and get read. For executive communication, PDF is the format of record. PlanSight needs to produce one.
+**Why a PM cares.** Stakeholders forward PDFs. They don't forward links — links require the recipient to click, load, possibly authenticate, and trust the source. PDFs land in inboxes and get read. For executive communication, PDF is the format of record.
 
-**Build cost.** Low. `@react-pdf/renderer` or Puppeteer. Half-day build using server-side rendering of the existing share-page or analysis components.
+**Implementation.** `app/api/plansight/export-pdf/route.ts` with Pro gate. `@react-pdf/renderer` server-side; landscape orientation set in `lib/plansight-ai/pdf/share-view.tsx` (`orientation="landscape"`).
 
 ---
 
-### 8. Custom branding
+### 8. Custom branding — **planned**
 
 **What it does.** PM uploads their company logo, sets brand colors, and adds a footer. Stakeholder share pages and exported PDFs render with the PM's branding instead of PlanSight's.
 
@@ -116,13 +123,13 @@
 
 ---
 
-### 9. Higher upload limits
+### 9. Higher upload limits — **shipped**
 
-**What it does.** Raises the file size cap (5 MB → 25 MB) and task count cap (5,000 → 25,000) for Pro users. These are **parsing and rendering** caps — what the MPP parser proxy will accept and what the workspace UI can render performantly. They are **not** AI-cost caps: the bounded AI payload (see `branding/plansight-ai/AI_PAYLOAD_SPEC.md`) keeps AI cost roughly flat regardless of plan size.
+**What it does.** Raises the file size cap (5 MB → 25 MB) for Pro users. This is a **parsing and rendering** cap — what the MPP parser proxy will accept and what the workspace UI can render performantly. It is **not** an AI-cost cap: the bounded AI payload (see [ai-payload.md](ai-payload.md)) keeps AI cost roughly flat regardless of plan size.
 
-**Why a PM cares.** Most plans fit comfortably under the existing free-tier caps. The ones that don't — large enterprise programs, consolidated portfolio plans, multi-year roadmaps — belong to exactly the kind of PM most likely to pay. Higher limits are invisible to free users and meaningful to the segment with the highest willingness to pay.
+**Why a PM cares.** Most plans fit comfortably under the existing free-tier cap. The ones that don't — large enterprise programs, consolidated portfolio plans, multi-year roadmaps — belong to exactly the kind of PM most likely to pay. Higher limits are invisible to free users and meaningful to the segment with the highest willingness to pay.
 
-**Build cost.** Trivial. A config change keyed off user tier.
+**Implementation.** `getLimitsForTier` keyed off `product_activations.tier`, applied at `app/api/plansight/import-mpp/route.ts:170`.
 
 ---
 
@@ -155,4 +162,4 @@ Conversational interface where the PM or stakeholder can ask Claude questions ab
 
 ## Pricing rationale (one paragraph)
 
-$19/month sits in the band where PMs can expense the tool without manager approval, signals "real product" rather than side project, and prices below the per-seat cost of Asana, Monday, or MS Project Plan 1. Unit economics are healthy at this price: marginal cost per Pro user is roughly $1/month (mostly fixed infrastructure amortized across users, plus negligible Haiku token cost on cached AI analysis). The annual option ($190, ~17% discount) funds 6+ months of infrastructure in a single transaction, which matters when running solo.
+$19/month sits in the band where PMs can expense the tool without manager approval, signals "real product" rather than side project, and prices below the per-seat cost of Asana, Monday, or MS Project Plan 1. Unit economics are healthy at this price: marginal cost per Pro user is dominated by the bounded Haiku AI calls — `claude-haiku-4-5-20251001` via the regenerate and weekly-snapshot paths, plus the per-task explain cache. Actual per-user spend is now tracked in `ai_usage_log` and visible on `/products/plansight-ai/admin` under "Cost / active Pro". The annual option (~17% discount) funds 6+ months of infrastructure in a single transaction, which matters when running solo.

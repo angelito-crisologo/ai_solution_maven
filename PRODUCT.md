@@ -124,7 +124,7 @@ Replaces a previously-templated "AI analysis" panel with actual Claude integrati
 
 The two-call architecture was chosen after iteration: a single call consistently produced empty recommendations because the model treated risks as covering both descriptive and prescriptive concerns. Splitting the calls — one tool for summary+risks, a separate tool whose only output is recommendations — eliminated the failure mode.
 
-A follow-up bounded-payload refactor (see `branding/plansight-ai/AI_PAYLOAD_SPEC.md`) keeps AI cost and latency roughly flat across plan sizes — a 25,000-task plan analyzes for the same cost as a 100-task plan. Measured cost: 3–8¢ per first generation. Cached re-views (content-hash cache on `public.plans.ai_analysis`) are free — no Claude call. Latency: 5–8s end-to-end on first generation, sub-second on cached views.
+A follow-up bounded-payload refactor (see `docs/plansight-ai/specs/ai-payload.md`) keeps AI cost and latency roughly flat across plan sizes — a 25,000-task plan analyzes for the same cost as a 100-task plan. Measured cost: 3–8¢ per first generation. Cached re-views (content-hash cache on `public.plans.ai_analysis`) are free — no Claude call. Latency: 5–8s end-to-end on first generation, sub-second on cached views.
 
 The Regenerate button is gated as a Pro-tier feature. A preview-only env var (`NEXT_PUBLIC_PLANSIGHT_DEV_REGENERATE`) bypasses the gate during development.
 
@@ -160,12 +160,14 @@ Stripe Checkout for Pro upgrade, webhook updates user tier in DB, paywall on Pro
 
 | Document | What it covers |
 |---|---|
-| `PlanSightAI.md` | Product strategy and positioning |
-| `INSIGHTS_SYSTEM.md` | PMP-aligned insights engine spec (CPM math, RAG thresholds) |
-| `branding/plansight-ai/AI_PAYLOAD_SPEC.md` | Bounded AI payload contract (sections, caps, sort orders, token budget) |
-| `branding/plansight-ai/TELEMETRY_SPEC.md` | Upload telemetry contract (schema, failure-stage taxonomy, fire-and-forget rule) |
+| `docs/plansight-ai/PRODUCT.md` | PlanSight AI product overview and current shipped state |
+| `docs/plansight-ai/specs/insights.md` | PMP-aligned insights engine spec (CPM math, RAG thresholds) |
+| `docs/plansight-ai/specs/ai-payload.md` | Bounded AI payload contract (sections, caps, sort orders, token budget) |
+| `docs/plansight-ai/specs/telemetry.md` | Upload / AI usage / share-view telemetry contracts |
+| `docs/plansight-ai/specs/pro-features.md` | Pro tier features, gates, pricing rationale |
+| `docs/plansight-ai/specs/abuse-mitigation.md` | Rate limits, soft caps, spend alerts on AI features |
 | `EXCEL_EXPORT_SPEC.md` | Excel export acceptance criteria |
-| `PLANSIGHT_MIGRATION_MAP.md` | Migration map from the original `mpp_viewer` codebase |
+| `docs/plansight-ai/archive/` | Historical implementation briefs and the migration map |
 | `branding/<product>/BRANDKIT.md` | Per-product design system (colors, typography, voice). AISM brand at `branding/ai-solution-maven/BRANDKIT.md`. Tokens in `lib/branding/`. |
 | `AGENTS.md` | Original project instructions |
 | `IMPLEMENTATION_PLAN.md` | Phase-by-phase work tracker |

@@ -4,7 +4,9 @@ This is the formal contract for the JSON object sent to Claude for AI analysis.
 
 The whole point: **AI cost and latency are constant regardless of plan size.** A 100-task plan and a 25,000-task plan produce roughly the same payload size, the same number of tokens, and the same per-generation cost.
 
-Design context lives in `AI_PAYLOAD_IMPLEMENTATION_BRIEF.md` (the brief that drove this work). This document is the contract.
+Design context lives in [`../archive/AI_PAYLOAD_IMPLEMENTATION_BRIEF.md`](../archive/AI_PAYLOAD_IMPLEMENTATION_BRIEF.md) (the brief that drove this work). This document is the contract.
+
+**Model:** `claude-haiku-4-5-20251001` for all paths (regenerate analysis, weekly snapshot, explain task). Set in `lib/plansight-ai/ai.ts`.
 
 ---
 
@@ -270,7 +272,8 @@ The legacy `compressInsightsForPrompt()` path remains in the codebase as a one-e
 
 ## See also
 
-- `branding/plansight-ai/AI_PAYLOAD_IMPLEMENTATION_BRIEF.md` — the design brief that drove this work.
-- `INSIGHTS_SYSTEM.md` — the deterministic insights engine the payload draws from.
+- [`../archive/AI_PAYLOAD_IMPLEMENTATION_BRIEF.md`](../archive/AI_PAYLOAD_IMPLEMENTATION_BRIEF.md) — the design brief that drove this work.
+- [`insights.md`](insights.md) — the deterministic insights engine the payload draws from.
+- [`abuse-mitigation.md`](abuse-mitigation.md) — `ai_usage_log` contract for measuring real-world cost.
 - `lib/plansight-ai/ai-payload/types.ts` — the runtime type contract.
 - `lib/plansight-ai/ai-payload/__tests__/build-ai-payload.test.ts` — 22 contract tests.

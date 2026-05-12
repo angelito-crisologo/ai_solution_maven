@@ -1,5 +1,6 @@
 # PlanSight AI — "Explain this task" abuse mitigation approach
 
+**Status:** Shipped (phase 9). See [pre-launch checklist](#pre-launch-checklist--shipped-status) for what landed where.
 **Feature:** "Explain this task" inline AI (Pro tier)
 **Scope:** Authenticated Pro users only. Not available on stakeholder share pages.
 **Goal:** Bound cost exposure within $19/mo unit economics while capturing usage data for future tuning.
@@ -43,7 +44,7 @@ The rate limit applies at the user level, not per-plan. Per-plan limits would sc
 
 **Why the soft cap at 100/day matters.** It's not a block — it's a nudge that prompts the user to be intentional about continuing. Most users will dismiss it and carry on; abusers and runaway scripts hit it as a signal that something unusual is happening. The hard cap at 200 is the real ceiling.
 
-**Hard cap messaging.** When the hard cap is hit, the block message should be polite and include a contact line: "You've used today's allowance. Come back tomorrow, or [contact me] if your workflow needs more." That gives a direct line to power users — the most valuable feedback channel for tuning limits later.
+**Hard cap messaging.** When the hard cap is hit, the block message should be polite and include a contact line: "You've used today's allowance. Come back tomorrow, or email support@aisolutionmaven.com if your workflow needs more." That gives a direct line to power users — the most valuable feedback channel for tuning limits later.
 
 ### Layer 4: Account-level spend alert
 
@@ -53,7 +54,7 @@ Email the operator when any account exceeds $3/mo cumulative Haiku spend across 
 
 ## Worst-case economics
 
-At $0.003 per uncached call (Haiku 4.5, ~1.2K input + ~300 output tokens):
+At $0.003 per uncached call (`claude-haiku-4-5-20251001`, ~1.2K input + ~300 output tokens):
 
 | Scenario | Cost |
 |---|---|
@@ -78,11 +79,11 @@ A dedicated Supabase table logs every AI call across all features. Add this on d
 | `id` | uuid | Primary key |
 | `created_at` | timestamptz | When the call happened |
 | `user_id` | uuid | Account that triggered it (FK to `auth.users`) |
-| `plan_id` | uuid | Which plan it was for (FK to `plans`) |
-| `feature` | text | `explain_task`, `regenerate_analysis`, `weekly_snapshot`, etc. |
+| `share_id` | text | Which plan share-id it was for (FK to `plans.share_id`, nullable) |
+| `feature` | text | `explain_task`, `regenerate_analysis`, `weekly_snapshot` (CHECK enforced) |
 | `task_id` | text | For per-task features; null otherwise |
 | `cache_hit` | boolean | True if served from cache, false if real Haiku call |
-| `model` | text | `claude-haiku-4-5` (in case you swap models later) |
+| `model` | text | `claude-haiku-4-5-20251001` (in case you swap models later) |
 | `input_tokens` | int | From Anthropic response |
 | `output_tokens` | int | From Anthropic response |
 | `cache_read_tokens` | int | From prompt-caching metadata |
@@ -127,21 +128,20 @@ The logging table gives the visibility to revisit any of these decisions with da
 
 ---
 
-## Pre-launch checklist
+## Pre-launch checklist — shipped status
 
-- [ ] Per-task cache implemented and keyed by `(plan_content_hash, task_id)`
-- [ ] Server-side auth + plan ownership check on the endpoint
-- [ ] Hourly hard limit enforced server-side (30/hr per user, across all plans)
-- [ ] Daily soft cap reminder triggers at 100/day (UI nudge, dismissable, doesn't block)
-- [ ] Daily hard limit enforced server-side (200/day per user, across all plans)
-- [ ] Block message at hard caps includes a contact line for power-user feedback
-- [ ] `ai_usage_log` table created with the schema above
-- [ ] Every AI call writes a row to `ai_usage_log`, including cache hits (with `cache_hit = true` and `cost_usd = 0`)
-- [ ] Account spend alert configured to email the operator at $3/mo cumulative per user
-- [ ] One internal query saved: "top 10 users by AI cost this month"
-- [ ] One internal query saved: "soft cap show vs dismiss rate, last 30 days"
+All shipped in phase 9 (migration `09_phase9_ai_usage_log.sql` + `app/api/plansight/explain-task/route.ts`):
 
-The last two items are the discipline that keeps this system useful over time. The logging table is only valuable if it's queried; saving a couple of starting queries means it actually gets looked at within the first month.
+- [x] Per-task cache implemented and keyed by `(plan_content_hash, task_id)` — `explain_task_cache` table
+- [x] Server-side auth + plan ownership check on the endpoint
+- [x] Hourly hard limit enforced server-side (30/hr per user, across all plans)
+- [x] Daily soft cap reminder triggers at 100/day (UI nudge, dismissable, doesn't block)
+- [x] Daily hard limit enforced server-side (200/day per user, across all plans)
+- [x] Block message at hard caps includes a contact line for power-user feedback
+- [x] `ai_usage_log` table created with the schema above
+- [x] Every AI call writes a row to `ai_usage_log`, including cache hits (with `cache_hit = true` and `cost_usd = 0`)
+- [x] Account spend alert configured to email the operator at $3/mo cumulative per user — `ai_spend_alerts` dedupe table (key `(user_id, year_month)`)
+- [x] Live queries surfaced on `/products/plansight-ai/admin` (cost / active Pro, top spenders, cache hit rate per feature)
 
 ---
 

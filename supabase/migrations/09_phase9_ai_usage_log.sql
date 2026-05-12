@@ -1,7 +1,7 @@
 -- Phase 9: AI usage logging, explain-task caching, and spend-alert dedupe.
 --
 -- Backs the abuse-mitigation stack in
--- branding/plansight-ai/PLANSIGHT_EXPLAIN_TASK_ABUSE_MITIGATION.md:
+-- docs/plansight-ai/specs/abuse-mitigation.md:
 --
 -- 1. ai_usage_log — one row per AI call (cache hits and misses) for every
 --    AI feature (explain_task, regenerate_analysis, weekly_snapshot).
