@@ -524,6 +524,67 @@ function normalizeFindings(value: unknown): {
   return { summary, risks };
 }
 
+/**
+ * Phase 3 safety net: Claude (especially Haiku) sometimes submits the
+ * `submit_recommendations` tool with an empty `{}` input, bypassing the
+ * tool schema's `minItems: 1` constraint. Forced tool_choice doesn't
+ * enforce inner constraints, so we have to recover server-side.
+ *
+ * When the first call returns 0 recommendations, send one corrective
+ * turn back using the standard tool_result protocol: replay the model's
+ * empty output, then a user message that flags the failure and asks
+ * specifically for the missing field. Most empty cases resolve on this
+ * second attempt; if not, we give up and return the empty array.
+ */
+async function retryRecommendationsIfEmpty(
+  apiKey: string,
+  systemPrompt: string,
+  cachedSchemaHeader: string | undefined,
+  originalMessages: ClaudeMessage[],
+  firstResponse: AnthropicMessageResponse
+): Promise<AiAnalysisRecommendation[]> {
+  const toolUseBlock = firstResponse.content.find(
+    (block) => block.type === "tool_use"
+  ) as { type: "tool_use"; id: string; name: string; input: unknown } | undefined;
+  if (!toolUseBlock) return [];
+
+  const retryMessages: ClaudeMessage[] = [
+    ...originalMessages,
+    {
+      role: "assistant",
+      content: [
+        {
+          type: "tool_use",
+          id: toolUseBlock.id,
+          name: toolUseBlock.name,
+          input: toolUseBlock.input
+        }
+      ]
+    },
+    {
+      role: "user",
+      content: [
+        {
+          type: "tool_result",
+          tool_use_id: toolUseBlock.id,
+          content:
+            "Your previous submit_recommendations call returned an empty input. The schema requires 1-5 recommendations and there is no situation where zero is correct. Re-call submit_recommendations with 1-5 concrete prescriptive actions — each starting with an imperative verb (Reassign, Reschedule, Confirm, Update, Convene, Review, Escalate, Reduce, Re-baseline, Delegate, Validate, etc.) — that map to the risks already identified."
+        }
+      ]
+    }
+  ];
+
+  const retryData = await callClaude(
+    apiKey,
+    systemPrompt,
+    RECOMMENDATIONS_TOOL,
+    retryMessages,
+    cachedSchemaHeader
+  );
+  const retryInput = extractToolUseInput(retryData, "submit_recommendations");
+  return normalizeRecommendations(retryInput);
+}
+
 function normalizeRecommendations(value: unknown): AiAnalysisRecommendation[] {
   if (typeof value !== "object" || value === null) return [];
   const obj = value as Record<string, unknown>;
@@ -630,26 +691,38 @@ async function generateAiAnalysisV1(
     2
   );
 
+  const recsMessages: ClaudeMessage[] = [
+    {
+      role: "user",
+      content: `Here is the plan's deterministic insights, the SUMMARY, and the RISKS already identified. Produce 1-5 prescriptive RECOMMENDATIONS the PM should execute next.\n\n${recommendationsContext}`
+    }
+  ];
+
   const recsData = await callClaude(
     apiKey,
     RECOMMENDATIONS_SYSTEM_PROMPT,
     RECOMMENDATIONS_TOOL,
-    [
-      {
-        role: "user",
-        content: `Here is the plan's deterministic insights, the SUMMARY, and the RISKS already identified. Produce 1-5 prescriptive RECOMMENDATIONS the PM should execute next.\n\n${recommendationsContext}`
-      }
-    ]
+    recsMessages
   );
 
   const recsInput = extractToolUseInput(recsData, "submit_recommendations");
-  const recommendations = normalizeRecommendations(recsInput);
+  let recommendations = normalizeRecommendations(recsInput);
 
   if (recommendations.length === 0) {
     console.warn(
-      "[ai-analysis] recommendations call returned 0 items; preview:",
+      "[ai-analysis] v1 recommendations call returned 0 items; retrying once with corrective tool_result. preview:",
       ((JSON.stringify(recsInput) ?? "") as string).slice(0, 400)
     );
+    recommendations = await retryRecommendationsIfEmpty(
+      apiKey,
+      RECOMMENDATIONS_SYSTEM_PROMPT,
+      undefined,
+      recsMessages,
+      recsData
+    );
+    if (recommendations.length === 0) {
+      console.error("[ai-analysis] v1 retry also returned 0 recommendations");
+    }
   }
 
   return assembleResult(findings.summary, findings.risks, recommendations, findingsData, recsData);
@@ -712,27 +785,39 @@ async function generateAiAnalysisV2(
     }
   );
 
+  const recsMessages: ClaudeMessage[] = [
+    {
+      role: "user",
+      content: `Plan payload + findings (JSON):\n\n${recsContext}\n\nProduce 1-5 prescriptive RECOMMENDATIONS the PM should execute next.`
+    }
+  ];
+
   const recsData = await callClaude(
     apiKey,
     RECOMMENDATIONS_SYSTEM_PROMPT_V2,
     RECOMMENDATIONS_TOOL,
-    [
-      {
-        role: "user",
-        content: `Plan payload + findings (JSON):\n\n${recsContext}\n\nProduce 1-5 prescriptive RECOMMENDATIONS the PM should execute next.`
-      }
-    ],
+    recsMessages,
     PAYLOAD_SCHEMA_HEADER
   );
 
   const recsInput = extractToolUseInput(recsData, "submit_recommendations");
-  const recommendations = normalizeRecommendations(recsInput);
+  let recommendations = normalizeRecommendations(recsInput);
 
   if (recommendations.length === 0) {
     console.warn(
-      "[ai-analysis] recommendations call returned 0 items; preview:",
+      "[ai-analysis] v2 recommendations call returned 0 items; retrying once with corrective tool_result. preview:",
       ((JSON.stringify(recsInput) ?? "") as string).slice(0, 400)
     );
+    recommendations = await retryRecommendationsIfEmpty(
+      apiKey,
+      RECOMMENDATIONS_SYSTEM_PROMPT_V2,
+      PAYLOAD_SCHEMA_HEADER,
+      recsMessages,
+      recsData
+    );
+    if (recommendations.length === 0) {
+      console.error("[ai-analysis] v2 retry also returned 0 recommendations");
+    }
   }
 
   return assembleResult(findings.summary, findings.risks, recommendations, findingsData, recsData);
