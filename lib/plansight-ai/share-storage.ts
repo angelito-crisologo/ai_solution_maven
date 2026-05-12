@@ -317,7 +317,7 @@ export async function saveSharedPlan(
 
   const ownerType = options?.ownerType ?? "guest";
   const ownerUserId = options?.ownerUserId ?? null;
-  const expiresAt = ownerType === "guest" ? getGuestPlanExpiryIso(30) : null;
+  const expiresAt = ownerType === "guest" ? getGuestPlanExpiryIso(24) : null;
 
   const sharedPlanRow: SharedPlanRow = {
     share_id: shareId,

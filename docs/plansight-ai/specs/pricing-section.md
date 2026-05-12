@@ -80,7 +80,7 @@ Each row carries a `kind`: `"feature"` (clickable) or `"divider"` (non-interacti
 | `upload` | Upload .mpp file | ✓ | ✓ | ✓ |
 | `insights-engine` | Insights engine | ✓ | ✓ | ✓ |
 | `ai-analysis` | AI analysis | First analysis free | First analysis free | **Included** |
-| `share-link` | Public share link | 14 days | Never expires | **Never expires** |
+| `share-link` | Public share link | 24 hours | Never expires | **Never expires** |
 | `plans-saved` | Plans saved | — | 1 (most recent) | **Unlimited** |
 | `excel-export` | Export as Excel | ✓ | ✓ | ✓ |
 | `regenerate-ai` | Regenerate AI analysis | — | — | ✓ |
@@ -203,9 +203,20 @@ This section uses cyan in five places, per `branding/plansight-ai/docs/colors.md
 
 Non-Pro tier eyebrows (`ANONYMOUS`, `FREE`) use `text-slate-500`. Divider rows' Pro sub-labels (`PRO · AI ON DEMAND` etc.) use slate-600 because they're labels, not accents.
 
+## Anonymous TTL and the in-product reminder
+
+The 24-hour anonymous TTL is the conversion mechanic, not just a constraint. The workspace renders a persistent banner for anonymous users while a plan is loaded:
+
+> ⏱ **This plan expires in 24 hours.** Anonymous plans and their share links are kept for 24 hours, then deleted. Sign up free to keep this plan — and its share link — forever. Upgrade to Pro to keep every plan you upload.
+>
+> [Save my plan — sign up free]
+
+The banner uses a cyan-200 border + cyan-50 fill (one shade stronger than the surrounding workspace) so it reads as the next action, not a passive notice. Implemented in `PlanSightProductShell.tsx`; renders when `!signedIn` and a plan is loaded.
+
+Backend enforcement: `lib/plansight-ai/guest.ts` exports `getGuestPlanExpiryIso(hours = 24)`. The share-storage `saveSharedPlan` sets `expires_at = getGuestPlanExpiryIso(24)` for guest rows and `null` for signed-in users. Cleanup runs opportunistically inside `saveSharedPlan` (best-effort, non-blocking). No scheduled job; no env-var override.
+
 ## Open questions / known gaps
 
-- **Anonymous share link retention.** The section currently advertises `14 days` per the design comp. `PRODUCT.md:20` says `24-hour TTL on anonymous plans`. Backend behaviour needs to be confirmed and one of the two reconciled. If 14 days is the policy, the share-storage code's TTL should change to match.
 - **PremiumAnalysisTeaser.tsx is unused** after this change. Left in place pending explicit removal.
 
 ## Out of scope

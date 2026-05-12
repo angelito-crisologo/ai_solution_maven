@@ -45,7 +45,7 @@ const ROWS: RowItem[] = [
       eyebrow: "Input",
       lede: "PlanSight parses MS Project .mpp files into a structured plan you can view, analyse, and share. Drag-and-drop or click to upload.",
       perTier: {
-        anonymous: "Upload without signing in. Plan and share link persist for 14 days.",
+        anonymous: "Upload without signing in. Plan and share link persist for 24 hours.",
         free: "Upload after signing in. Your most recent plan stays in your account.",
         pro: "Upload as many plans as you need. Every plan is kept."
       }
@@ -90,7 +90,7 @@ const ROWS: RowItem[] = [
     key: "share-link",
     label: "Public share link",
     cells: {
-      anonymous: "14 days",
+      anonymous: "24 hours",
       free: "Never expires",
       pro: <span className="font-semibold text-cyan-700">Never expires</span>
     },
@@ -98,8 +98,8 @@ const ROWS: RowItem[] = [
       eyebrow: "Communication",
       lede: "A read-only URL that lets a stakeholder view the plan, insights, and AI analysis without an account or MS Project install.",
       perTier: {
-        anonymous: "Link works for 14 days. After that, the plan and the link both expire.",
-        free: "Link never expires. Send it once and it keeps working.",
+        anonymous: "Link works for 24 hours. After that, the plan and the link both disappear — the workspace shows a reminder so you can sign up to keep them before they expire.",
+        free: "Link never expires. Send it once and it keeps working — even months later.",
         pro: "Never-expiring links across all your saved plans."
       }
     }
@@ -117,7 +117,7 @@ const ROWS: RowItem[] = [
       eyebrow: "Storage",
       lede: "How many plans your account holds. This is the main reason most PMs sign up for Free, and the main reason they upgrade to Pro.",
       perTier: {
-        anonymous: "Nothing saved to an account. The plan exists for 14 days alongside its share link.",
+        anonymous: "Nothing saved to an account. The plan exists for 24 hours alongside its share link, then both are deleted.",
         free: "One saved plan. Uploading a new file replaces it.",
         pro: "Every plan you upload stays. Switch between them freely from the My Plans dashboard."
       }

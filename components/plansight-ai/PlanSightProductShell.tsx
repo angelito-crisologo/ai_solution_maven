@@ -7,7 +7,7 @@ import {
   AlertTriangle,
   BarChart3,
   Check,
-  KeyRound,
+  Clock,
   Loader2,
   List,
   Sparkles,
@@ -416,19 +416,19 @@ export function PlanSightProductShell({
             </div>
 
             {isAnonymous ? (
-              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mx-auto mt-3 flex max-w-[1200px] flex-col gap-3 rounded-md border-2 border-cyan-200 bg-cyan-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
-                    <KeyRound className="h-4 w-4" />
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-cyan-700 text-white">
+                    <Clock className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-h3 text-ink">
-                      Want this plan still here next time?
+                      This plan expires in 24 hours
                     </p>
                     <p className="mt-1 text-body text-slate-700">
-                      Sign up for PlanSight to keep your most recent plan, its insights,
-                      and AI analysis ready when you return. Upgrade to Pro to keep every
-                      plan you upload.
+                      Anonymous plans and their share links are kept for 24 hours, then
+                      deleted. Sign up free to keep this plan — and its share link —
+                      forever. Upgrade to Pro to keep every plan you upload.
                     </p>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ export function PlanSightProductShell({
                   href="/signin?product=plansight-ai&redirectTo=/products/plansight-ai"
                   className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                 >
-                  Sign up for PlanSight
+                  Save my plan — sign up free
                 </Link>
               </div>
             ) : null}
