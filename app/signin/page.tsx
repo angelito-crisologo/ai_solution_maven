@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default async function SignInPage({ searchParams }: Props) {
-  const redirectTo = searchParams?.redirectTo || "/my-plans";
+  const redirectTo = searchParams?.redirectTo || "/products/plansight-ai/my-plans";
   const product = searchParams?.product;
 
   // Legacy URL: /signin?product=plansight-ai was the old sign-up entry

@@ -25,7 +25,7 @@ function asProductSlug(raw: string | null): ProductSlug | null {
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const redirectTo = url.searchParams.get("redirectTo") || "/my-plans";
+  const redirectTo = url.searchParams.get("redirectTo") || "/products/plansight-ai/my-plans";
   const productSlug = asProductSlug(url.searchParams.get("product"));
 
   if (!code) {

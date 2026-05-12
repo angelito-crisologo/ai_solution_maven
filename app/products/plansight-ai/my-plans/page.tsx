@@ -61,7 +61,7 @@ export default async function MyPlansPage({
 }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/signin?redirectTo=/my-plans");
+    redirect("/signin?redirectTo=/products/plansight-ai/my-plans");
   }
 
   const activation = await getProductActivation(user.id, PRODUCTS.PLANSIGHT);
@@ -98,7 +98,7 @@ export default async function MyPlansPage({
         signedIn
         activated
         tier={activation.tier}
-        signinRedirectTo="/my-plans"
+        signinRedirectTo="/products/plansight-ai/my-plans"
       />
 
       <section className="bg-navy text-slate-100">
