@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ShareViewFooterCta } from "@/components/plansight-ai/ShareViewFooterCta";
 import { SharedStakeholderPlanLoader } from "@/components/plansight-ai/SharedStakeholderPlanLoader";
 
 export const runtime = "nodejs";
@@ -51,31 +52,7 @@ export default async function SharePage({ params }: Props) {
 
       <SharedStakeholderPlanLoader shareId={shareId} />
 
-      <footer className="mt-12 border-t border-slate-200 px-6 py-8">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/products/plansight-ai/brand/plansight-monogram-light.svg"
-              alt=""
-              width={20}
-              height={20}
-            />
-            <p className="text-caption text-slate-500">
-              Built on{" "}
-              <Link
-                href="/products/plansight-ai"
-                className="font-semibold text-cyan-700 transition hover:text-cyan-800"
-              >
-                PlanSight AI
-              </Link>
-              {" "}· Your data isn&apos;t training data.
-            </p>
-          </div>
-          <p className="font-mono text-caption text-slate-400">
-            /share/{shareId}
-          </p>
-        </div>
-      </footer>
+      <ShareViewFooterCta shareId={shareId} />
     </main>
   );
 }
