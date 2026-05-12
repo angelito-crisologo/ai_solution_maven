@@ -385,6 +385,26 @@ export async function loadSharedPlan(shareId: string) {
   return result.plan;
 }
 
+/**
+ * Lightweight owner lookup used by share-view telemetry to decide whether
+ * the current viewer is the plan's PM owner (so we can flag is_owner_view).
+ * Returns null if the plan doesn't exist, is guest-owned, or Supabase
+ * isn't configured. Cheap indexed query against the plans table.
+ */
+export async function getSharedPlanOwner(shareId: string): Promise<string | null> {
+  const client = createSupabaseAnonClient();
+  if (!client) return null;
+
+  const { data, error } = await client
+    .from("plans")
+    .select("owner_user_id")
+    .eq("share_id", shareId)
+    .maybeSingle<{ owner_user_id: string | null }>();
+
+  if (error || !data) return null;
+  return data.owner_user_id;
+}
+
 export async function loadSharedPlanWithDebug(shareId: string): Promise<{ plan: Plan | null; debug: SharedPlanDebug }> {
   // Reads use the anon client (RLS allows SELECT for anyone with the share_id).
   const client = createSupabaseAnonClient();
