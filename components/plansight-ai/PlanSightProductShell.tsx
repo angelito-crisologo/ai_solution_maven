@@ -1,8 +1,10 @@
 "use client";
 
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+
+const CLAIM_SHARE_ID_KEY = "plansight:claim-share-id";
 import {
   AlertTriangle,
   BarChart3,
@@ -90,6 +92,64 @@ export function PlanSightProductShell({
       importedPlanTabsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [plan, shareId]);
+
+  // Post-signup claim flow. When an anonymous visitor clicks the "Save my
+  // plan" banner we stash the shareId in localStorage and send them through
+  // signup/signin. On return — once signed in — we POST the stashed id to
+  // /api/plansight/claim to transfer ownership, then reload via ?shareId=
+  // so the server-rendered shell hydrates with the now-owned plan. Clear
+  // the marker immediately so transient failures don't loop.
+  useEffect(() => {
+    if (!signedIn) return;
+    if (typeof window === "undefined") return;
+    const claimId = window.localStorage.getItem(CLAIM_SHARE_ID_KEY);
+    if (!claimId) return;
+    window.localStorage.removeItem(CLAIM_SHARE_ID_KEY);
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch("/api/plansight/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shareId: claimId })
+        });
+        if (cancelled) return;
+        if (response.ok) {
+          window.location.replace(
+            `/products/plansight-ai?shareId=${encodeURIComponent(claimId)}`
+          );
+        }
+        // On failure (plan expired, already claimed, server error), stay on
+        // the empty workspace silently — localStorage is already cleared so
+        // we don't retry. The user can re-upload.
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[plansight] claim-on-signin failed", error);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
+
+  // Click handler for the anonymous-banner CTA. Persists the current shareId
+  // so the post-signup claim effect (above) can pick it up after the auth
+  // round-trip. Honours modifier-click so "open in new tab" still works.
+  const handleClaimBannerClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) {
+      return;
+    }
+    if (shareId && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(CLAIM_SHARE_ID_KEY, shareId);
+      } catch {
+        // localStorage unavailable — claim won't fire, user re-uploads after signup.
+      }
+    }
+  };
 
   /**
    * POST the parsed Plan to /api/plansight/share. Returns the new shareId on
@@ -434,6 +494,7 @@ export function PlanSightProductShell({
                 </div>
                 <Link
                   href="/signin?product=plansight-ai&redirectTo=/products/plansight-ai"
+                  onClick={handleClaimBannerClick}
                   className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                 >
                   Save my plan — sign up free

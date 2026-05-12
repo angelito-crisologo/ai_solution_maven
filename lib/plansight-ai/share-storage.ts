@@ -102,6 +102,78 @@ async function cleanupExpiredGuestPlans(client: ReturnType<typeof createSupabase
   }
 }
 
+export type ClaimGuestPlanResult =
+  | { ok: true; shareId: string; title: string }
+  | { ok: false; reason: "not-found" | "not-guest" | "expired" };
+
+/**
+ * Transfer an anonymous (guest) plan onto a signed-in user's account. Used by
+ * the post-signup claim flow: an anonymous visitor uploads, clicks "Save my
+ * plan", signs up, and on return we re-attribute the row so the plan and its
+ * share link persist instead of evaporating at the 24h TTL.
+ *
+ * Authorisation note: any signed-in user may claim a guest row. The shareId
+ * is the only key, which means a stakeholder who received an anonymous share
+ * URL could in principle race the original uploader to ownership. We accept
+ * that trade-off for v1 — anonymous plans expire in 24h anyway, and the
+ * original uploader can always claim first by signing up. If we ever need
+ * stricter creator-only claim, the path forward is a guest-session cookie
+ * scoped to the shareId.
+ */
+export async function claimGuestPlan(
+  shareId: string,
+  userId: string
+): Promise<ClaimGuestPlanResult> {
+  if (!isSupabaseServiceConfigured()) {
+    throw new Error(
+      "Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY in the server environment."
+    );
+  }
+
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Failed to create Supabase service client.");
+  }
+
+  const { data: row, error: lookupError } = await client
+    .from("plans")
+    .select("share_id, title, owner_type, expires_at")
+    .eq("share_id", shareId)
+    .maybeSingle();
+
+  if (lookupError) {
+    throw lookupError;
+  }
+
+  if (!row) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  if (row.owner_type !== "guest") {
+    return { ok: false, reason: "not-guest" };
+  }
+
+  if (row.expires_at && Date.parse(row.expires_at) <= Date.now()) {
+    return { ok: false, reason: "expired" };
+  }
+
+  const { error: updateError } = await client
+    .from("plans")
+    .update({
+      owner_type: "user",
+      owner_user_id: userId,
+      expires_at: null
+    })
+    .eq("share_id", shareId)
+    .eq("owner_type", "guest");
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return { ok: true, shareId, title: row.title };
+}
+
 /**
  * Hard-delete every plan owned by the given user. plan_tasks rows cascade.
  * Used for the Free single-plan slot: when a Free user imports a new plan,

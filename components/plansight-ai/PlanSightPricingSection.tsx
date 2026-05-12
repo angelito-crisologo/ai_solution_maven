@@ -379,7 +379,7 @@ function DesktopTable({
           <div className="flex items-center px-6 py-5 text-caption text-slate-500">
             Click any row for details.
           </div>
-          <div className="flex items-center px-4 py-5">
+          <div className="flex items-center justify-center px-4 py-5">
             <a
               href="#plansight-workspace"
               onClick={onTryFree}
@@ -388,7 +388,7 @@ function DesktopTable({
               Try free →
             </a>
           </div>
-          <div className="flex items-center px-4 py-5">
+          <div className="flex items-center justify-center px-4 py-5">
             <Link
               href="/signup?redirectTo=/products/plansight-ai"
               className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-4 text-caption font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2"
@@ -396,7 +396,7 @@ function DesktopTable({
               Sign up free →
             </Link>
           </div>
-          <div className="flex items-center bg-cyan-50/70 px-4 py-5">
+          <div className="flex items-center justify-center bg-cyan-50/70 px-4 py-5">
             <Link
               href="/upgrade"
               className="inline-flex h-10 items-center justify-center gap-1 rounded-md bg-cyan-700 px-4 text-caption font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2"
