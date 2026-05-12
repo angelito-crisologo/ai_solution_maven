@@ -44,18 +44,15 @@ Recommended values:
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase dashboard → Project Settings → API → `service_role` secret
 - `ANTHROPIC_API_KEY`: from https://console.anthropic.com → Settings → API Keys
 
-### AI Analysis (Phase 3)
+### AI Analysis
 
-The AI Analysis tab calls Claude Haiku 4.5 via the Anthropic API, runs on Vercel Edge runtime (30s timeout), and caches each result by content hash on the plan row, so repeat views never re-spend tokens. To enable it:
-
-1. Run `supabase/migrations/02_phase3_ai_cache.sql` in the Supabase SQL editor (adds `ai_analysis`, `ai_analysis_content_hash`, `ai_analysis_generated_at` columns).
-2. Add `ANTHROPIC_API_KEY` to Vercel environment variables (Production + Preview).
+PlanSight AI calls `claude-haiku-4-5-20251001` via the Anthropic API and caches each result by content hash on the plan row, so repeat views never re-spend tokens. `ANTHROPIC_API_KEY` must be set in Vercel for the AI features to work. See [`docs/plansight-ai/specs/ai-payload.md`](docs/plansight-ai/specs/ai-payload.md) for the bounded payload contract and [`docs/plansight-ai/specs/abuse-mitigation.md`](docs/plansight-ai/specs/abuse-mitigation.md) for rate limits and spend alerts.
 
 ## Supabase Setup
 
 1. Open your Supabase project.
 2. Go to the SQL editor and run `supabase/schema.sql` for a fresh setup.
-3. Existing installations: run `supabase/migrations/01_phase1_security.sql` to lock down RLS and add forward-compat columns. **This truncates existing `plans` and `plan_tasks` data.**
+3. Existing installations: apply migrations under `supabase/migrations/` in numeric order (`01` through `11`). They are idempotent. Migrations cover RLS lockdown, the AI analysis cache, users + per-product activation, Stripe billing, week-start preference, AI usage logging, upload telemetry, and share-view telemetry.
 4. Add the env vars above to `.env.local` for local development and to Vercel for production.
 
 ### RLS posture
@@ -70,9 +67,9 @@ The parser service now lives in `services/plansight-import/` and is deployed wit
 
 Deploy that service to Render, then point `PLANSIGHT_IMPORT_SERVICE_URL` at the resulting service URL.
 
-## Login
+## Authentication
 
-The product will need authenticated user sessions for the private workspace. The cleanest next step is to add a managed auth provider such as Clerk or Supabase Auth, then protect the signed-in app area while keeping public stakeholder share links open.
+Supabase Auth (email/password + magic link) is wired up. Sign-in / sign-up flows live under `/signin`, `/signup`, `/forgot-password`, `/reset-password`. Anonymous use is intentionally supported for stakeholder share pages.
 
 ## Brand Assets
 
