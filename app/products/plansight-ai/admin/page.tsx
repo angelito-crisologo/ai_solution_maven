@@ -27,11 +27,11 @@ import {
   formatUsd
 } from "./components/StatRow";
 import {
-  ADMIN_CHART_COLORS,
   CategoryBarChart,
   DailyLineChart,
   FileSizeScatter
 } from "./components/AdminCharts";
+import { ADMIN_CHART_COLORS } from "./chart-constants";
 
 export const dynamic = "force-dynamic";
 
@@ -240,7 +240,7 @@ export default async function AdminPage() {
                       color: ADMIN_CHART_COLORS.primary
                     }
                   ]}
-                  yFormatter={(v) => `$${v.toFixed(2)}`}
+                  valueFormat="usd"
                   ariaLabel="Daily AI cost"
                 />
               )}
