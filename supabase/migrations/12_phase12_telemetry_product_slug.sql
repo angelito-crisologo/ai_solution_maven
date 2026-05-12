@@ -53,8 +53,11 @@ comment on column public.ai_usage_log.product_slug is
 alter table public.share_views
   add column if not exists product_slug text not null default 'plansight-ai';
 
-create index if not exists share_views_product_slug_created_idx
-  on public.share_views (product_slug, created_at desc);
+-- share_views uses `viewed_at`, not `created_at` (see migration 11). Index
+-- the (product_slug, viewed_at) pair so the engagement dashboard can
+-- window by product cheaply.
+create index if not exists share_views_product_slug_viewed_idx
+  on public.share_views (product_slug, viewed_at desc);
 
 comment on column public.share_views.product_slug is
   'Which product the viewed plan belongs to. Today always plansight-ai.';
