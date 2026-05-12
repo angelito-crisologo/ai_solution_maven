@@ -39,6 +39,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  // Google Search Console — URL prefix property verification for
+  // https://aisolutionmaven.com/. Renders as
+  // <meta name="google-site-verification" content="..." />.
+  // The token covers the property only; rotating in Search Console will
+  // produce a new value. Domain property (DNS TXT) is intentionally skipped
+  // since the site doesn't use subdomains.
+  verification: {
+    google: "R-OnioYD5sNBGMcnpuuG9Xeb0NlazmgQFov5sr9FVRI"
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
