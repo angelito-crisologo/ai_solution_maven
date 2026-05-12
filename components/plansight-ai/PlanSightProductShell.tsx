@@ -180,7 +180,9 @@ export function PlanSightProductShell({
     formData.append("file", selectedFile);
 
     setIsSubmitting(true);
-    setStatus(`Importing ${selectedFile.name}...`);
+    setStatus(
+      `Importing ${selectedFile.name}... This may take up to a minute.`
+    );
 
     try {
       const response = await fetch("/api/plansight/import-mpp", {

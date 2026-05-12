@@ -169,7 +169,9 @@ export function PlanSightAIAnalysisPanel({
               {state.status === "loading" || state.status === "idle" ? (
                 <div className="flex items-center gap-3 text-body text-slate-700">
                   <Loader2 className="h-4 w-4 animate-spin text-cyan-700" />
-                  <span>Generating analysis (5–8s)...</span>
+                  <span>
+                    Generating analysis. This may take up to a minute...
+                  </span>
                 </div>
               ) : state.status === "error" ? (
                 <div className="space-y-3">
