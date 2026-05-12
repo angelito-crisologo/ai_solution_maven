@@ -1,8 +1,11 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 const MAX_USER_AGENT_CHARS = 500;
 
 export type ShareViewEvent = {
+  /** Product slug this share belongs to. Defaults to "plansight-ai" if
+   *  unset for backwards compatibility; new products must pass their slug. */
+  productSlug?: string;
   /** share_id of the plan being viewed. Required. */
   shareId: string;
   /** Supabase auth UUID of the viewer, or null for unauthenticated stakeholders. */
@@ -34,6 +37,7 @@ export async function recordShareView(event: ShareViewEvent): Promise<void> {
     }
 
     const { error } = await client.from("share_views").insert({
+      product_slug: event.productSlug ?? "plansight-ai",
       share_id: event.shareId,
       viewer_user_id: event.viewerUserId ?? null,
       is_owner_view: event.isOwnerView,

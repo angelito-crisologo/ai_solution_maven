@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 /**
  * Read a cached explanation for (plan_content_hash, task_id). Returns null on

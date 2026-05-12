@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 /**
  * Categorical pipeline stage at which an upload failed. The dashboard's
@@ -24,6 +24,9 @@ export type FailureStage =
 export type UserTier = "anon" | "free" | "pro";
 
 export type UploadEvent = {
+  /** Product slug this upload belongs to. Defaults to "plansight-ai" if
+   *  unset for backwards compatibility; new products must pass their slug. */
+  productSlug?: string;
   userId: string | null;
   userTier: UserTier;
   userAgent: string | null;
@@ -76,6 +79,7 @@ export async function recordUploadEvent(event: Partial<UploadEvent>): Promise<vo
     }
 
     const { error } = await client.from("upload_events").insert({
+      product_slug: event.productSlug ?? "plansight-ai",
       user_id: event.userId ?? null,
       user_tier: event.userTier ?? "anon",
       user_agent: event.userAgent ? event.userAgent.slice(0, MAX_USER_AGENT_CHARS) : null,

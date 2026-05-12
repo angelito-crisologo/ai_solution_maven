@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const EXPLAIN_TASK_LIMITS = {
   PER_HOUR_HARD: 30,

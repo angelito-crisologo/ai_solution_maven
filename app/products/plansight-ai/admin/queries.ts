@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 // Time windows. Tweak in one place if we ever want a date-range picker.
 export const WINDOW_DAYS_HEALTH = 7;

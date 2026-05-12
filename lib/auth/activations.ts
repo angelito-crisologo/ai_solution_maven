@@ -4,7 +4,8 @@ import {
 import {
   createSupabaseServiceClient,
   isSupabaseServiceConfigured
-} from "@/lib/plansight-ai/supabase";
+} from "@/lib/supabase/service";
+import type { ProductSlug } from "@/lib/products";
 
 export type ProductTier = "free" | "pro";
 
@@ -16,14 +17,11 @@ export type ProductActivation = {
 };
 
 /**
- * Stable product slugs. Use these constants instead of string literals so
- * a typo at a callsite is a TS error, not a silent miss.
+ * Stable product slugs. Re-exported from the single source of truth in
+ * `lib/products.ts` for backwards compatibility with existing callsites.
  */
-export const PRODUCTS = {
-  PLANSIGHT: "plansight-ai"
-} as const;
-
-export type ProductSlug = (typeof PRODUCTS)[keyof typeof PRODUCTS];
+export { PRODUCT_SLUGS as PRODUCTS } from "@/lib/products";
+export type { ProductSlug } from "@/lib/products";
 
 type ActivationRow = {
   user_id: string;

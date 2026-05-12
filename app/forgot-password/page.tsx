@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function ForgotPasswordPage({ searchParams }: Props) {
-  const redirectTo = searchParams?.redirectTo || "/products/plansight-ai/my-plans";
+  const redirectTo = searchParams?.redirectTo || "/";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">

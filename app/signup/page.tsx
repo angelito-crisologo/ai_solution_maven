@@ -37,7 +37,7 @@ export default async function SignUpPage({ searchParams }: Props) {
     searchParams?.redirectTo ||
     (productSlug === PRODUCTS.PLANSIGHT
       ? "/products/plansight-ai/my-plans"
-      : "/products/plansight-ai/my-plans");
+      : "/");
 
   const user = await getCurrentUser();
 

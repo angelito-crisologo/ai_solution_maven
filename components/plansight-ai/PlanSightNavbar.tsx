@@ -40,7 +40,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signinRedirectTo }:
   // cluster. The center nav is product-feature navigation only.
   const productNav = [
     { label: "Workspace", href: "/products/plansight-ai" },
-    { label: "Pricing", href: "/upgrade" }
+    { label: "Pricing", href: "/products/plansight-ai/upgrade" }
   ];
 
   return (
@@ -176,7 +176,7 @@ function PlanSightAuthCTA({
       <>
         {tier !== "pro" ? (
           <Link
-            href="/upgrade"
+            href="/products/plansight-ai/upgrade"
             onClick={onAfter}
             className={`${base} bg-cyan-400 font-semibold text-ink transition hover:bg-cyan-300`}
           >
