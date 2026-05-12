@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { track } from "@/lib/analytics/gtag";
 
 /**
  * Drop-in client component that completes the anonymous→signed-up claim
@@ -40,6 +41,7 @@ export function ClaimGuestPlanOnMount() {
         });
         if (cancelled) return;
         if (response.ok) {
+          track("plan_claimed", { source: "my_plans_landing" });
           // Re-render the server component so listPlansForUser picks up
           // the newly-claimed row.
           router.refresh();

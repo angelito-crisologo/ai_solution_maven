@@ -2,6 +2,7 @@
 
 import { Check, Link2 } from "lucide-react";
 import { useState } from "react";
+import { track } from "@/lib/analytics/gtag";
 
 type Props = {
   sharePath: string;
@@ -21,6 +22,7 @@ export function CopyShareLinkButton({ sharePath }: Props) {
       const absolute = new URL(sharePath, window.location.origin).toString();
       await navigator.clipboard.writeText(absolute);
       setCopied(true);
+      track("share_link_copied", { method: "clipboard" });
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       // Clipboard API can fail in restricted contexts (no HTTPS, browser
@@ -28,6 +30,7 @@ export function CopyShareLinkButton({ sharePath }: Props) {
       // grab the URL.
       const absolute = new URL(sharePath, window.location.origin).toString();
       window.prompt("Copy this link", absolute);
+      track("share_link_copied", { method: "prompt_fallback" });
     }
   };
 

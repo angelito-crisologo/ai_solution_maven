@@ -15,6 +15,7 @@ import {
   Sparkles,
   Upload
 } from "lucide-react";
+import { track } from "@/lib/analytics/gtag";
 import { buildInsightsReport, summarizePlan } from "@/lib/plansight-ai/analysis";
 import { createSharePayload } from "@/lib/plansight-ai/share";
 import type { Plan } from "@/lib/plansight-ai/types";
@@ -114,6 +115,7 @@ export function PlanSightProductShell({
         });
         if (cancelled) return;
         if (response.ok) {
+          track("plan_claimed", { source: "workspace_fallback" });
           window.location.replace("/products/plansight-ai/my-plans");
         }
         // On failure (plan expired, already claimed, server error), stay on
@@ -145,6 +147,7 @@ export function PlanSightProductShell({
         // localStorage unavailable — claim won't fire, user re-uploads after signup.
       }
     }
+    track("signup_cta_clicked", { source: "anonymous_workspace_banner" });
   };
 
   /**
@@ -220,6 +223,12 @@ export function PlanSightProductShell({
     setSelectedTaskIds(new Set());
     setStatus(`Imported ${fileName} and saved it.`);
     setActiveTab("plan");
+
+    track("plan_uploaded", {
+      task_count: parsedPlan.tasks.length,
+      auth_state: signedIn ? (plansightTier === "pro" ? "pro" : "free") : "anonymous",
+      replaced_existing: options.replaceExisting === true
+    });
 
     return { kind: "saved", shareId: newShareId };
   }

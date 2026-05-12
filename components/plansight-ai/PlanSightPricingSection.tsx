@@ -4,6 +4,7 @@ import { Check, Minus, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { track } from "@/lib/analytics/gtag";
 
 type TierKey = "anonymous" | "free" | "pro";
 
@@ -399,6 +400,7 @@ function DesktopTable({
           <div className="flex items-center justify-center bg-cyan-50/70 px-4 py-5">
             <Link
               href="/upgrade"
+              onClick={() => track("upgrade_clicked", { source: "pricing_table_desktop" })}
               className="inline-flex h-10 items-center justify-center gap-1 rounded-md bg-cyan-700 px-4 text-caption font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2"
             >
               Upgrade · $19/mo
@@ -675,6 +677,7 @@ function TierAccordionCard({
             ) : (
               <Link
                 href="/upgrade"
+                onClick={() => track("upgrade_clicked", { source: "pricing_accordion_mobile" })}
                 className="inline-flex h-10 w-full items-center justify-center gap-1 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white hover:bg-cyan-800"
               >
                 Upgrade · $19/mo
@@ -760,6 +763,7 @@ function FeatureDialog({
           </button>
           <Link
             href="/upgrade"
+            onClick={() => track("upgrade_clicked", { source: "feature_dialog" })}
             className="inline-flex h-10 items-center justify-center rounded-md bg-cyan-700 px-4 text-body font-semibold text-white hover:bg-cyan-800"
           >
             Upgrade to Pro
