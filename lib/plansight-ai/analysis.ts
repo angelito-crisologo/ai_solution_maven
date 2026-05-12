@@ -54,7 +54,7 @@ export type PlanInsightsReport = {
   };
   insights: {
     criticalTasks: CriticalPathTask[];
-    criticalPaths: string[][];
+    criticalPaths: Array<{ taskIds: string[]; durationDays: number }>;
     potentialCriticalTasks: ApproximateCriticalTask[];
     projectEndDate: string | null;
     lateTasks: LateTask[];
@@ -428,7 +428,10 @@ function computeCriticalPath(tasks: IndexedTask[], childCounts: Map<number, numb
   return {
     mode: "cpm" as const,
     criticalTasks,
-    criticalPaths: uniqueCriticalPaths.map((entry) => entry.path.map(String)),
+    criticalPaths: uniqueCriticalPaths.map((entry) => ({
+      taskIds: entry.path.map(String),
+      durationDays: entry.durationDays
+    })),
     potentialCriticalTasks: [] as ApproximateCriticalTask[],
     projectEndDate: null
   };
@@ -445,7 +448,7 @@ function computeApproximateCriticalTasks(tasks: IndexedTask[], childCounts: Map<
       mode: "approximate" as const,
       projectEndDate: null,
       criticalTasks: [] as CriticalPathTask[],
-      criticalPaths: [] as string[][],
+      criticalPaths: [] as Array<{ taskIds: string[]; durationDays: number }>,
       potentialCriticalTasks: [] as ApproximateCriticalTask[]
     };
   }
@@ -518,7 +521,7 @@ function computeApproximateCriticalTasks(tasks: IndexedTask[], childCounts: Map<
     mode: "approximate" as const,
     projectEndDate,
     criticalTasks: [] as CriticalPathTask[],
-    criticalPaths: [] as string[][],
+    criticalPaths: [] as Array<{ taskIds: string[]; durationDays: number }>,
     potentialCriticalTasks
   };
 }

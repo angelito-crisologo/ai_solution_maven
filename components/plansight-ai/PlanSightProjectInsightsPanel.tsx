@@ -108,33 +108,24 @@ export function PlanSightProjectInsightsPanel({
     [analysis.insights.criticalTasks, analysis.insights.potentialCriticalTasks, isApproximateMode]
   );
 
-  const criticalTaskById = useMemo(() => {
-    const source = isApproximateMode ? analysis.insights.potentialCriticalTasks : analysis.insights.criticalTasks;
-    return new Map(source.map((task) => [String(task.id), task] as const));
-  }, [analysis.insights.criticalTasks, analysis.insights.potentialCriticalTasks, isApproximateMode]);
-
   const criticalPathCards = useMemo(() => {
     if (isApproximateMode) {
       return [] as Array<{ key: string; pathIndex: number; label: string; durationDays: number }>;
     }
 
-    return analysis.insights.criticalPaths.map((path, index) => {
-      const tasks = path.map((taskId) => criticalTaskById.get(taskId)).filter(Boolean) as CriticalPathTask[];
-      const durationDays = tasks.reduce((sum, task) => {
-        const start = parsePlanDate(task.start);
-        const finish = parsePlanDate(task.finish);
-        if (!start || !finish) return sum;
-        return sum + Math.max(0, Math.round((finish.getTime() - start.getTime()) / 86400000) + 1);
-      }, 0);
-
-      return {
-        key: `${path.join("-")}-${index}`,
-        pathIndex: index + 1,
-        label: path.join(" → "),
-        durationDays
-      };
-    });
-  }, [analysis.insights.criticalPaths, criticalTaskById, isApproximateMode]);
+    // Duration comes straight from the analysis layer — single source of
+    // truth. The earlier client-side re-computation summed
+    // (finish - start + 1) per task with millisecond arithmetic, which
+    // diverged from the analysis layer's day-index math whenever a task
+    // straddled a DST boundary, surfacing as off-by-one durations on
+    // otherwise-equal critical paths.
+    return analysis.insights.criticalPaths.map((entry, index) => ({
+      key: `${entry.taskIds.join("-")}-${index}`,
+      pathIndex: index + 1,
+      label: entry.taskIds.join(" → "),
+      durationDays: entry.durationDays
+    }));
+  }, [analysis.insights.criticalPaths, isApproximateMode]);
 
   const criticalPathCount = criticalPathCards.length;
 

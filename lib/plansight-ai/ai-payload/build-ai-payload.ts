@@ -131,17 +131,10 @@ function computeOverallPercentComplete(plan: Plan): number | null {
 function computeCriticalPathDuration(insights: PlanInsightsReport): number | null {
   if (insights.mode !== "cpm") return null;
   const longestPath = insights.insights.criticalPaths[0];
-  if (!longestPath || longestPath.length === 0) return null;
-
-  const criticalTasksById = new Map(insights.insights.criticalTasks.map((task) => [task.id, task] as const));
-  let total = 0;
-  for (const idStr of longestPath) {
-    const id = Number.parseInt(idStr, 10);
-    if (!Number.isFinite(id)) continue;
-    const task = criticalTasksById.get(id);
-    if (task) total += task.durationDays;
-  }
-  return total;
+  if (!longestPath || longestPath.taskIds.length === 0) return null;
+  // Analysis layer is the single source of truth for path duration —
+  // re-summing here would risk drifting from the UI's display.
+  return longestPath.durationDays;
 }
 
 // ---- flag sets -------------------------------------------------------------
