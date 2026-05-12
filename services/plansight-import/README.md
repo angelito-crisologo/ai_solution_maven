@@ -1,115 +1,85 @@
-# mpp_viewer
+# plansight-import — `.mpp` parser microservice
 
-Responsive web app for viewing Microsoft Project `.mpp` plans in the browser with:
-- hierarchical task list (MS Project-style outline)
-- synchronized Gantt chart
-- dependency lines
-- drag-resizable task columns
-- drag-resizable task pane vs Gantt pane
-- sample-project picker from `sample_projects/`
+Standalone backend service that PlanSight AI's Next.js app calls to
+parse Microsoft Project `.mpp` files. Deployed separately (Render
+Free) because Vercel can't host a JVM.
 
-## Repository Layout
+The Next.js app at `/api/plansight/import-mpp` proxies uploads to this
+service via the `PLANSIGHT_IMPORT_SERVICE_URL` environment variable.
 
-- `frontend/`: React + Vite UI
-- `backend/`: Node + Express API
-- `parser-java/`: Java MPXJ parser CLI
-- `sample_projects/`: bundled sample `.mpp` files
-- `render.yaml`: Render backend deployment config
-- `frontend/vercel.json`: Vercel frontend config
+## Repository layout
 
-## How It Works
+- `backend/` — Node + Express API that wraps the Java CLI
+- `parser-java/` — Java MPXJ parser CLI (Maven-built jar)
+- `sample_projects/` — bundled sample `.mpp` files served via the
+  samples API
+- `Dockerfile` — multi-stage build (Maven for the jar, Node for the API)
+- `render.yaml` — Render Blueprint config
 
-1. User uploads a `.mpp` file or selects a sample project.
-2. Frontend calls backend API.
-3. Backend invokes Java parser (`MPXJ`) and returns normalized JSON.
-4. Frontend renders task table + Gantt and keeps row heights aligned.
+## How it works
 
-## Prerequisites
+1. Next.js app posts a multipart upload to `POST /api/parse`.
+2. Node API writes the file to a temp path and invokes the Java jar.
+3. Java parser uses MPXJ to read the `.mpp` and emits normalized JSON.
+4. Node API returns the JSON; Next.js app renders the workspace.
+
+## Prerequisites (local dev)
 
 - Node.js 20+
 - Java 17+
 - Maven 3.9+
 
-## Local Development
+## Local development
 
-1. Build parser jar:
-```bash
-cd parser-java
-mvn -q package
-cd ..
-```
+Build the parser jar, install Node deps, run the server:
 
-2. Install dependencies:
 ```bash
+cd parser-java && mvn -q package && cd ..
 npm install
-```
-
-3. Run frontend + backend:
-```bash
 npm run dev
 ```
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3001`
+Backend listens on `http://localhost:3001` by default (override with
+`PORT`).
 
 ## Backend API
 
-- `GET /api/health`
-- `POST /api/parse` (multipart upload field: `file`)
-- `GET /api/samples` (list `.mpp` files in `sample_projects`)
-- `POST /api/parse-sample` (`{ "fileName": "..." }`)
+- `GET /api/health` → `{ ok: true }`
+- `POST /api/parse` — multipart upload, field name `file`
+- `GET /api/samples` — list `.mpp` files in `sample_projects/`
+- `POST /api/parse-sample` — body `{ "fileName": "..." }`
 
-## Production Deployment (Parser Service + Frontend)
-
-### 1) Push code to GitHub
-
-```bash
-git add .
-git commit -m "Prepare PlanSight import service deployment"
-git push origin main
-```
-
-### 2) Deploy the parser service on Render
-
-This repo includes `render.yaml` for the parser service.
+## Production deployment (Render Blueprint)
 
 In Render:
-1. New -> Blueprint
+1. **New → Blueprint**
 2. Connect this repository
 3. Render reads `render.yaml` and creates `plansight-import-service`
+   (Docker-based — uses `Dockerfile` directly)
 
-The service is Docker-based, so Render uses `Dockerfile` directly.
-
-Required env var:
-- `CORS_ORIGIN=https://<your-nextjs-domain>`
+Set the env var on the Render service after first deploy:
+- `CORS_ORIGIN=https://aisolutionmaven.com`
 
 Already set by `render.yaml`:
 - `SAMPLE_PROJECTS_DIR=/app/sample_projects`
 - `MPP_PARSER_JAR=/app/parser-java/target/mpp-parser-cli-1.0.0-jar-with-dependencies.jar`
 
-### 3) Deploy the frontend on Vercel
+Then in Vercel, set `PLANSIGHT_IMPORT_SERVICE_URL` to the Render
+service URL.
 
-1. Import the PlanSight Next.js app repo in Vercel
-2. Add env var:
-   - `PLANSIGHT_IMPORT_SERVICE_URL=https://<your-render-service-domain>`
-3. Deploy
-
-### 4) Final production wiring
-
-1. Copy the Vercel production URL
-2. Set Render `CORS_ORIGIN` to that exact URL
-3. Redeploy the parser service
-
-### 5) Verification checklist
+## Verification
 
 - `https://<render-service>/api/health` returns `{ "ok": true }`
-- `https://<render-service>/` returns the service status message
-- Upload `.mpp` from PlanSight works
-- PlanSight can import and render a plan
-- Daily/Weekly/Monthly views render correctly
+- An MPP upload from PlanSight succeeds and renders a plan
 
 ## Notes
 
-- Backend listens on `process.env.PORT` automatically (required by Render).
-- If parser path changes, override:
-  `MPP_PARSER_JAR=/absolute/path/to/mpp-parser-cli-...jar`
+- Backend listens on `process.env.PORT` automatically (required by
+  Render).
+- Render Free has aggressive cold-start behavior — UptimeRobot or a
+  similar pinger should hit `/api/health` every ~5 min during business
+  hours to keep the parser warm. Cold-start time is the dominant
+  parse-time outlier; the `parser_duration_ms` field in
+  `upload_events` shows this in production.
+- If the parser path changes, override `MPP_PARSER_JAR` to the absolute
+  path.
