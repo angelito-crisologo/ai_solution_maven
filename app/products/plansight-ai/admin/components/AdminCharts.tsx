@@ -14,16 +14,17 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import {
+  ADMIN_CHART_COLORS,
+  type ChartValueFormat
+} from "../chart-constants";
 
-const COLOR_PRIMARY = "#0e7490"; // cyan-700
-const COLOR_SECONDARY = "#7c3aed"; // violet-600
-const COLOR_DANGER = "#b91c1c"; // red-700
+const COLOR_PRIMARY = ADMIN_CHART_COLORS.primary;
 const AXIS_STROKE = "#cbd5e1"; // slate-300
 const TICK_FILL = "#475569"; // slate-600
 const GRID_STROKE = "#e2e8f0"; // slate-200
 
 function formatDateTick(value: string) {
-  // expects "YYYY-MM-DD"
   return value.slice(5); // "MM-DD"
 }
 
@@ -38,6 +39,27 @@ function formatMsTick(value: number) {
   return `${value}ms`;
 }
 
+function formatUsdTick(value: number) {
+  if (value >= 1) return `$${value.toFixed(2)}`;
+  return `$${value.toFixed(4)}`;
+}
+
+function formatIntTick(value: number) {
+  return value.toLocaleString();
+}
+
+function pickTickFormatter(format?: ChartValueFormat) {
+  if (format === "usd") return formatUsdTick;
+  if (format === "ms") return formatMsTick;
+  if (format === "bytes") return formatBytesTick;
+  if (format === "int") return formatIntTick;
+  return undefined;
+}
+
+function pickValueFormatter(format?: ChartValueFormat) {
+  return pickTickFormatter(format) ?? formatIntTick;
+}
+
 // ---------------------------------------------------------------------------
 // Line chart — daily counts (uploads, AI cost, share views)
 // ---------------------------------------------------------------------------
@@ -50,10 +72,10 @@ type LineSeries = {
 
 type DailyLineChartProps = {
   data: Array<Record<string, string | number>>;
-  /** name of the date field on each row, default "date" */
   xKey?: string;
   series: LineSeries[];
-  yFormatter?: (value: number) => string;
+  // Discriminator string — functions can't cross the server→client boundary.
+  valueFormat?: ChartValueFormat;
   ariaLabel?: string;
 };
 
@@ -61,9 +83,11 @@ export function DailyLineChart({
   data,
   xKey = "date",
   series,
-  yFormatter,
+  valueFormat,
   ariaLabel
 }: DailyLineChartProps) {
+  const tickFormatter = pickTickFormatter(valueFormat);
+  const valueFormatter = pickValueFormatter(valueFormat);
   return (
     <div className="h-64 w-full" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
@@ -78,14 +102,14 @@ export function DailyLineChart({
           <YAxis
             stroke={AXIS_STROKE}
             tick={{ fontSize: 11, fill: TICK_FILL }}
-            tickFormatter={yFormatter}
+            tickFormatter={tickFormatter}
             width={60}
           />
           <Tooltip
             formatter={(value) => {
               const n = typeof value === "number" ? value : Number(value);
               if (!Number.isFinite(n)) return String(value);
-              return yFormatter ? yFormatter(n) : n.toLocaleString();
+              return valueFormatter(n);
             }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -117,7 +141,7 @@ type BarChartProps = {
   yLabel?: string;
   ariaLabel?: string;
   color?: string;
-  yFormatter?: (value: number) => string;
+  valueFormat?: ChartValueFormat;
 };
 
 export function CategoryBarChart({
@@ -127,8 +151,10 @@ export function CategoryBarChart({
   yLabel,
   ariaLabel,
   color = COLOR_PRIMARY,
-  yFormatter
+  valueFormat
 }: BarChartProps) {
+  const tickFormatter = pickTickFormatter(valueFormat);
+  const valueFormatter = pickValueFormatter(valueFormat);
   return (
     <div className="h-64 w-full" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
@@ -138,7 +164,7 @@ export function CategoryBarChart({
           <YAxis
             stroke={AXIS_STROKE}
             tick={{ fontSize: 11, fill: TICK_FILL }}
-            tickFormatter={yFormatter}
+            tickFormatter={tickFormatter}
             label={
               yLabel
                 ? { value: yLabel, angle: -90, position: "insideLeft", offset: 12, style: { fontSize: 11, fill: TICK_FILL } }
@@ -150,7 +176,7 @@ export function CategoryBarChart({
             formatter={(value) => {
               const n = typeof value === "number" ? value : Number(value);
               if (!Number.isFinite(n)) return String(value);
-              return yFormatter ? yFormatter(n) : n.toLocaleString();
+              return valueFormatter(n);
             }}
           />
           <Bar dataKey={yKey} fill={color} radius={[4, 4, 0, 0]} />
@@ -173,8 +199,8 @@ type ScatterChartProps = {
   data: ScatterDatum[];
   xLabel: string;
   yLabel: string;
-  xFormatter?: (value: number) => string;
-  yFormatter?: (value: number) => string;
+  xValueFormat?: ChartValueFormat;
+  yValueFormat?: ChartValueFormat;
   ariaLabel?: string;
 };
 
@@ -182,10 +208,14 @@ export function FileSizeScatter({
   data,
   xLabel,
   yLabel,
-  xFormatter,
-  yFormatter,
+  xValueFormat = "bytes",
+  yValueFormat = "ms",
   ariaLabel
 }: ScatterChartProps) {
+  const xTickFormatter = pickTickFormatter(xValueFormat);
+  const yTickFormatter = pickTickFormatter(yValueFormat);
+  const xValueFormatter = pickValueFormatter(xValueFormat);
+  const yValueFormatter = pickValueFormatter(yValueFormat);
   return (
     <div className="h-72 w-full" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
@@ -197,7 +227,7 @@ export function FileSizeScatter({
             name={xLabel}
             stroke={AXIS_STROKE}
             tick={{ fontSize: 11, fill: TICK_FILL }}
-            tickFormatter={xFormatter ?? formatBytesTick}
+            tickFormatter={xTickFormatter}
             label={{
               value: xLabel,
               position: "insideBottom",
@@ -211,7 +241,7 @@ export function FileSizeScatter({
             name={yLabel}
             stroke={AXIS_STROKE}
             tick={{ fontSize: 11, fill: TICK_FILL }}
-            tickFormatter={yFormatter ?? formatMsTick}
+            tickFormatter={yTickFormatter}
             width={60}
           />
           <Tooltip
@@ -219,8 +249,8 @@ export function FileSizeScatter({
             formatter={(value, name) => {
               const n = typeof value === "number" ? value : Number(value);
               if (!Number.isFinite(n)) return [String(value), String(name)];
-              if (name === "x") return [xFormatter ? xFormatter(n) : formatBytesTick(n), xLabel];
-              return [yFormatter ? yFormatter(n) : formatMsTick(n), yLabel];
+              if (name === "x") return [xValueFormatter(n), xLabel];
+              return [yValueFormatter(n), yLabel];
             }}
           />
           <Scatter data={data} fill={COLOR_PRIMARY} />
@@ -229,10 +259,3 @@ export function FileSizeScatter({
     </div>
   );
 }
-
-// Re-export colors for callers that want consistent palette.
-export const ADMIN_CHART_COLORS = {
-  primary: COLOR_PRIMARY,
-  secondary: COLOR_SECONDARY,
-  danger: COLOR_DANGER
-} as const;
