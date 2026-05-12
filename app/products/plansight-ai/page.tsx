@@ -11,10 +11,27 @@ import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
 import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
 
+// PlanSight is searched as its own product (independent of the AISM portfolio
+// brand), so we use an absolute title to bypass the "%s | AI Solution Maven"
+// template defined in app/layout.tsx. The phrasing leads with the queries PMs
+// actually type — "open .mpp file", "share Microsoft Project plan",
+// "stakeholder view" — while keeping the brand name as the trailing anchor.
 export const metadata: Metadata = {
-  title: "PlanSight AI",
+  title: {
+    absolute: "View and share Microsoft Project .mpp files — PlanSight AI"
+  },
   description:
-    "Your project plan, finally legible. Upload an .mpp file, review the critical path, share a stakeholder-ready view.",
+    "Upload a Microsoft Project .mpp file, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view. Free, no signup needed. Pro is $19/mo.",
+  keywords: [
+    "mpp viewer",
+    "open mpp file online",
+    "share Microsoft Project plan",
+    "view mpp file without Microsoft Project",
+    "project plan stakeholder share",
+    "critical path analysis tool",
+    "AI project plan analysis",
+    "mpp file analysis"
+  ],
   alternates: {
     canonical: "/products/plansight-ai",
   },
@@ -30,11 +47,18 @@ export const metadata: Metadata = {
   },
   manifest: "/products/plansight-ai/site.webmanifest",
   openGraph: {
-    title: "PlanSight AI — your project plan, finally legible.",
+    title: "View and share Microsoft Project .mpp files — PlanSight AI",
     description:
-      "Upload an .mpp file, review the critical path, share a stakeholder-ready view.",
+      "Upload a .mpp file, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup.",
     url: "/products/plansight-ai",
+    type: "website"
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "View and share Microsoft Project .mpp files — PlanSight AI",
+    description:
+      "Upload a .mpp file, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup."
+  }
 };
 
 type Props = {
@@ -79,8 +103,71 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
     }
   }
 
+  // SoftwareApplication JSON-LD — lets SERPs render the Free/$19 offers and
+  // category inline. Numbers mirror the marketing pricing section so a future
+  // pricing change requires a deliberate update here too.
+  const softwareApplicationLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "PlanSight AI",
+    description:
+      "Upload a Microsoft Project .mpp file, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view.",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web Browser",
+    url: "https://aisolutionmaven.com/products/plansight-ai",
+    image:
+      "https://aisolutionmaven.com/products/plansight-ai/brand/plansight-logo-primary.svg",
+    offers: [
+      {
+        "@type": "Offer",
+        name: "Free",
+        price: "0",
+        priceCurrency: "USD",
+        description:
+          "Upload .mpp files, view deterministic insights, run one AI analysis per plan, share stakeholder links."
+      },
+      {
+        "@type": "Offer",
+        name: "Pro (monthly)",
+        price: "19",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "19",
+          priceCurrency: "USD",
+          unitText: "MONTH"
+        },
+        description:
+          "Regenerate AI any time, weekly status PDF, Explain-this-task AI, multi-plan dashboard, PDF export."
+      },
+      {
+        "@type": "Offer",
+        name: "Pro (annual)",
+        price: "190",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "190",
+          priceCurrency: "USD",
+          unitText: "ANNUAL"
+        },
+        description: "Same as monthly Pro, billed annually — saves ~17%."
+      }
+    ],
+    publisher: {
+      "@type": "Organization",
+      name: "AI Solution Maven",
+      url: "https://aisolutionmaven.com"
+    }
+  };
+
   return (
     <main className="min-h-screen bg-light">
+      <script
+        type="application/ld+json"
+        // SSR-only; React inserts the literal JSON without escaping.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationLd) }}
+      />
       <PlanSightNavbar
         signedIn={!!user}
         activated={!!activation}
