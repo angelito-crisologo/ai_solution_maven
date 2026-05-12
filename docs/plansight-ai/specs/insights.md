@@ -183,3 +183,22 @@ Cards:
 
 ## 🚀 Goal
 Enable users to understand project health in under 10 seconds.
+
+---
+
+## How this connects to the AI features
+
+The deterministic engine specified above is the **source** that the AI features consume. It computes *what matters* (critical path, late tasks, at-risk tasks, RAG, bottlenecks). Claude is layered on top to generate *narrative and judgment* over that bounded summary.
+
+- **Bounded AI payload** ([ai-payload.md](ai-payload.md)) — the regenerate-analysis and weekly-snapshot paths package this engine's outputs into a fixed-size payload (≤10k tokens regardless of plan size).
+- **Explain this task** ([abuse-mitigation.md](abuse-mitigation.md)) — per-task AI explanations draw on the same RAG/criticality classifications plus the task's dependency neighborhood.
+
+If the insights engine changes (new classification, new field), the AI payload spec is the next file to update.
+
+---
+
+## See also
+
+- [`ai-payload.md`](ai-payload.md) — bounded payload built from this engine's output.
+- [`abuse-mitigation.md`](abuse-mitigation.md) — rate limits and caching on the AI features that consume these insights.
+- `lib/plansight-ai/analysis.ts` — the implementation.

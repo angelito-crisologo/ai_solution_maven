@@ -51,7 +51,7 @@ create policy "no client access"
   with check (false);
 
 comment on table public.share_views is
-  'One row per successful GET on /api/plansight/share. Stakeholder-engagement signal — see branding/plansight-ai/TELEMETRY_SPEC.md.';
+  'One row per successful GET on /api/plansight/share. Stakeholder-engagement signal — see docs/plansight-ai/specs/telemetry.md.';
 comment on column public.share_views.is_owner_view is
   'true when the PM owner of this plan is the one viewing. Dashboard filters to false when computing share-view rate.';
 comment on column public.share_views.viewer_user_id is

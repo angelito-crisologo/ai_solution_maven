@@ -401,7 +401,9 @@ limit 10;
 
 ## See also
 
-- `branding/plansight-ai/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md` — upload telemetry design brief.
+- [`../archive/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md`](../archive/UPLOAD_TELEMETRY_IMPLEMENTATION_BRIEF.md) — upload telemetry design brief.
+- [`abuse-mitigation.md`](abuse-mitigation.md) — `ai_usage_log` contract (the third telemetry table).
+- `app/products/plansight-ai/admin/queries.ts` — admin dashboard queries reading these tables.
 - `lib/telemetry/upload-events.ts` — uploads runtime contract.
 - `lib/telemetry/share-views.ts` — share-views runtime contract.
 - `lib/telemetry/__tests__/` — unit tests.

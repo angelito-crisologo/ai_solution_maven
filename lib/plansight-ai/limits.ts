@@ -8,7 +8,7 @@
  * These are **parsing and rendering** caps: what the MPP parser proxy
  * will accept and what the workspace UI can render performantly. They
  * are NOT AI-cost caps — the bounded AI payload architecture (see
- * branding/plansight-ai/AI_PAYLOAD_SPEC.md) keeps AI cost roughly flat
+ * docs/plansight-ai/specs/ai-payload.md) keeps AI cost roughly flat
  * across plan sizes, so a 25k-task plan costs roughly the same to
  * analyze as a 100-task plan. If we ever want to widen these limits
  * past 25k for Pro, that's a parsing/rendering decision, not an AI

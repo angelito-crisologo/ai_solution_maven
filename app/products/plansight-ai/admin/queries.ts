@@ -3,7 +3,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 // Time windows. Tweak in one place if we ever want a date-range picker.
 export const WINDOW_DAYS_HEALTH = 7;
 export const WINDOW_DAYS_TRENDS = 30;
-// Cold-start proxy threshold per AI_PAYLOAD_SPEC.md fallback: parser
+// Cold-start proxy threshold per docs/plansight-ai/specs/telemetry.md fallback: parser
 // duration > 8000ms is a likely cold start. Some large legitimate plans
 // will trip this; refine when the parser exposes X-Parser-Queue-Ms.
 const COLD_START_THRESHOLD_MS = 8000;
