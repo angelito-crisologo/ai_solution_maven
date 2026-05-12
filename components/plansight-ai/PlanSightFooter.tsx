@@ -3,6 +3,7 @@ import Link from "next/link";
 
 const productLinks = [
   { label: "Workspace", href: "/products/plansight-ai" },
+  { label: "Guides", href: "/products/plansight-ai/guides" },
   { label: "Pricing", href: "/products/plansight-ai/upgrade" },
   { label: "Feedback", href: "/feedback?product=PlanSight%20AI" }
 ];

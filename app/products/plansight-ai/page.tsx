@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightPricingSection } from "@/components/plansight-ai/PlanSightPricingSection";
@@ -9,6 +11,7 @@ import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGra
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
+import { listGuides } from "@/lib/guides";
 import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
 
 // PlanSight is searched as its own product (independent of the AISM portfolio
@@ -71,6 +74,10 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
   const user = await getCurrentUser();
   const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
   const preferences = user ? await getUserPreferences(user.id) : { weekStartDay: "monday" as const };
+  // Latest published guides to surface in the discovery section near the
+  // page footer. Limit to three so the section stays tight; the full list
+  // lives at /products/plansight-ai/guides.
+  const recentGuides = (await listGuides()).slice(0, 3);
 
   // Deep-link from /my-plans: when ?shareId is present, server-side load the
   // plan for the signed-in owner and pre-populate the workspace. Stakeholders
@@ -206,6 +213,59 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
       </div>
 
       <PlanSightPricingSection />
+
+      {recentGuides.length > 0 ? (
+        <section className="bg-slate-50 px-6 py-20">
+          <div className="mx-auto max-w-[1200px]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-micro uppercase tracking-wider text-cyan-700">
+                  Guides
+                </p>
+                <h2 className="mt-3 text-h1 text-ink">
+                  Working PM reading
+                </h2>
+                <p className="mt-3 text-body-lg text-slate-700">
+                  Practical posts on opening .mpp files, sharing project plans,
+                  and the analysis concepts that show up every week.
+                </p>
+              </div>
+              <Link
+                href="/products/plansight-ai/guides"
+                className="inline-flex h-10 items-center gap-1 self-start text-caption font-semibold text-cyan-700 hover:text-cyan-800 sm:self-end"
+              >
+                All guides
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <ul className="mt-8 grid gap-4 md:grid-cols-3">
+              {recentGuides.map((guide) => (
+                <li key={guide.slug}>
+                  <Link
+                    href={`/products/plansight-ai/guides/${guide.slug}`}
+                    className="group flex h-full flex-col rounded-xl border border-slate-200 bg-white p-6 transition hover:border-slate-300 hover:shadow-card"
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
+                      <BookOpen className="h-4 w-4" />
+                    </span>
+                    <h3 className="mt-4 text-h3 text-ink group-hover:text-cyan-700">
+                      {guide.title}
+                    </h3>
+                    <p className="mt-2 flex-1 text-body text-slate-700">
+                      {guide.description}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-1 text-caption font-semibold text-cyan-700">
+                      Read guide
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
 
       <section className="px-6 pb-20">
         <div className="mx-auto grid max-w-[1200px] gap-6 lg:grid-cols-2">

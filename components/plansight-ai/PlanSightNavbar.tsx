@@ -40,6 +40,7 @@ export function PlanSightNavbar({ signedIn, activated, tier, signinRedirectTo }:
   // cluster. The center nav is product-feature navigation only.
   const productNav = [
     { label: "Workspace", href: "/products/plansight-ai" },
+    { label: "Guides", href: "/products/plansight-ai/guides" },
     { label: "Pricing", href: "/products/plansight-ai/upgrade" }
   ];
 
