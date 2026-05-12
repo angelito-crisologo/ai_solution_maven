@@ -128,30 +128,23 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
       },
       {
         "@type": "Offer",
+        // Google's parser rejects nested UnitPriceSpecification under
+        // Offer.priceSpecification ("Invalid object type"), so the recurring
+        // signal lives in the Offer name and description instead. price +
+        // priceCurrency are still the canonical fields rich results read.
         name: "Pro (monthly)",
         price: "19",
         priceCurrency: "USD",
-        priceSpecification: {
-          "@type": "UnitPriceSpecification",
-          price: "19",
-          priceCurrency: "USD",
-          unitText: "MONTH"
-        },
         description:
-          "Regenerate AI any time, weekly status PDF, Explain-this-task AI, multi-plan dashboard, PDF export."
+          "$19 per month. Regenerate AI any time, weekly status PDF, Explain-this-task AI, multi-plan dashboard, PDF export."
       },
       {
         "@type": "Offer",
         name: "Pro (annual)",
         price: "190",
         priceCurrency: "USD",
-        priceSpecification: {
-          "@type": "UnitPriceSpecification",
-          price: "190",
-          priceCurrency: "USD",
-          unitText: "ANNUAL"
-        },
-        description: "Same as monthly Pro, billed annually — saves ~17%."
+        description:
+          "$190 per year. Same as monthly Pro, billed annually — saves ~17%."
       }
     ],
     publisher: {
