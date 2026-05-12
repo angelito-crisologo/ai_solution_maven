@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAnonClient, isSupabaseConfigured } from "@/lib/plansight-ai/supabase";
+import { createSupabaseAnonClient, isSupabaseConfigured } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 

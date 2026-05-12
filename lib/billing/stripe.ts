@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import {
   createSupabaseServiceClient,
   isSupabaseServiceConfigured
-} from "@/lib/plansight-ai/supabase";
+} from "@/lib/supabase/service";
 
 let cachedClient: Stripe | null = null;
 

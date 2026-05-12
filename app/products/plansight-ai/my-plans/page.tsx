@@ -340,7 +340,7 @@ export default async function MyPlansPage({
                 plan you import, with rename, archive, and delete.
               </p>
               <Link
-                href="/upgrade"
+                href="/products/plansight-ai/upgrade"
                 className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
               >
                 Upgrade to Pro

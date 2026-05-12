@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 const SPEND_ALERT_THRESHOLD_USD = 3;
 const RESEND_API_URL = "https://api.resend.com/emails";

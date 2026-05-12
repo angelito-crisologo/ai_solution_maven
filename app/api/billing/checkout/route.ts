@@ -35,7 +35,7 @@ export async function POST() {
       customer: customerId,
       line_items: [{ price: getStripePriceId(), quantity: 1 }],
       success_url: `${appUrl}/products/plansight-ai/my-plans?checkout=success`,
-      cancel_url: `${appUrl}/upgrade?checkout=cancelled`,
+      cancel_url: `${appUrl}/products/plansight-ai/upgrade?checkout=cancelled`,
       allow_promotion_codes: true,
       client_reference_id: user.id,
       subscription_data: {

@@ -1,3 +1,4 @@
+import { PRODUCT_SLUGS } from "@/lib/products";
 import { aismBranding } from "./aism";
 import { plansightBranding } from "./plansight";
 import type { ProductBranding } from "./types";
@@ -5,14 +6,17 @@ import type { ProductBranding } from "./types";
 export type { ProductBranding } from "./types";
 
 /**
- * Stable slug constants. Use these instead of string literals so a typo
- * is a TS error, not a silent miss. The slug is also the value stored in
- * `product_activations.product_slug` and the directory name under
- * `/branding/` and `/public/products/`.
+ * Brand slug registry. Product slugs come from the single source of truth
+ * in `lib/products.ts`; AISM is added on top because the parent brand has
+ * design tokens but isn't an activatable product.
+ *
+ * The slug doubles as the directory name under `/branding/` and
+ * `/public/products/`, and matches `product_activations.product_slug`
+ * for activatable products.
  */
 export const BRANDS = {
   AISM: "ai-solution-maven",
-  PLANSIGHT: "plansight-ai"
+  ...PRODUCT_SLUGS
 } as const;
 
 export type BrandSlug = (typeof BRANDS)[keyof typeof BRANDS];

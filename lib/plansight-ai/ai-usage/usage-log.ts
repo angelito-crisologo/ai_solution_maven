@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/plansight-ai/supabase";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { HAIKU_MODEL_ID, computeCostUsd, type TokenUsage } from "./cost";
 
 export type AiFeature =
@@ -51,6 +51,7 @@ export async function logAiUsage(input: AiUsageLogInput): Promise<void> {
     const costUsd = cacheHit ? 0 : computeCostUsd(usage);
 
     const { error } = await client.from("ai_usage_log").insert({
+      product_slug: "plansight-ai",
       user_id: input.userId,
       share_id: input.shareId ?? null,
       feature: input.feature,

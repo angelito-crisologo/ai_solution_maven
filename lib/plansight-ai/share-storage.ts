@@ -6,7 +6,7 @@ import {
   createSupabaseServiceClient,
   isSupabaseConfigured,
   isSupabaseServiceConfigured
-} from "./supabase";
+} from "@/lib/supabase/service";
 
 type SharedPlanRow = {
   share_id: string;

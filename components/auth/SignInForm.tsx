@@ -36,9 +36,11 @@ export function SignInForm({ redirectTo }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   const forgotHref = `/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`;
-  // Sign-up always lands on /my-plans (new account = dashboard landing),
-  // regardless of where the sign-in attempt was headed.
-  const signupHref = "/signup?product=plansight-ai&redirectTo=%2Fmy-plans";
+  // Carry the caller's destination forward into the signup flow so a user
+  // who clicked "Sign up" from a product page lands back on that product
+  // after activation. No hardcoded product slug — that decision belongs to
+  // the linker (typically the product navbar) via ?product=<slug>.
+  const signupHref = `/signup?redirectTo=${encodeURIComponent(redirectTo)}`;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

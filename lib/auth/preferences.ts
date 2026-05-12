@@ -1,7 +1,7 @@
 import {
   createSupabaseServiceClient,
   isSupabaseServiceConfigured
-} from "@/lib/plansight-ai/supabase";
+} from "@/lib/supabase/service";
 
 export type WeekStartDay = "monday" | "sunday";
 

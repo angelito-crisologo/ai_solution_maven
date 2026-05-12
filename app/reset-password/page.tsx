@@ -22,7 +22,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
     redirect("/forgot-password");
   }
 
-  const redirectTo = searchParams?.next || "/products/plansight-ai/my-plans";
+  const redirectTo = searchParams?.next || "/";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">

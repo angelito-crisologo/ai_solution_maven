@@ -146,7 +146,7 @@ export function PlanSightAIAnalysisPanel({
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <a
-                      href="/upgrade"
+                      href="/products/plansight-ai/upgrade"
                       className="inline-flex h-9 items-center gap-2 rounded-md bg-cyan-700 px-3 text-body font-semibold text-white transition hover:bg-cyan-800"
                     >
                       Upgrade to Pro

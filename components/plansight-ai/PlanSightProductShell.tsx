@@ -480,7 +480,7 @@ export function PlanSightProductShell({
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Link
-                    href="/upgrade"
+                    href="/products/plansight-ai/upgrade"
                     className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                   >
                     Upgrade to Pro
