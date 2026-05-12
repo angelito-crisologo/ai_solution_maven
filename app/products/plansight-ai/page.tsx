@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { PremiumAnalysisTeaser } from "@/components/plansight-ai/PremiumAnalysisTeaser";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
+import { PlanSightPricingSection } from "@/components/plansight-ai/PlanSightPricingSection";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
@@ -114,34 +114,18 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         </div>
       </section>
 
-      <PlanSightProductShell
-        signedIn={!!user}
-        plansightActivated={!!activation}
-        plansightTier={activation?.tier ?? null}
-        initialPlan={initialPlan}
-        initialShareId={initialShareId}
-        weekStartDay={preferences.weekStartDay}
-      />
+      <div id="plansight-workspace" className="scroll-mt-16">
+        <PlanSightProductShell
+          signedIn={!!user}
+          plansightActivated={!!activation}
+          plansightTier={activation?.tier ?? null}
+          initialPlan={initialPlan}
+          initialShareId={initialShareId}
+          weekStartDay={preferences.weekStartDay}
+        />
+      </div>
 
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-[1200px]">
-          <div className="mb-6 max-w-2xl">
-            <p className="text-micro text-cyan-700">AI analysis</p>
-            <h2 className="mt-3 text-h1 text-ink">
-              Free for the first analysis. Pro for daily use.
-            </h2>
-            <p className="mt-4 text-body-lg text-slate-700">
-              Every imported plan gets a Claude-generated summary, risks, and
-              recommendations at no cost. Pro unlocks the multi-plan dashboard,
-              regeneration on demand, the &ldquo;Explain this task&rdquo; inline
-              AI, landscape PDF export, AI-narrated weekly status reports, and
-              higher upload limits.
-            </p>
-          </div>
-
-          <PremiumAnalysisTeaser />
-        </div>
-      </section>
+      <PlanSightPricingSection />
 
       <section className="px-6 pb-20">
         <div className="mx-auto grid max-w-[1200px] gap-6 lg:grid-cols-2">
