@@ -16,6 +16,7 @@ Shipped (live in production):
 |---|---|---|
 | Upload `.mpp` files, view, deterministic insights | ✓ | ✓ |
 | Stakeholder share link (read-only) | ✓ | ✓ |
+| Revoke / restore share link | ✓ | ✓ |
 | Excel export | ✓ | ✓ |
 | AI analysis | First generation, cached | **Regenerate any time** |
 | Plans saved | 1 visible (most recent) | **Unlimited** |
@@ -23,6 +24,7 @@ Shipped (live in production):
 | Weekly status snapshot (PDF, landscape) | – | ✓ |
 | "Explain this task" inline AI | – | ✓ |
 | PDF export | – | ✓ |
+| **Password-protected share links** | – | ✓ |
 | Upload size cap | 5 MB | **25 MB** |
 
 Deferred to Pro v1.1 — see the section at the end of this doc.

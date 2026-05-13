@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ShieldX } from "lucide-react";
 import { ShareViewFooterCta } from "@/components/plansight-ai/ShareViewFooterCta";
 import { SharedStakeholderPlanLoader } from "@/components/plansight-ai/SharedStakeholderPlanLoader";
+import {
+  shareCookieName,
+  verifyShareCookie
+} from "@/lib/plansight-ai/share-security";
+import { getShareSecurityStatus } from "@/lib/plansight-ai/share-storage";
 
 export const runtime = "nodejs";
+// Server-side cookie + security-status reads make this inherently dynamic.
+// Force it so Vercel doesn't try to cache a tenant-specific render.
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ shareId: string }>;
@@ -30,8 +41,78 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function NoLongerAvailable() {
+  return (
+    <main className="flex min-h-screen flex-col bg-white">
+      <header className="h-16 border-b border-slate-200 bg-white px-6">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center gap-4">
+          <Link
+            href="/products/plansight-ai"
+            aria-label="PlanSight AI"
+            className="shrink-0"
+          >
+            <Image
+              src="/products/plansight-ai/brand/plansight-logo-primary.svg"
+              alt="PlanSight AI"
+              width={180}
+              height={36}
+              priority
+              className="h-8 w-auto sm:h-9"
+            />
+          </Link>
+        </div>
+      </header>
+
+      <section className="flex flex-1 items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <span className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+            <ShieldX className="h-5 w-5" />
+          </span>
+          <h1 className="mt-4 text-h2 text-ink">This link is no longer available</h1>
+          <p className="mt-3 text-body text-slate-700">
+            The shared plan you&apos;re looking for has been revoked or is no
+            longer accessible. Ask the person who sent you the link if you
+            still need to view it.
+          </p>
+          <Link
+            href="/products/plansight-ai"
+            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
+          >
+            Explore PlanSight AI
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default async function SharePage({ params }: Props) {
   const { shareId } = await params;
+
+  // Security gate 1: revocation. The owner can still see their plan from
+  // /my-plans (which queries a different surface), but the public share
+  // route renders the generic "no longer available" page when revoked.
+  const status = await getShareSecurityStatus(shareId);
+  if (status.exists && status.revoked) {
+    return <NoLongerAvailable />;
+  }
+
+  // Security gate 2: password. If a password is set and the visitor
+  // doesn't have a valid cookie for the current password version, send
+  // them to the prompt page. The cookie embeds shareId + passwordVersion
+  // and is signed with SHARE_COOKIE_SECRET — see lib/plansight-ai/share-security.
+  if (status.exists && status.hasPassword) {
+    const cookieStore = cookies();
+    const token = cookieStore.get(shareCookieName(shareId))?.value;
+    const valid = verifyShareCookie(token, shareId, status.passwordVersion);
+    if (!valid) {
+      redirect(`/share/${shareId}/password`);
+    }
+  }
+
+  // From here on, either: no password, or password gate passed.
+  // The "share doesn't exist at all" case falls through and the loader
+  // surfaces its own not-found state — matches behaviour before Phase 15.
 
   return (
     <main className="min-h-screen bg-white">

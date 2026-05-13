@@ -10,11 +10,13 @@ import {
   ExternalLink,
   FileText,
   LayoutDashboard,
-  Lock
+  Lock,
+  ShieldOff
 } from "lucide-react";
 import { ClaimGuestPlanOnMount } from "@/components/plansight-ai/ClaimGuestPlanOnMount";
 import { CopyShareLinkButton } from "@/components/plansight-ai/CopyShareLinkButton";
 import { DeletePlanButton } from "@/components/plansight-ai/DeletePlanButton";
+import { ManageShareButton } from "@/components/plansight-ai/ManageShareButton";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { WeekStartDayToggle } from "@/components/plansight-ai/WeekStartDayToggle";
@@ -262,6 +264,8 @@ export default async function MyPlansPage({
                 const lockedForFree = !isPro && index > 0;
                 const workspaceHref = `/products/plansight-ai?shareId=${plan.share_id}`;
                 const sharePath = `/share/${plan.share_id}`;
+                const shareRevoked = !!plan.share_revoked_at;
+                const sharePasswordSet = plan.share_has_password;
                 return (
                   <li
                     key={plan.share_id}
@@ -310,6 +314,21 @@ export default async function MyPlansPage({
                           <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-caption text-slate-600">
                             {plan.source_format}
                           </span>
+                          {shareRevoked ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-caption font-semibold text-amber-800">
+                              <ShieldOff className="h-3 w-3" />
+                              Share revoked
+                            </span>
+                          ) : null}
+                          {sharePasswordSet && !shareRevoked ? (
+                            <span
+                              className="inline-flex items-center gap-1 rounded bg-cyan-50 px-2 py-0.5 text-caption text-cyan-700"
+                              title="Share link is password-protected"
+                            >
+                              <Lock className="h-3 w-3" />
+                              Password
+                            </span>
+                          ) : null}
                         </div>
                       </div>
 
@@ -339,6 +358,14 @@ export default async function MyPlansPage({
                               <ExternalLink className="h-3.5 w-3.5" />
                               Stakeholder view
                             </Link>
+                            <ManageShareButton
+                              shareId={plan.share_id}
+                              title={plan.title}
+                              isPro={isPro}
+                              revoked={shareRevoked}
+                              hasPassword={sharePasswordSet}
+                              passwordSetAt={plan.share_password_set_at}
+                            />
                             <DeletePlanButton
                               shareId={plan.share_id}
                               title={plan.title}

@@ -37,6 +37,7 @@ This project is ready for Vercel.
    - `STRIPE_PRICE_ID` — monthly recurring Price id (`price_…`) for PlanSight Pro
    - `STRIPE_PRICE_ID_ANNUAL` — annual recurring Price id (`price_…`) for PlanSight Pro
    - `STRIPE_WEBHOOK_SECRET` (server-only) — endpoint signing secret; test- and live-mode values differ
+   - `SHARE_COOKIE_SECRET` (server-only) — ≥32 char HMAC key signing the share-link password session cookie. Generate with `openssl rand -hex 32`. Different value per environment.
 4. Deploy the project.
 
 Recommended values:

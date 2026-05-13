@@ -1,8 +1,35 @@
 # Secure Share Links — Pro Feature Spec
 
-**Status:** Specification — ready to implement
-**Tier:** Pro
-**Phase:** Bundle with Pro launch (Phase 5)
+**Status:** v1.2 shipped (subset) — see Implementation note below
+**Tier:** Pro (password) + Free/Pro (revocation)
+**Phase:** Shipped as Phase 15, separately from Phase 5 (Stripe billing)
+
+> **Implementation note (2026-05-13, v1.2).** Two of the three features
+> in this spec shipped. The third (share link expiry / view limits) was
+> **deferred** at the planning step:
+>
+> - ✅ **Soft revocation + restore** — Free + Pro. Implemented via
+>   `share_revoked_at` column + `share_password_version` bump on
+>   revoke/restore so any active stakeholder cookies become invalid
+>   immediately. Migration `15_phase15_secure_share_links.sql`.
+> - ✅ **Password-protected share links** — Pro only, opt-in per share.
+>   Hashing uses **scrypt via `node:crypto`** instead of the spec's
+>   suggested bcrypt-via-pgcrypto — same legal/security posture
+>   (slow-on-purpose KDF), zero extension or dependency footprint.
+>   Cookie scheme is HMAC-signed JSON `{shareId, passwordVersion, exp}`
+>   matching `lib/plansight-ai/share-security.ts`. Rate limiting via
+>   `share_access_attempts` table (the spec's audit table doubles as
+>   rate-limit storage).
+> - ❌ **Share link expiry (date + view limits)** — **not implemented**.
+>   The two-condition gating, view-count semantics, and owner carve-out
+>   added meaningful UX complexity for what is, today, a thin product
+>   demand signal. Anonymous plans still auto-expire at 24h via the
+>   existing system-set `expires_at` column. Pro users cannot set a
+>   user-configurable expiry. Re-open this spec when paying customers
+>   ask.
+>
+> Verbatim-quoted password copy ("Anyone with this link…") is in the
+> Manage Share modal helper text per §UI/UX.
 
 ---
 

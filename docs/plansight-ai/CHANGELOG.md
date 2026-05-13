@@ -11,6 +11,58 @@ current in-progress section.
 
 ---
 
+## v1.2 — in progress
+
+### Added
+
+- **Secure share links — soft revocation + optional password protection.**
+  Implements [`specs/SECURE_SHARE_LINKS_SPEC.md`](specs/SECURE_SHARE_LINKS_SPEC.md)
+  with the v1.2 scope reduction (expiry / view-limit deferred).
+  - **Revocation + restore** (Free + Pro) — new "Manage share" button
+    on each `/my-plans` row opens a modal with a Revoke / Restore
+    action. Revoked links return a generic "no longer available" page
+    server-side. `share_revoked_at` is a soft flag; the underlying
+    plan and tasks are untouched, and any in-flight stakeholder
+    cookies are invalidated by bumping `share_password_version`.
+    `POST /api/plansight/share/{revoke,restore}` (signed-in only,
+    ownership enforced).
+  - **Password-protected share links** (Pro only, opt-in per share) —
+    in the same "Manage share" modal, Pro users can toggle on a
+    password and enter it. Hashed with **scrypt via `node:crypto`**
+    (no npm dep, no pgcrypto extension), stored format
+    `scrypt$<salt>$<key>`. `POST /api/plansight/share/password`.
+  - **Generic password prompt page** at
+    `app/share/[shareId]/password/page.tsx` — no plan name, no owner,
+    no metadata. Title: "Password required." Single input, single
+    submit. Same render for every failure mode (wrong password,
+    revoked, doesn't exist, rate-limited) — no information leakage.
+  - **HMAC-signed session cookies** issued by
+    `POST /api/plansight/share/verify`. Cookie path is
+    `/share/<shareId>` (per-share scope), `HttpOnly`, `Secure`,
+    `SameSite=Lax`, absolute 4-hour lifetime (no slide). Payload
+    embeds `passwordVersion`; any password change, revoke, or restore
+    bumps the version and invalidates outstanding cookies.
+  - **Rate limiting + audit log** — new `share_access_attempts` table
+    (`(share_id, ip_address, attempted_at desc)` index). 5 failed
+    attempts per (share, IP) in 15 minutes → silent lockout (same
+    generic error as a wrong password, per spec §Critical security
+    requirements). Every attempt (success or failure) logged for the
+    future "who accessed this share" audit-trail surface.
+  - **`/my-plans` row indicators** — yellow "Share revoked" badge,
+    cyan "Password" badge with lock icon.
+  - **Upgrade page Pro features list** — adds "Password-protected
+    share links" entry.
+  - **`SHARE_COOKIE_SECRET`** new env var, documented in README +
+    services.md. Minimum 32 chars; generate with `openssl rand -hex 32`.
+  - Migration: `supabase/migrations/15_phase15_secure_share_links.sql`.
+
+### Deferred
+
+- Share link expiry by date and view limit — see
+  `specs/SECURE_SHARE_LINKS_SPEC.md` implementation note for rationale.
+
+---
+
 ## v1.1 — in progress
 
 ### Added

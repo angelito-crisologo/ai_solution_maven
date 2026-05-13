@@ -85,3 +85,4 @@ migrate:
 - **Supabase** project URL, anon key, and service-role key are dashboard-managed.
 - **Render** service URL pinned via `PLANSIGHT_IMPORT_SERVICE_URL` on Vercel.
 - **Domain registrar** for `aisolutionmaven.com` (not recorded in this repo).
+- **`SHARE_COOKIE_SECRET`** — server-only env var (min 32 chars). Used by `lib/plansight-ai/share-security.ts` to sign HMAC session cookies issued by `/api/plansight/share/verify` for password-protected shares. Generate with `openssl rand -hex 32`. Different value per environment (test, preview, production). The `share_access_attempts` Supabase table (created by migration 15) is the rate-limit + audit log; nothing user-facing reads it.

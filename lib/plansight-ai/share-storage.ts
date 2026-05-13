@@ -223,7 +223,9 @@ export async function listPlansForUser(userId: string) {
 
   const { data, error } = await client
     .from("plans")
-    .select("share_id, title, source_format, imported_at, start_date, finish_date")
+    .select(
+      "share_id, title, source_format, imported_at, start_date, finish_date, share_revoked_at, share_password_hash, share_password_set_at"
+    )
     .eq("owner_user_id", userId)
     .order("imported_at", { ascending: false });
 
@@ -231,7 +233,28 @@ export async function listPlansForUser(userId: string) {
     throw error;
   }
 
-  return data ?? [];
+  // Strip the raw hash before returning — the /my-plans page only needs
+  // to know whether a password is set, not its value. Keeps the hash out
+  // of any caller's data flow.
+  return (data ?? []).map((row) => {
+    const { share_password_hash, ...rest } = row as Record<string, unknown> & {
+      share_password_hash: string | null;
+    };
+    return {
+      ...rest,
+      share_has_password: !!share_password_hash
+    };
+  }) as Array<{
+    share_id: string;
+    title: string;
+    source_format: string;
+    imported_at: string;
+    start_date: string | null;
+    finish_date: string | null;
+    share_revoked_at: string | null;
+    share_password_set_at: string | null;
+    share_has_password: boolean;
+  }>;
 }
 
 /**
@@ -327,6 +350,245 @@ export async function findPlansByTitleForUser(
     title: row.title,
     importedAt: row.imported_at
   }));
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Secure share links (Phase 15)
+// ──────────────────────────────────────────────────────────────────────
+
+export type ShareSecurityStatus = {
+  exists: boolean;
+  revoked: boolean;
+  hasPassword: boolean;
+  passwordVersion: number;
+  passwordSetAt: string | null;
+  ownerUserId: string | null;
+};
+
+type ShareSecurityRow = {
+  share_id: string;
+  owner_user_id: string | null;
+  share_revoked_at: string | null;
+  share_password_hash: string | null;
+  share_password_set_at: string | null;
+  share_password_version: number | null;
+};
+
+/**
+ * Lightweight read of just the security state of a share. Public reads
+ * via the anon key — RLS allows SELECT for anyone with the share id.
+ * The hash itself is intentionally NOT returned here; verify operations
+ * use a separate function with the service-role client.
+ */
+export async function getShareSecurityStatus(
+  shareId: string
+): Promise<ShareSecurityStatus> {
+  const fallback: ShareSecurityStatus = {
+    exists: false,
+    revoked: false,
+    hasPassword: false,
+    passwordVersion: 0,
+    passwordSetAt: null,
+    ownerUserId: null
+  };
+
+  const client = createSupabaseAnonClient();
+  if (!client) return fallback;
+
+  const { data, error } = await client
+    .from("plans")
+    .select(
+      "share_id, owner_user_id, share_revoked_at, share_password_hash, share_password_set_at, share_password_version"
+    )
+    .eq("share_id", shareId)
+    .maybeSingle<ShareSecurityRow>();
+
+  if (error || !data) return fallback;
+  return {
+    exists: true,
+    revoked: !!data.share_revoked_at,
+    hasPassword: !!data.share_password_hash,
+    passwordVersion: data.share_password_version ?? 0,
+    passwordSetAt: data.share_password_set_at,
+    ownerUserId: data.owner_user_id
+  };
+}
+
+/**
+ * Read the password hash for verify. Uses the service client because we
+ * never want this column exposed via RLS-visible reads.
+ */
+export async function getSharePasswordHashAndVersion(
+  shareId: string
+): Promise<{ hash: string; passwordVersion: number } | null> {
+  const client = createSupabaseServiceClient();
+  if (!client) return null;
+  const { data, error } = await client
+    .from("plans")
+    .select("share_password_hash, share_password_version")
+    .eq("share_id", shareId)
+    .maybeSingle<{
+      share_password_hash: string | null;
+      share_password_version: number | null;
+    }>();
+  if (error || !data || !data.share_password_hash) return null;
+  return {
+    hash: data.share_password_hash,
+    passwordVersion: data.share_password_version ?? 0
+  };
+}
+
+/**
+ * Soft-revoke. Increments share_password_version so any outstanding
+ * session cookies become invalid on the next request. Two-query pattern
+ * because PostgREST doesn't expose atomic `version + 1` increments; the
+ * race window is microseconds and the only person racing themselves is
+ * the PM. Returns true if a row was updated (ownership match).
+ */
+export async function revokeShareForUser(
+  shareId: string,
+  userId: string
+): Promise<boolean> {
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Supabase service role is not configured.");
+  }
+  const { data: current, error: readError } = await client
+    .from("plans")
+    .select("share_password_version")
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .maybeSingle<{ share_password_version: number | null }>();
+  if (readError) throw readError;
+  if (!current) return false;
+
+  const { data, error } = await client
+    .from("plans")
+    .update({
+      share_revoked_at: new Date().toISOString(),
+      share_password_version: (current.share_password_version ?? 0) + 1
+    })
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .select("share_id");
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
+export async function restoreShareForUser(
+  shareId: string,
+  userId: string
+): Promise<boolean> {
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Supabase service role is not configured.");
+  }
+  const { data: current, error: readError } = await client
+    .from("plans")
+    .select("share_password_version")
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .maybeSingle<{ share_password_version: number | null }>();
+  if (readError) throw readError;
+  if (!current) return false;
+
+  const { data, error } = await client
+    .from("plans")
+    .update({
+      share_revoked_at: null,
+      share_password_version: (current.share_password_version ?? 0) + 1
+    })
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .select("share_id");
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
+/**
+ * Set, change, or clear (newHash = null) the share password. Always
+ * increments share_password_version so existing stakeholder sessions
+ * are invalidated. Returns true on ownership match.
+ */
+export async function setSharePasswordForUser(
+  shareId: string,
+  userId: string,
+  newHash: string | null
+): Promise<boolean> {
+  const client = createSupabaseServiceClient();
+  if (!client) {
+    throw new Error("Supabase service role is not configured.");
+  }
+  const { data: current, error: readError } = await client
+    .from("plans")
+    .select("share_password_version")
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .maybeSingle<{ share_password_version: number | null }>();
+  if (readError) throw readError;
+  if (!current) return false;
+
+  const now = new Date().toISOString();
+  const { data, error } = await client
+    .from("plans")
+    .update({
+      share_password_hash: newHash,
+      share_password_set_at: newHash ? now : null,
+      share_password_version: (current.share_password_version ?? 0) + 1
+    })
+    .eq("share_id", shareId)
+    .eq("owner_user_id", userId)
+    .select("share_id");
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
+/**
+ * Count failed password attempts for this (share_id, ip) inside the
+ * rate-limit window. Used by the verify route to enforce 5 failures in
+ * 15 minutes. Returns 0 on any read error — fail-open here would let
+ * brute-force through, but the alternative is wedging legitimate users
+ * out when Supabase has a hiccup; we log the error and let it through.
+ */
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const SHARE_PASSWORD_RATE_LIMIT_THRESHOLD = 5;
+
+export async function countRecentFailedShareAttempts(
+  shareId: string,
+  ipAddress: string
+): Promise<number> {
+  const client = createSupabaseServiceClient();
+  if (!client) return 0;
+  const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+  const { count, error } = await client
+    .from("share_access_attempts")
+    .select("*", { count: "exact", head: true })
+    .eq("share_id", shareId)
+    .eq("ip_address", ipAddress)
+    .eq("success", false)
+    .gte("attempted_at", since);
+  if (error) {
+    console.error("[share-security] rate-limit read failed:", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+export async function logShareAccessAttempt(
+  shareId: string,
+  ipAddress: string,
+  success: boolean
+): Promise<void> {
+  const client = createSupabaseServiceClient();
+  if (!client) return;
+  const { error } = await client.from("share_access_attempts").insert({
+    share_id: shareId,
+    ip_address: ipAddress,
+    success
+  });
+  if (error) {
+    console.error("[share-security] attempt log failed:", error.message);
+  }
 }
 
 /**

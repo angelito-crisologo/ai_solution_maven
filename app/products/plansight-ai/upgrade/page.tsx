@@ -8,6 +8,7 @@ import {
   FileText,
   History,
   LayoutDashboard,
+  Lock,
   RefreshCcw,
   Sparkles,
   Tag,
@@ -74,6 +75,12 @@ const PRO_FEATURES = [
     description:
       "One-page PDF covering the last completed week: RAG, slips, at-risk tasks, milestone hit/miss, and an AI-written Status Summary you can forward.",
     icon: FileBarChart
+  },
+  {
+    name: "Password-protected share links",
+    description:
+      "Require viewers to enter a password before they can see the plan. Share the password through a different channel from the link itself — even forwarded or accidentally-posted links stay protected.",
+    icon: Lock
   },
   {
     name: "Higher upload limits",
