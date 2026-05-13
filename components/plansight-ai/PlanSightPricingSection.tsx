@@ -31,7 +31,7 @@ type DividerRow = {
 type RowItem = FeatureRow | DividerRow;
 
 const TIER_LABELS: Record<TierKey, string> = {
-  anonymous: "Anonymous",
+  anonymous: "No signup",
   free: "Free",
   pro: "Pro"
 };
@@ -140,8 +140,12 @@ const ROWS: RowItem[] = [
     key: "plans-saved",
     label: "Plans saved",
     cells: {
-      anonymous: <Dash />,
-      free: "1 (most recent)",
+      anonymous: <span className="text-slate-500">Auto-delete after 24 hours</span>,
+      free: (
+        <span>
+          <span className="font-semibold text-slate-900">1</span> plan
+        </span>
+      ),
       pro: <span className="font-semibold text-cyan-700">Unlimited</span>
     },
     detail: {
@@ -316,12 +320,16 @@ export function PlanSightPricingSection() {
           <p className="mt-4 text-body-lg text-slate-700">
             Upload any .mpp file and PlanSight computes critical path, late
             tasks, at-risk tasks, and overall project health — free, no signup.
-            Every plan you upload gets one free Claude-generated analysis. Pro
-            is live today — re-run AI whenever the plan changes, generate
-            weekly status reports, and get inline &ldquo;Explain this
-            task&rdquo; AI on any task.
+            Every plan you upload gets one free Claude-generated analysis.
           </p>
         </header>
+
+        <p className="mb-6 flex items-center gap-2 text-body font-semibold text-cyan-700">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-cyan-600" />
+          Pro is live today — re-run AI whenever the plan changes, generate
+          weekly status reports, and get inline &ldquo;Explain this
+          task&rdquo; AI on any task.
+        </p>
 
         <DesktopTable
           onRowClick={setOpenFeatureKey}
@@ -334,6 +342,10 @@ export function PlanSightPricingSection() {
           onOpenTierChange={setMobileOpenTier}
           onTryFree={onTryFreeClick}
         />
+
+        <p className="mt-6 text-body text-slate-500">
+          Free fits one project. Pro fits your portfolio.
+        </p>
       </div>
 
       {openFeature ? (
@@ -443,7 +455,7 @@ function DesktopTable({
 }
 
 function TierHeaderCell({ tier }: { tier: "anonymous" | "free" }) {
-  const sub = tier === "anonymous" ? "no signup" : "with signup";
+  const sub = tier === "anonymous" ? "try it" : "with signup";
   return (
     <div className="border-b border-slate-200 px-4 pb-6 pt-7 text-center">
       <p className="text-micro uppercase tracking-wider text-slate-500">
@@ -603,7 +615,7 @@ function TierAccordionCard({
 
   const summary =
     tier === "anonymous"
-      ? "no signup"
+      ? "try it"
       : tier === "free"
       ? "with signup"
       : "AI on demand";
@@ -767,7 +779,7 @@ function FeatureDialog({
 
         <dl className="mt-6 space-y-4">
           <TierDetailRow
-            label="Anonymous · no signup"
+            label="No signup · try it"
             value={feature.detail.perTier.anonymous}
             accent={false}
           />
