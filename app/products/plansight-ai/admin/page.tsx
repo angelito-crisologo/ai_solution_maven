@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MessageSquareText } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   getAiCostByFeature,
@@ -94,6 +96,15 @@ export default async function AdminPage() {
             All queries run server-side with the service-role key; no data
             reaches the client beyond what these charts render.
           </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/products/plansight-ai/admin/feedback"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-caption font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+            >
+              <MessageSquareText className="h-3.5 w-3.5" />
+              Feedback
+            </Link>
+          </div>
         </header>
 
         {/* ============ Section 1 — Pipeline health ============ */}
