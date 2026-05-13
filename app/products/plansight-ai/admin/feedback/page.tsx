@@ -3,8 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
-import { listFeedbackForProduct } from "@/lib/feedback/queries";
+import {
+  listFeedbackForProduct,
+  parseFeedbackFilter
+} from "@/lib/feedback/queries";
 import { FeedbackTable } from "@/components/admin/FeedbackTable";
+import { FeedbackFilters } from "@/components/admin/FeedbackFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +19,27 @@ export const metadata: Metadata = {
 };
 
 const PLANSIGHT_PRODUCT_LABEL = "PlanSight AI";
+const PAGE_PATH = "/products/plansight-ai/admin/feedback";
 
-export default async function PlansightFeedbackAdminPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function PlansightFeedbackAdminPage({
+  searchParams
+}: {
+  searchParams?: SearchParams;
+}) {
   const user = await getCurrentUser();
   const adminId = process.env.ADMIN_USER_ID;
   if (!user || !adminId || user.id !== adminId) {
     redirect("/");
   }
 
-  const rows = await listFeedbackForProduct(PLANSIGHT_PRODUCT_LABEL, 100);
+  const filter = parseFeedbackFilter(searchParams ?? {});
+  const rows = await listFeedbackForProduct(
+    PLANSIGHT_PRODUCT_LABEL,
+    filter,
+    100
+  );
   const counts = countByType(rows);
 
   return (
@@ -53,10 +69,23 @@ export default async function PlansightFeedbackAdminPage() {
           </div>
         </header>
 
-        <section className="mt-8">
+        <section className="mt-6">
+          <FeedbackFilters
+            basePath={PAGE_PATH}
+            product={PLANSIGHT_PRODUCT_LABEL}
+            current={filter}
+            accent="cyan"
+          />
+        </section>
+
+        <section className="mt-6">
           <FeedbackTable
             rows={rows}
-            emptyMessage="No PlanSight feedback yet."
+            emptyMessage={
+              Object.keys(filter).length > 0
+                ? "No PlanSight feedback matches the current filter."
+                : "No PlanSight feedback yet."
+            }
           />
         </section>
       </div>

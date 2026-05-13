@@ -3,8 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
-import { listFeedbackForProduct } from "@/lib/feedback/queries";
+import {
+  listFeedbackForProduct,
+  parseFeedbackFilter
+} from "@/lib/feedback/queries";
 import { FeedbackTable } from "@/components/admin/FeedbackTable";
+import { FeedbackFilters } from "@/components/admin/FeedbackFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -19,15 +23,27 @@ export const metadata: Metadata = {
 // feedback (currently just PlanSight) is filtered into its own admin
 // page so this surface stays general-only.
 const AISM_PRODUCT_LABEL = "AI Solution Maven";
+const PAGE_PATH = "/aisolution/admin/feedback";
 
-export default async function AisolutionFeedbackAdminPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function AisolutionFeedbackAdminPage({
+  searchParams
+}: {
+  searchParams?: SearchParams;
+}) {
   const user = await getCurrentUser();
   const adminId = process.env.ADMIN_USER_ID;
   if (!user || !adminId || user.id !== adminId) {
     redirect("/");
   }
 
-  const rows = await listFeedbackForProduct(AISM_PRODUCT_LABEL, 100);
+  const filter = parseFeedbackFilter(searchParams ?? {});
+  const rows = await listFeedbackForProduct(
+    AISM_PRODUCT_LABEL,
+    filter,
+    100
+  );
   const counts = countByType(rows);
 
   return (
@@ -57,10 +73,23 @@ export default async function AisolutionFeedbackAdminPage() {
           </div>
         </header>
 
-        <section className="mt-8">
+        <section className="mt-6">
+          <FeedbackFilters
+            basePath={PAGE_PATH}
+            product={AISM_PRODUCT_LABEL}
+            current={filter}
+            accent="emerald"
+          />
+        </section>
+
+        <section className="mt-6">
           <FeedbackTable
             rows={rows}
-            emptyMessage="No general AISM feedback yet."
+            emptyMessage={
+              Object.keys(filter).length > 0
+                ? "No AISM feedback matches the current filter."
+                : "No general AISM feedback yet."
+            }
           />
         </section>
       </div>
