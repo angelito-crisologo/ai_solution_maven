@@ -484,7 +484,8 @@ export async function revokeShareForUser(
     })
     .eq("share_id", shareId)
     .eq("owner_user_id", userId)
-    .select("share_id");
+    .select("share_id, share_revoked_at, share_password_version");
+  console.log("[share-revoke:write]", { shareId, error: error?.message, rows: data });
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
@@ -514,7 +515,8 @@ export async function restoreShareForUser(
     })
     .eq("share_id", shareId)
     .eq("owner_user_id", userId)
-    .select("share_id");
+    .select("share_id, share_revoked_at, share_password_version");
+  console.log("[share-restore:write]", { shareId, error: error?.message, rows: data });
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
