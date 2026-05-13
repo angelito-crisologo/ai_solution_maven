@@ -101,7 +101,8 @@ export default async function SharePage({ params }: Props) {
     exists: status.exists,
     revoked: status.revoked,
     hasPassword: status.hasPassword,
-    passwordVersion: status.passwordVersion
+    passwordVersion: status.passwordVersion,
+    at: new Date().toISOString()
   });
   if (status.exists && status.revoked) {
     return <NoLongerAvailable />;

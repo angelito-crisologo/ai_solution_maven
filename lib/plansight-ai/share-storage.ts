@@ -408,7 +408,16 @@ export async function getShareSecurityStatus(
     .eq("share_id", shareId)
     .maybeSingle<ShareSecurityRow>();
 
-  if (error || !data) return fallback;
+  if (error || !data) {
+    console.log("[share-gate:read]", { shareId, error: error?.message, found: false });
+    return fallback;
+  }
+  console.log("[share-gate:read]", {
+    shareId,
+    raw_share_revoked_at: data.share_revoked_at,
+    raw_has_password: !!data.share_password_hash,
+    raw_password_version: data.share_password_version
+  });
   return {
     exists: true,
     revoked: !!data.share_revoked_at,
