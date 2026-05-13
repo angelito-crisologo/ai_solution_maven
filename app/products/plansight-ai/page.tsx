@@ -7,7 +7,6 @@ import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightPricingSection } from "@/components/plansight-ai/PlanSightPricingSection";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
-import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -196,7 +195,15 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
             </p>
           </div>
 
-          <PlanSightFlowGraphic />
+          <Image
+            src="/products/plansight-ai/hero/workspace.webp"
+            alt="PlanSight workspace showing the critical path, RAG status, and AI summary for a sample software development project plan."
+            width={2560}
+            height={1600}
+            priority
+            sizes="(min-width: 1024px) 600px, 100vw"
+            className="w-full rounded-xl border border-slate-800 shadow-modal"
+          />
         </div>
       </section>
 
