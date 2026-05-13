@@ -69,6 +69,21 @@ const ROWS: RowItem[] = [
   },
   {
     kind: "feature",
+    key: "excel-export",
+    label: "Export as Excel",
+    cells: { anonymous: <Tick />, free: <Tick />, pro: <Tick /> },
+    detail: {
+      eyebrow: "Export",
+      lede: "Download the imported task list as an .xlsx workbook with the columns stakeholders expect: ID, task, dates, % complete, resource, notes.",
+      perTier: {
+        anonymous: "Export the current plan.",
+        free: "Export your saved plan any time.",
+        pro: "Export any plan from the dashboard."
+      }
+    }
+  },
+  {
+    kind: "feature",
     key: "ai-analysis",
     label: "AI analysis",
     cells: {
@@ -107,6 +122,21 @@ const ROWS: RowItem[] = [
   },
   {
     kind: "feature",
+    key: "revoke-share",
+    label: "Revoke share link",
+    cells: { anonymous: <Dash />, free: <Tick />, pro: <Tick /> },
+    detail: {
+      eyebrow: "Communication",
+      lede: "Turn off a shared link without deleting the plan. Anyone opening the link sees a generic “no longer available” page. Restore later to re-enable.",
+      perTier: {
+        anonymous: "Not available — anonymous links auto-expire after 24 hours.",
+        free: "Revoke and restore the share link on your saved plan.",
+        pro: "Revoke and restore on every plan in the dashboard."
+      }
+    }
+  },
+  {
+    kind: "feature",
     key: "plans-saved",
     label: "Plans saved",
     cells: {
@@ -121,21 +151,6 @@ const ROWS: RowItem[] = [
         anonymous: "Nothing saved to an account. The plan exists for 24 hours alongside its share link, then both are deleted.",
         free: "One saved plan. Uploading a new file replaces it.",
         pro: "Every plan you upload stays. Switch between them freely from the My Plans dashboard."
-      }
-    }
-  },
-  {
-    kind: "feature",
-    key: "excel-export",
-    label: "Export as Excel",
-    cells: { anonymous: <Tick />, free: <Tick />, pro: <Tick /> },
-    detail: {
-      eyebrow: "Export",
-      lede: "Download the imported task list as an .xlsx workbook with the columns stakeholders expect: ID, task, dates, % complete, resource, notes.",
-      perTier: {
-        anonymous: "Export the current plan.",
-        free: "Export your saved plan any time.",
-        pro: "Export any plan from the dashboard."
       }
     }
   },
@@ -223,6 +238,21 @@ const ROWS: RowItem[] = [
         anonymous: "Not available.",
         free: "Not available.",
         pro: "Available on every saved plan. Landscape A4 with task ID, name, dates, % complete, resource, notes."
+      }
+    }
+  },
+  {
+    kind: "feature",
+    key: "share-password",
+    label: "Password-protected share links",
+    cells: { anonymous: <Dash />, free: <Dash />, pro: <Tick /> },
+    detail: {
+      eyebrow: "Security",
+      lede: "Set a password on a share link so only stakeholders you give it to can open the plan. Change or clear the password at any time — sessions invalidate automatically on every change.",
+      perTier: {
+        anonymous: "Not available.",
+        free: "Not available.",
+        pro: "Set, change, or clear a password per plan. Failed attempts are rate-limited per visitor IP."
       }
     }
   },
