@@ -1,5 +1,10 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
+// $3 per user per month — calibrated against the bounded-payload Haiku
+// cost (typical Pro user generates < $0.20/mo). Crossing $3 means
+// regenerate spam, runaway explain-task usage, or a prompt-engineering
+// regression. Alert is per-user, fires once per month, and is the only
+// human-in-the-loop tripwire on AI spend.
 const SPEND_ALERT_THRESHOLD_USD = 3;
 const RESEND_API_URL = "https://api.resend.com/emails";
 

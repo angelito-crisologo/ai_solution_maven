@@ -1,5 +1,16 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
+// Two-layer velocity gate on the explain-task feature, which is the
+// one Pro feature a user can fire infinitely from the UI.
+//   PER_HOUR_HARD — blocks burst abuse (script clicking every task).
+//   PER_DAY_SOFT  — shows a non-blocking nudge ("you're using this a
+//                   lot — consider regenerate analysis for the whole
+//                   plan"), tuned so a working PM clicking through a
+//                   plan won't hit it.
+//   PER_DAY_HARD  — blocks. 200/day is well above any plausible
+//                   legitimate single-user pattern; crossing it
+//                   probably means a credential leak or automation.
+// Per-Pro-user spend cap is enforced separately via spend-alert.ts.
 export const EXPLAIN_TASK_LIMITS = {
   PER_HOUR_HARD: 30,
   PER_DAY_SOFT: 100,

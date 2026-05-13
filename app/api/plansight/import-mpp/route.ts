@@ -16,9 +16,18 @@ import {
 
 export const runtime = "nodejs";
 
-const PARSER_TIMEOUT_MS = 25_000; // 25s, leaves headroom under Vercel Hobby's 10s ceiling for the typical case
+// Defensive upper bound on the fetch to the Render parser. The Vercel
+// function ceiling (10s on Hobby) will preempt this in practice — the
+// 25s value is here so that if we ever move to a longer-lived runtime
+// the timeout still trips on a genuinely hung parser instead of running
+// indefinitely.
+const PARSER_TIMEOUT_MS = 25_000;
 
-// MS Compound Document magic bytes — every .mpp file starts with this.
+// MS Compound Document magic bytes. Validated client-side before
+// forwarding to the parser so a non-MPP upload (a .docx, a renamed
+// .zip, a typo) fails fast with a 400 and never costs us a parser
+// request. Not a security boundary — it just shifts the obvious-garbage
+// rejections off the Render free tier.
 const MPP_MAGIC_BYTES = new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 
 function resolveParserServiceUrl() {

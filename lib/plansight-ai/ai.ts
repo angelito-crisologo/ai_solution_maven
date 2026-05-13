@@ -8,7 +8,15 @@ import { estimatePayloadTokens } from "./ai-payload/token-estimate";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
 const MODEL_ID = "claude-haiku-4-5-20251001";
+// 800 tokens fits the spec's narrative + ~5 recommendations comfortably
+// on Haiku without forcing truncation; pushing higher mostly buys empty
+// padding and adds latency. Tune jointly with the system prompt's
+// length budget.
 const MAX_OUTPUT_TOKENS = 800;
+// Cap the number of items per category (critical tasks, late, etc.)
+// shown to Claude. 8 is empirically the point where the model still
+// references items by ID without saturating prompt-relevance and where
+// the bounded payload stays in the 3k-10k token band.
 const TOP_N_PER_CATEGORY = 8;
 
 type PayloadVersion = "v1" | "v2";

@@ -4,6 +4,10 @@ import {
   isSupabaseServiceConfigured
 } from "@/lib/supabase/service";
 
+// Module-level singleton. Vercel reuses warm function instances across
+// invocations (Fluid Compute), so caching the Stripe SDK saves the
+// constructor cost on every call past the first cold start. Safe because
+// the SDK is stateless — it builds requests, not connections.
 let cachedClient: Stripe | null = null;
 
 export function getStripeClient(): Stripe {

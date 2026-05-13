@@ -4,6 +4,11 @@ import { extractTokenUsage, type TokenUsage } from "./ai-usage/cost";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
 const MODEL_ID = "claude-haiku-4-5-20251001";
+// Calibrated to the "3 sentences, ~80 words" output contract in
+// SYSTEM_PROMPT below — 350 is enough for the model to land all three
+// sentences with citations, with a small cushion. Lower budgets trigger
+// truncation on tasks with long names; higher budgets just invite
+// padding.
 const MAX_OUTPUT_TOKENS = 350;
 
 export type ExplainTaskResult = {

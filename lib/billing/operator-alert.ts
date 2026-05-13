@@ -14,6 +14,10 @@ export async function sendOperatorAlert(
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.OPERATOR_ALERT_EMAIL;
+  // Hard-coded fallback so a forgotten env var doesn't silently fail the
+  // operator alert path entirely. The address must exist on the verified
+  // Resend sending domain; if it doesn't, Resend rejects the send and we
+  // log it (no retries — see comment above).
   const from = process.env.OPERATOR_ALERT_FROM ?? "alerts@aisolutionmaven.com";
 
   if (!apiKey || !to) {

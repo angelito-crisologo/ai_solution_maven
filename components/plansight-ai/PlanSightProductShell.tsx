@@ -4,6 +4,12 @@ import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
+// localStorage key holding the anonymous share id between upload and
+// signup. The workspace shell writes it on anonymous import; the post-
+// signup shell reads it once and POSTs to /api/plansight/claim to
+// re-parent the plan onto the new account, then clears it. Namespaced
+// to avoid collisions; rename = explicit migration (delete old key on
+// next visit and accept a one-time claim loss).
 const CLAIM_SHARE_ID_KEY = "plansight:claim-share-id";
 import {
   AlertTriangle,
