@@ -128,11 +128,13 @@ current in-progress section.
     the submit button.
   - Anonymous upload CTA (`components/plansight-ai/PlanSightProductShell.tsx`)
     — inline consent line under the upload form description.
-  - Upgrade form (`app/products/plansight-ai/upgrade/page.tsx`) — the
-    old "Secure checkout via Stripe" caption now reads "By subscribing
-    you agree to our **Terms**, **Refund Policy**, and **Privacy
-    Policy**. Secure checkout via Stripe..." putting the refund
-    commitment in front of the user before payment (ACL alignment).
+  - Upgrade form (`app/products/plansight-ai/upgrade/page.tsx`) — an
+    **active consent checkbox** appears above the submit button:
+    *"I agree to the **Terms**, **Refund Policy**, and **Privacy
+    Policy**."* HTML5 `required` blocks submission until ticked.
+    Defence-in-depth check in the checkout route rejects scripted
+    bypass with a 400. Stronger contract formation posture than the
+    earlier passive "By subscribing..." paragraph.
 
 - **Operator alert helper.** New `lib/billing/operator-alert.ts` —
   generic Resend-backed operator email, used by the dispute handlers.

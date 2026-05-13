@@ -42,6 +42,21 @@ export async function POST(request: Request) {
   }
 
   const form = await request.formData().catch(() => null);
+
+  // Defence-in-depth for the active consent checkbox on /upgrade. The
+  // browser already blocks submission via the `required` attribute; this
+  // catches scripted bypass. Unticked checkboxes are absent from the
+  // form payload entirely, so a missing field is the unchecked state.
+  if (form?.get("consent") !== "on") {
+    return NextResponse.json(
+      {
+        error:
+          "You must agree to the Terms, Refund Policy, and Privacy Policy to subscribe."
+      },
+      { status: 400 }
+    );
+  }
+
   const rawInterval = form?.get("interval");
   const interval: BillingInterval = isBillingInterval(rawInterval) ? rawInterval : "month";
   const promoRaw = form?.get("promo");

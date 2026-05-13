@@ -257,6 +257,38 @@ export default async function UpgradePage({
                     <p className="mt-1 text-caption text-slate-500">~ 2 months free</p>
                   </label>
                 </fieldset>
+                <label className="mt-4 flex cursor-pointer items-start gap-2 text-caption text-slate-700">
+                  <input
+                    type="checkbox"
+                    name="consent"
+                    required
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-cyan-700 focus:ring-cyan-400 focus:ring-offset-0"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link
+                      href="/products/plansight-ai/legal/terms"
+                      className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                    >
+                      Terms
+                    </Link>
+                    ,{" "}
+                    <Link
+                      href="/products/plansight-ai/legal/refunds"
+                      className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                    >
+                      Refund Policy
+                    </Link>
+                    , and{" "}
+                    <Link
+                      href="/products/plansight-ai/legal/privacy"
+                      className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
                 <button
                   type="submit"
                   className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
@@ -265,28 +297,7 @@ export default async function UpgradePage({
                   Upgrade to Pro
                 </button>
                 <p className="mt-3 text-caption text-slate-500">
-                  By subscribing you agree to our{" "}
-                  <Link
-                    href="/products/plansight-ai/legal/terms"
-                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
-                  >
-                    Terms
-                  </Link>
-                  ,{" "}
-                  <Link
-                    href="/products/plansight-ai/legal/refunds"
-                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
-                  >
-                    Refund Policy
-                  </Link>
-                  , and{" "}
-                  <Link
-                    href="/products/plansight-ai/legal/privacy"
-                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                  . Secure checkout via Stripe; we never see your card details.
+                  Secure checkout via Stripe; we never see your card details.
                 </p>
               </form>
             )}
