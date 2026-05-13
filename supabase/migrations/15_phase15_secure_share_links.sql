@@ -1,4 +1,4 @@
--- Phase 15: secure share links — soft revocation + optional password.
+-- Phase 15: secure share links -- soft revocation + optional password.
 --
 -- Implements docs/plansight-ai/specs/SECURE_SHARE_LINKS_SPEC.md
 -- with the v1.2 scope reduction: expiry / view-limit deferred,
@@ -49,7 +49,7 @@ create index if not exists plans_share_revoked_idx
 
 -- share_access_attempts: rate-limit + audit log for password verify route.
 -- 5 failed attempts per (share_id, ip) within 15 minutes triggers a generic
--- error response (same string as a wrong password — never reveal lockout to
+-- error response (same string as a wrong password -- never reveal lockout to
 -- attackers). Audit trail kept indefinitely for future "who accessed this
 -- share" surfacing.
 
