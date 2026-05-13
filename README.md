@@ -38,6 +38,10 @@ This project is ready for Vercel.
    - `STRIPE_PRICE_ID_ANNUAL` — annual recurring Price id (`price_…`) for PlanSight Pro
    - `STRIPE_WEBHOOK_SECRET` (server-only) — endpoint signing secret; test- and live-mode values differ
    - `SHARE_COOKIE_SECRET` (server-only) — ≥32 char HMAC key signing the share-link password session cookie. Generate with `openssl rand -hex 32`. Different value per environment.
+   - `NEXT_PUBLIC_APP_URL` — public origin used to build Stripe Checkout success / cancel URLs (e.g. `https://aisolutionmaven.com`)
+   - `OPERATOR_ALERT_EMAIL` (server-only) — inbox that receives dispute auto-revoke and per-user AI spend alerts. **If unset, both alert paths fall through silently** — set this before going live.
+   - `OPERATOR_ALERT_FROM` (server-only, optional) — sender address on alert emails. Defaults to `alerts@aisolutionmaven.com`; must exist on your Resend verified domain.
+   - `ADMIN_USER_ID` (server-only) — Supabase user id that can access `/products/plansight-ai/admin`. Anyone else hitting that path gets a 404.
 4. Deploy the project.
 
 Recommended values:
