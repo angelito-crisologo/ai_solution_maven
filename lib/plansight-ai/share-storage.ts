@@ -375,10 +375,15 @@ type ShareSecurityRow = {
 };
 
 /**
- * Lightweight read of just the security state of a share. Public reads
- * via the anon key — RLS allows SELECT for anyone with the share id.
- * The hash itself is intentionally NOT returned here; verify operations
- * use a separate function with the service-role client.
+ * Lightweight read of the security state of a share. Uses the
+ * service-role client because the columns added in Phase 15
+ * (share_revoked_at, share_password_*) are not visible to the anon role
+ * via PostgREST's REST layer on some Supabase configurations — even
+ * with `notify pgrst, 'reload schema'`, the anon-side response strips
+ * them. Service role bypasses that filter. This is server-only; the
+ * service key never reaches the browser. The password hash itself is
+ * not returned in this shape; verify operations use
+ * getSharePasswordHashAndVersion separately.
  */
 export async function getShareSecurityStatus(
   shareId: string
@@ -392,7 +397,7 @@ export async function getShareSecurityStatus(
     ownerUserId: null
   };
 
-  const client = createSupabaseAnonClient();
+  const client = createSupabaseServiceClient();
   if (!client) return fallback;
 
   const { data, error } = await client
