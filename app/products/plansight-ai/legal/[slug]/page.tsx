@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
@@ -163,7 +164,11 @@ export default async function LegalDocumentPage({ params }: Props) {
 
       <article className="px-6 py-12">
         <div className="mx-auto max-w-3xl">
-          <MDXRemote source={doc.body} components={mdxComponents} />
+          <MDXRemote
+            source={doc.body}
+            components={mdxComponents}
+            options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+          />
         </div>
       </article>
 

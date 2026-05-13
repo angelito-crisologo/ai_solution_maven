@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
@@ -116,6 +117,26 @@ const mdxComponents = {
       className="mt-6 border-l-2 border-cyan-300 bg-cyan-50/40 px-5 py-3 text-body-lg italic text-slate-800"
       {...props}
     />
+  ),
+  table: (props: React.HTMLAttributes<HTMLTableElement>) => (
+    <div className="mt-6 overflow-x-auto">
+      <table
+        className="w-full border-collapse border border-slate-200 text-body text-slate-800"
+        {...props}
+      />
+    </div>
+  ),
+  thead: (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
+    <thead className="bg-slate-50" {...props} />
+  ),
+  th: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+    <th
+      className="border border-slate-200 px-3 py-2 text-left font-semibold text-ink"
+      {...props}
+    />
+  ),
+  td: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+    <td className="border border-slate-200 px-3 py-2 align-top" {...props} />
   )
 };
 
@@ -204,7 +225,11 @@ export default async function GuidePage({ params }: Props) {
           </header>
 
           <div className="mt-10">
-            <MDXRemote source={guide.body} components={mdxComponents} />
+            <MDXRemote
+              source={guide.body}
+              components={mdxComponents}
+              options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+            />
           </div>
 
           <aside className="mt-16 rounded-xl border border-slate-200 bg-white p-6">
