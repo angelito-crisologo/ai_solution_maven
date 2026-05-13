@@ -139,23 +139,15 @@ export default async function MyPlansPage({
             <div className="flex flex-wrap items-center gap-4">
               <WeekStartDayToggle initial={preferences.weekStartDay} />
               {isPro ? (
-                <div className="flex flex-col items-end gap-1">
-                  <form action="/api/billing/portal" method="post">
-                    <button
-                      type="submit"
-                      className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
-                    >
-                      <CreditCard className="h-3.5 w-3.5" />
-                      Manage billing
-                    </button>
-                  </form>
-                  <Link
-                    href="/products/plansight-ai/legal/refunds"
-                    className="text-micro text-slate-400 transition hover:text-cyan-300"
+                <form action="/api/billing/portal" method="post">
+                  <button
+                    type="submit"
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
                   >
-                    Refund policy
-                  </Link>
-                </div>
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Manage billing
+                  </button>
+                </form>
               ) : null}
             </div>
           </div>
