@@ -27,6 +27,11 @@ Brand assets (voice, colors, typography, logos) live under
     cost model
   - [pricing-section.md](specs/pricing-section.md) — marketing pricing
     table, dialog content, anonymous TTL + claim-on-signup mechanic
+  - [SECURE_SHARE_LINKS_SPEC.md](specs/SECURE_SHARE_LINKS_SPEC.md) —
+    revocation + password protection (Phase 15 / v1.2 shipped subset)
+  - [IN_PRODUCT_DISCLAIMERS_SPEC.md](specs/IN_PRODUCT_DISCLAIMERS_SPEC.md)
+    — AI disclaimer placement and copy across PM and stakeholder
+    surfaces
   - [ai-payload.md](specs/ai-payload.md) — what gets sent to Claude,
     payload caps, prompt caching, v1 rollback
   - [telemetry.md](specs/telemetry.md) — `upload_events`,

@@ -11,7 +11,7 @@ current in-progress section.
 
 ---
 
-## v1.2 — in progress
+## v1.2 — 2026-05-13
 
 ### Added
 
@@ -56,6 +56,44 @@ current in-progress section.
     services.md. Minimum 32 chars; generate with `openssl rand -hex 32`.
   - Migration: `supabase/migrations/15_phase15_secure_share_links.sql`.
 
+- **Pricing table — revoke + password rows surfaced.** The
+  `/products/plansight-ai` pricing comparison now shows "Revoke share
+  link" as a Free+Pro row right under "Public share link", and
+  "Password-protected share links" as a Pro-only row under PRO ·
+  WORKFLOW. "Export as Excel" moved up to position three (right after
+  Insights engine) so the Free block reads upload → view → export →
+  analyse → share rather than burying export at the bottom.
+
+- **Sign-in → /my-plans; sign-out → /products/plansight-ai.** Sign-in
+  no longer drops users back on the marketing page they came from —
+  every successful sign-in lands on the My Plans dashboard, matching
+  sign-up. Sign-out returns the PlanSight product home (was AISM
+  root). The per-page `signinRedirectTo` prop on `PlanSightNavbar` is
+  removed along with its six call sites.
+
+### Changed
+
+- **Service-role Supabase reads bypass Next.js Data Cache.**
+  `createSupabaseServiceClient()` now overrides `global.fetch` with
+  `cache: "no-store"`. `dynamic = "force-dynamic"` on the share page
+  opts out of the full-route cache but does not propagate `no-store`
+  to fetches inside imported helpers — symptom was the share gate
+  returning pre-revoke `share_revoked_at` values even though the
+  write had landed in the DB. Production-only bug; fix verified
+  end-to-end (revoke, restore, password).
+
+- **`getShareSecurityStatus` uses the service-role client.** PostgREST
+  was filtering the Phase 15 columns from the anon role on the live
+  Supabase project despite `notify pgrst, 'reload schema'`. Service
+  role bypasses the column-visibility filter. Server-only call;
+  service key never reaches the browser.
+
+- **Refund Policy link removed from under Manage Billing on
+  /my-plans.** The footer surfaces Refunds on every PlanSight page so
+  the duplicate was just visual clutter. The contextual Refund Policy
+  link inside the cancellation-pending banner is left in place since
+  it's specifically about what cancellation does and doesn't refund.
+
 ### Deferred
 
 - Share link expiry by date and view limit — see
@@ -63,7 +101,7 @@ current in-progress section.
 
 ---
 
-## v1.1 — in progress
+## v1.1 — 2026-05-12
 
 ### Added
 

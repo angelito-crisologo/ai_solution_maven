@@ -23,7 +23,9 @@ Live at **https://aisolutionmaven.com/products/plansight-ai**.
 - Everything above, plus
 - 1 saved plan visible in **My Plans** (`/products/plansight-ai/my-plans`)
 - Persistent share links across sessions
-- Sign-up via Supabase email OTP
+- **Revoke / restore share link** — turn a shared URL off (and back on)
+  without deleting the plan
+- Sign-up via Supabase email + password
 
 **Pro tier (`product_activations.tier = "pro"`, Stripe-backed):**
 - Unlimited saved plans
@@ -31,7 +33,10 @@ Live at **https://aisolutionmaven.com/products/plansight-ai**.
 - **Explain this task** — per-task AI explanations (Haiku 4.5, cached)
 - **Weekly status report** — one-click, ready to send
 - **PDF export** — landscape, ready to forward
-- $19/month via Stripe Checkout + Stripe Customer Portal
+- **Password-protected share links** — opt-in per share, scrypt-hashed,
+  HMAC-signed session cookies, rate-limited verify attempts
+- $19/month or $190/year (~17% off) via Stripe Checkout + Stripe
+  Customer Portal. Interval switching is self-serve from the portal.
 
 ---
 
@@ -81,8 +86,12 @@ without forcing the recipient to install MS Project.
 ## Where to read more
 
 - **[specs/pro-features.md](specs/pro-features.md)** — every Pro feature, gate, and cost model
+- **[specs/SECURE_SHARE_LINKS_SPEC.md](specs/SECURE_SHARE_LINKS_SPEC.md)** — revoke/restore + password protection (Phase 15, v1.2 shipped subset)
+- **[specs/IN_PRODUCT_DISCLAIMERS_SPEC.md](specs/IN_PRODUCT_DISCLAIMERS_SPEC.md)** — AI disclaimer copy and placement
 - **[specs/ai-payload.md](specs/ai-payload.md)** — what gets sent to Claude, payload caps, caching
 - **[specs/telemetry.md](specs/telemetry.md)** — `upload_events`, `ai_usage_log`, `share_views` contracts
 - **[specs/insights.md](specs/insights.md)** — deterministic insights engine (critical path, RAG, etc.)
 - **[specs/abuse-mitigation.md](specs/abuse-mitigation.md)** — rate limits, soft caps, spend alerts
+- **[stripe-setup.md](stripe-setup.md)** — Stripe Dashboard configuration walkthrough
+- **[CHANGELOG.md](CHANGELOG.md)** — versioned notable changes
 - **[archive/](archive/)** — historical implementation briefs (kept for context, not maintained)

@@ -28,10 +28,11 @@ Free for the first AI analysis. Pro for daily use.            (h1, ink)
 ├──────────────────────────┼──────────────┼──────────────┼─────────────────┤
 │ Upload .mpp file         │      ✓       │      ✓       │       ✓         │
 │ Insights engine          │      ✓       │      ✓       │       ✓         │
-│ AI analysis              │ First free   │ First free   │  Included       │
-│ Public share link        │  14 days     │ Never expires│  Never expires  │
-│ Plans saved              │      —       │ 1 (most rec.)│  Unlimited      │
 │ Export as Excel          │      ✓       │      ✓       │       ✓         │
+│ AI analysis              │ First free   │ First free   │  Included       │
+│ Public share link        │  24 hours    │ Never expires│  Never expires  │
+│ Revoke share link        │      —       │      ✓       │       ✓         │
+│ Plans saved              │      —       │ 1 (most rec.)│  Unlimited      │
 ├──────────────────────────┴──────────────┴──────────────┼─────────────────┤
 │ PRO · AI ON DEMAND                                      │   INCLUDED      │
 ├──────────────────────────┬──────────────┬──────────────┼─────────────────┤
@@ -43,6 +44,7 @@ Free for the first AI analysis. Pro for daily use.            (h1, ink)
 ├──────────────────────────┬──────────────┬──────────────┼─────────────────┤
 │ My Plans dashboard       │      —       │      —       │       ✓         │
 │ Export as PDF            │      —       │      —       │       ✓         │
+│ Password-protected links │      —       │      —       │       ✓         │
 │ File size limit (muted)  │    5 MB      │    5 MB      │     25 MB       │
 ├──────────────────────────┼──────────────┼──────────────┼─────────────────┤
 │ Click any row for detail │ [Try free →] │[Sign up free→]│ Upgrade·$19/mo │
@@ -79,15 +81,17 @@ Each row carries a `kind`: `"feature"` (clickable) or `"divider"` (non-interacti
 |---|---|---|---|---|
 | `upload` | Upload .mpp file | ✓ | ✓ | ✓ |
 | `insights-engine` | Insights engine | ✓ | ✓ | ✓ |
+| `excel-export` | Export as Excel | ✓ | ✓ | ✓ |
 | `ai-analysis` | AI analysis | First analysis free | First analysis free | **Included** |
 | `share-link` | Public share link | 24 hours | Never expires | **Never expires** |
+| `revoke-share` | Revoke share link | — | ✓ | ✓ |
 | `plans-saved` | Plans saved | — | 1 (most recent) | **Unlimited** |
-| `excel-export` | Export as Excel | ✓ | ✓ | ✓ |
 | `regenerate-ai` | Regenerate AI analysis | — | — | ✓ |
 | `weekly-report` | Weekly status report | — | — | ✓ |
 | `explain-task` | Explain this task | — | — | ✓ |
 | `my-plans` | My Plans dashboard | — | — | ✓ |
 | `pdf-export` | Export as PDF | — | — | ✓ |
+| `share-password` | Password-protected share links | — | — | ✓ |
 | `file-size` | File size limit (muted) | 5 MB | 5 MB | 25 MB |
 
 **Bold cells** render with `font-semibold text-cyan-700`. The `file-size` row is rendered muted (`text-slate-500`) since it's a constraint rather than a benefit.
