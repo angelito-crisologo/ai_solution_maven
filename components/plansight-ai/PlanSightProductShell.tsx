@@ -419,6 +419,7 @@ export function PlanSightProductShell({
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:min-w-[420px]">
               <input
+                id="plansight-file-input"
                 type="file"
                 accept=".mpp"
                 onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}

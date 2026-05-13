@@ -7,6 +7,7 @@ import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightPricingSection } from "@/components/plansight-ai/PlanSightPricingSection";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
+import { PlanSightHeroCta } from "@/components/plansight-ai/PlanSightHeroCta";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -193,6 +194,10 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
               AI-generated summary with risks and recommendations. Share a clear,
               read-only view with stakeholders. No login required for viewers.
             </p>
+            <PlanSightHeroCta />
+            <p className="mt-8 text-[11px] leading-[18px] font-normal text-[#94A3B8]">
+              Analysis runs on Anthropic&apos;s Claude Haiku 4.5.
+            </p>
           </div>
 
           <Image
@@ -218,7 +223,11 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         />
       </div>
 
-      {activation?.tier === "pro" ? null : <PlanSightPricingSection />}
+      {activation?.tier === "pro" ? null : (
+        <div id="pricing" className="scroll-mt-16">
+          <PlanSightPricingSection />
+        </div>
+      )}
 
       {recentGuides.length > 0 ? (
         <section className="bg-slate-50 px-6 py-20">
