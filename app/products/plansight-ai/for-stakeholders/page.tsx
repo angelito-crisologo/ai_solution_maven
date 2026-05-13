@@ -106,7 +106,7 @@ export default async function ForStakeholdersPage() {
       <section className="bg-white px-6 py-12">
         <div className="mx-auto flex max-w-3xl items-start gap-4 rounded-md border border-slate-200 bg-slate-50 p-5">
           <Image
-            src="/products/plansight-ai/brand/plansight-monogram.svg"
+            src="/products/plansight-ai/brand/plansight-monogram-light.svg"
             alt=""
             width={36}
             height={36}
