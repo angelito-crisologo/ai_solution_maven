@@ -54,6 +54,15 @@ export function createSupabaseServiceClient() {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      // Next.js wraps `fetch` with a Data Cache. Even on routes marked
+      // `dynamic = "force-dynamic"`, in-module fetches (like PostgREST
+      // GETs from supabase-js) can return stale rows from prior renders
+      // — the symptom is "DB updated but the read still sees the old
+      // values". Forcing `no-store` here makes every server-side read
+      // hit Postgres directly.
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" })
     }
   });
 }
