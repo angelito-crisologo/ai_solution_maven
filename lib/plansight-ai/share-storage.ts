@@ -408,16 +408,7 @@ export async function getShareSecurityStatus(
     .eq("share_id", shareId)
     .maybeSingle<ShareSecurityRow>();
 
-  if (error || !data) {
-    console.log("[share-gate:read]", { shareId, error: error?.message, found: false });
-    return fallback;
-  }
-  console.log("[share-gate:read]", {
-    shareId,
-    raw_share_revoked_at: data.share_revoked_at,
-    raw_has_password: !!data.share_password_hash,
-    raw_password_version: data.share_password_version
-  });
+  if (error || !data) return fallback;
   return {
     exists: true,
     revoked: !!data.share_revoked_at,
@@ -484,8 +475,7 @@ export async function revokeShareForUser(
     })
     .eq("share_id", shareId)
     .eq("owner_user_id", userId)
-    .select("share_id, share_revoked_at, share_password_version");
-  console.log("[share-revoke:write]", { shareId, error: error?.message, rows: data });
+    .select("share_id");
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
@@ -515,8 +505,7 @@ export async function restoreShareForUser(
     })
     .eq("share_id", shareId)
     .eq("owner_user_id", userId)
-    .select("share_id, share_revoked_at, share_password_version");
-  console.log("[share-restore:write]", { shareId, error: error?.message, rows: data });
+    .select("share_id");
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }

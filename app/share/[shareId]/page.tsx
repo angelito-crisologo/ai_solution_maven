@@ -93,17 +93,6 @@ export default async function SharePage({ params }: Props) {
   // /my-plans (which queries a different surface), but the public share
   // route renders the generic "no longer available" page when revoked.
   const status = await getShareSecurityStatus(shareId);
-  // TEMPORARY DEBUG: surface what the read returned at the moment of
-  // decision. Bounded info — share id is already in the URL, booleans
-  // only. Remove once the gate is confirmed working in production.
-  console.log("[share-gate]", {
-    shareId,
-    exists: status.exists,
-    revoked: status.revoked,
-    hasPassword: status.hasPassword,
-    passwordVersion: status.passwordVersion,
-    at: new Date().toISOString()
-  });
   if (status.exists && status.revoked) {
     return <NoLongerAvailable />;
   }
