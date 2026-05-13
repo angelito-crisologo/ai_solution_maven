@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }
 };
 
-export default async function AisolutionAdminPage() {
+export default async function AdminPage() {
   const user = await getCurrentUser();
   const adminId = process.env.ADMIN_USER_ID;
   if (!user || !adminId || user.id !== adminId) {
@@ -32,7 +32,7 @@ export default async function AisolutionAdminPage() {
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2">
           <Link
-            href="/aisolution/admin/feedback"
+            href="/admin/feedback"
             className="group flex items-start gap-3 rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
           >
             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">

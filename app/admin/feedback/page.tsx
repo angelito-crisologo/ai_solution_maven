@@ -23,11 +23,11 @@ export const metadata: Metadata = {
 // feedback (currently just PlanSight) is filtered into its own admin
 // page so this surface stays general-only.
 const AISM_PRODUCT_LABEL = "AI Solution Maven";
-const PAGE_PATH = "/aisolution/admin/feedback";
+const PAGE_PATH = "/admin/feedback";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-export default async function AisolutionFeedbackAdminPage({
+export default async function FeedbackAdminPage({
   searchParams
 }: {
   searchParams?: SearchParams;
@@ -50,7 +50,7 @@ export default async function AisolutionFeedbackAdminPage({
     <main className="min-h-screen bg-light">
       <div className="mx-auto max-w-[1200px] px-6 py-10">
         <Link
-          href="/aisolution/admin"
+          href="/admin"
           className="inline-flex items-center gap-1 text-caption text-slate-500 transition hover:text-emerald-700"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
