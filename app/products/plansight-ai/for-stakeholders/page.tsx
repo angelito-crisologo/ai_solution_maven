@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
+import { StakeholderMailtoCta } from "@/components/plansight-ai/StakeholderMailtoCta";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -19,17 +20,6 @@ export const metadata: Metadata = {
     url: "/products/plansight-ai/for-stakeholders"
   }
 };
-
-// Pre-encoded mailto so the body / subject survive client mail
-// composition on iOS + Outlook web. The body is deliberately written
-// like a forward, not marketing copy — per the spec's brand-voice rule.
-const MAILTO_HREF =
-  "mailto:?subject=" +
-  encodeURIComponent("PlanSight AI — worth a look") +
-  "&body=" +
-  encodeURIComponent(
-    "Saw a project plan shared through this — clean read-only view, AI summary on top. Worth a look if you're sharing .mpp files with stakeholders.\n\nhttps://aisolutionmaven.com/products/plansight-ai"
-  );
 
 const bullets = [
   "Read the plan in your browser. Nothing to install.",
@@ -84,21 +74,8 @@ export default async function ForStakeholdersPage() {
             ))}
           </ul>
 
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <a
-              href={MAILTO_HREF}
-              aria-label="Email your PM about PlanSight"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-cyan-700 px-5 text-body font-semibold text-white transition hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2"
-            >
-              Tell your PM about PlanSight
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <Link
-              href="/products/plansight-ai"
-              className="inline-flex h-11 items-center justify-center text-body font-semibold text-slate-700 transition hover:text-ink focus-visible:outline-none focus-visible:underline"
-            >
-              See what it does
-            </Link>
+          <div className="mt-10">
+            <StakeholderMailtoCta />
           </div>
         </div>
       </section>
