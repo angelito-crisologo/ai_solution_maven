@@ -119,7 +119,6 @@ export default async function UpgradePage({
         signedIn={!!user}
         activated={!!activation}
         tier={activation?.tier ?? null}
-        signinRedirectTo="/products/plansight-ai/upgrade"
       />
 
       <section className="bg-navy text-slate-100">

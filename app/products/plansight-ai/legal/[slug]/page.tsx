@@ -137,7 +137,6 @@ export default async function LegalDocumentPage({ params }: Props) {
         signedIn={!!user}
         activated={!!activation}
         tier={activation?.tier ?? null}
-        signinRedirectTo={`/products/plansight-ai/legal/${slug}`}
       />
 
       <section className="bg-navy text-slate-100">

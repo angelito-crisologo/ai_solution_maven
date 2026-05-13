@@ -102,7 +102,6 @@ export default async function MyPlansPage({
         signedIn
         activated
         tier={activation.tier}
-        signinRedirectTo="/products/plansight-ai/my-plans"
       />
 
       <section className="bg-navy text-slate-100">

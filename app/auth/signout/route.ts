@@ -8,5 +8,8 @@ export async function POST(request: NextRequest) {
   await supabase.auth.signOut();
 
   const url = new URL(request.url);
-  return NextResponse.redirect(new URL("/", url.origin), { status: 303 });
+  return NextResponse.redirect(
+    new URL("/products/plansight-ai", url.origin),
+    { status: 303 }
+  );
 }

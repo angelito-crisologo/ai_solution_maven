@@ -180,7 +180,6 @@ export default async function GuidePage({ params }: Props) {
         signedIn={!!user}
         activated={!!activation}
         tier={activation?.tier ?? null}
-        signinRedirectTo={`/products/plansight-ai/guides/${slug}`}
       />
 
       <article className="px-6 py-12">

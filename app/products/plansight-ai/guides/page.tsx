@@ -54,7 +54,6 @@ export default async function GuidesIndexPage() {
         signedIn={!!user}
         activated={!!activation}
         tier={activation?.tier ?? null}
-        signinRedirectTo="/products/plansight-ai/guides"
       />
 
       <section className="bg-navy text-slate-100">
