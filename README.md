@@ -33,6 +33,10 @@ This project is ready for Vercel.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only, do **not** prefix with `NEXT_PUBLIC_`)
    - `ANTHROPIC_API_KEY` (server-only, do **not** prefix with `NEXT_PUBLIC_`)
+   - `STRIPE_SECRET_KEY` (server-only)
+   - `STRIPE_PRICE_ID` — monthly recurring Price id (`price_…`) for PlanSight Pro
+   - `STRIPE_PRICE_ID_ANNUAL` — annual recurring Price id (`price_…`) for PlanSight Pro
+   - `STRIPE_WEBHOOK_SECRET` (server-only) — endpoint signing secret; test- and live-mode values differ
 4. Deploy the project.
 
 Recommended values:

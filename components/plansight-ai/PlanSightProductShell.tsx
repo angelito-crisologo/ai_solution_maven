@@ -392,6 +392,23 @@ export function PlanSightProductShell({
                 parsed into the PlanSight schema, then rendered as an analyzed plan with a
                 stakeholder share view.
               </p>
+              <p className="mt-2 max-w-2xl text-caption text-slate-500">
+                By uploading you agree to our{" "}
+                <Link
+                  href="/products/plansight-ai/legal/terms"
+                  className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                >
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/products/plansight-ai/legal/privacy"
+                  className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:min-w-[420px]">

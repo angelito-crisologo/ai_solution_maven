@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
+  CircleAlert,
   CreditCard,
   FileBarChart,
   FileText,
@@ -9,12 +10,17 @@ import {
   LayoutDashboard,
   RefreshCcw,
   Sparkles,
+  Tag,
   Upload
 } from "lucide-react";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getCurrentUser } from "@/lib/auth/session";
+import {
+  describeCouponDiscount,
+  findActivePromotionCode
+} from "@/lib/billing/stripe";
 
 export const metadata: Metadata = {
   title: "Upgrade to Pro",
@@ -79,6 +85,8 @@ const PRO_FEATURES = [
 
 type CheckoutSearchParams = {
   checkout?: string;
+  promo?: string;
+  promo_error?: string;
 };
 
 export default async function UpgradePage({
@@ -90,6 +98,13 @@ export default async function UpgradePage({
   const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
   const isPro = activation?.tier === "pro";
   const cancelled = searchParams?.checkout === "cancelled";
+
+  const requestedPromo = searchParams?.promo?.trim() ?? "";
+  const promoError = searchParams?.promo_error === "invalid";
+  const promotion =
+    requestedPromo && !isPro ? await findActivePromotionCode(requestedPromo) : null;
+  const promoDescription = promotion ? describeCouponDiscount(promotion.coupon) : null;
+  const promoUnknown = !!requestedPromo && !promotion;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -122,12 +137,41 @@ export default async function UpgradePage({
             </div>
           ) : null}
 
+          {promotion && promoDescription ? (
+            <div className="mb-5 flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-body text-emerald-900">
+              <Tag className="mt-0.5 h-5 w-5 text-emerald-600" />
+              <div>
+                <p className="font-semibold">
+                  Promo code{" "}
+                  <span className="font-mono">{promotion.promotionCode.code}</span>{" "}
+                  applied
+                </p>
+                <p className="mt-0.5 text-emerald-800">
+                  {promoDescription}. Final price is shown on the Stripe Checkout page.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {(promoUnknown || promoError) && requestedPromo ? (
+            <div className="mb-5 flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-body text-amber-900">
+              <CircleAlert className="mt-0.5 h-5 w-5 text-amber-600" />
+              <div>
+                <p className="font-semibold">
+                  Promo code{" "}
+                  <span className="font-mono">{requestedPromo}</span> isn&apos;t valid
+                </p>
+                <p className="mt-0.5 text-amber-800">
+                  It may have expired or been mistyped. You can still upgrade at the
+                  standard price, or enter a different code on the Stripe Checkout
+                  page.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           <div className="rounded-xl border border-slate-200 bg-white p-6">
             <p className="text-micro text-cyan-700">PlanSight Pro</p>
-            <div className="mt-2 flex flex-wrap items-baseline gap-2">
-              <span className="text-display text-ink">$19</span>
-              <span className="text-body text-slate-600">USD / month</span>
-            </div>
             <p className="mt-3 text-body-lg text-slate-700">
               Cancel any time from the billing portal. All Pro features unlock
               immediately after checkout.
@@ -136,8 +180,8 @@ export default async function UpgradePage({
             {isPro ? (
               <div className="mt-5">
                 <p className="mb-3 rounded-md border border-cyan-200 bg-cyan-50 p-3 text-body text-cyan-900">
-                  You&apos;re already on Pro. Manage or cancel your subscription
-                  from the billing portal.
+                  You&apos;re already on Pro. Manage, switch billing interval,
+                  or cancel your subscription from the billing portal.
                 </p>
                 <form action="/api/billing/portal" method="post">
                   <button
@@ -167,15 +211,82 @@ export default async function UpgradePage({
               </div>
             ) : (
               <form action="/api/billing/checkout" method="post" className="mt-5">
+                {promotion ? (
+                  <input
+                    type="hidden"
+                    name="promo"
+                    value={promotion.promotionCode.code}
+                  />
+                ) : null}
+                <fieldset className="grid gap-3 sm:grid-cols-2">
+                  <legend className="sr-only">Billing interval</legend>
+                  <label className="cursor-pointer rounded-lg border-2 border-slate-200 bg-white p-4 transition hover:border-cyan-300 has-[:checked]:border-cyan-700 has-[:checked]:bg-cyan-50">
+                    <input
+                      type="radio"
+                      name="interval"
+                      value="month"
+                      defaultChecked
+                      className="sr-only"
+                    />
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-h3 text-ink">Monthly</span>
+                      <span className="text-caption text-slate-500">Cancel anytime</span>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-display text-ink">$19</span>
+                      <span className="text-body text-slate-600">/mo</span>
+                    </div>
+                  </label>
+                  <label className="cursor-pointer rounded-lg border-2 border-slate-200 bg-white p-4 transition hover:border-cyan-300 has-[:checked]:border-cyan-700 has-[:checked]:bg-cyan-50">
+                    <input
+                      type="radio"
+                      name="interval"
+                      value="year"
+                      className="sr-only"
+                    />
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-h3 text-ink">Annual</span>
+                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-micro font-semibold text-emerald-700">
+                        Save $38
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-display text-ink">$190</span>
+                      <span className="text-body text-slate-600">/yr</span>
+                    </div>
+                    <p className="mt-1 text-caption text-slate-500">~ 2 months free</p>
+                  </label>
+                </fieldset>
                 <button
                   type="submit"
-                  className="inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
+                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-cyan-700 px-4 text-body font-semibold text-white transition hover:bg-cyan-800"
                 >
                   <CreditCard className="h-4 w-4" />
                   Upgrade to Pro
                 </button>
                 <p className="mt-3 text-caption text-slate-500">
-                  Secure checkout via Stripe. We never see your card details.
+                  By subscribing you agree to our{" "}
+                  <Link
+                    href="/products/plansight-ai/legal/terms"
+                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                  >
+                    Terms
+                  </Link>
+                  ,{" "}
+                  <Link
+                    href="/products/plansight-ai/legal/refunds"
+                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                  >
+                    Refund Policy
+                  </Link>
+                  , and{" "}
+                  <Link
+                    href="/products/plansight-ai/legal/privacy"
+                    className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                  . Secure checkout via Stripe; we never see your card details.
                 </p>
               </form>
             )}

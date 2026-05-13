@@ -70,7 +70,7 @@ export function ShareViewFooterCta({ shareId }: Props) {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-5 text-caption text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 text-caption text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>
             Built on{" "}
             <Link
@@ -82,7 +82,15 @@ export function ShareViewFooterCta({ shareId }: Props) {
             </Link>
             {" "}— an AI-analysed view of any Microsoft Project .mpp file.
           </span>
-          <span className="font-mono text-slate-400">/share/{shareId}</span>
+          <span className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/products/plansight-ai/legal/privacy"
+              className="transition hover:text-slate-700"
+            >
+              Privacy
+            </Link>
+            <span className="font-mono text-slate-400">/share/{shareId}</span>
+          </span>
         </div>
       </div>
     </footer>

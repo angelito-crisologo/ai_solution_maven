@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 type FormState = {
@@ -184,6 +185,17 @@ export function ContactForm() {
         {status === "submitting" ? "Sending..." : "Send enquiry"}
         <ArrowRight aria-hidden="true" className="h-5 w-5" />
       </button>
+
+      <p className="mt-3 text-xs text-slate-500">
+        We handle messages per our{" "}
+        <Link
+          href="/products/plansight-ai/legal/privacy"
+          className="font-semibold text-slate-700 underline-offset-2 transition hover:text-primary hover:underline"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }

@@ -120,7 +120,13 @@ export default async function MyPlansPage({
                         : "rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-micro text-slate-300"
                     }
                   >
-                    {isPro ? "Pro plan" : "Free plan"}
+                    {isPro
+                      ? billing?.billingInterval === "year"
+                        ? "Pro · Annual"
+                        : billing?.billingInterval === "month"
+                          ? "Pro · Monthly"
+                          : "Pro plan"
+                      : "Free plan"}
                   </span>
                 </div>
                 <h1 className="mt-1 text-h1 text-slate-100">
@@ -131,15 +137,23 @@ export default async function MyPlansPage({
             <div className="flex flex-wrap items-center gap-4">
               <WeekStartDayToggle initial={preferences.weekStartDay} />
               {isPro ? (
-                <form action="/api/billing/portal" method="post">
-                  <button
-                    type="submit"
-                    className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                <div className="flex flex-col items-end gap-1">
+                  <form action="/api/billing/portal" method="post">
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                    >
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Manage billing
+                    </button>
+                  </form>
+                  <Link
+                    href="/products/plansight-ai/legal/refunds"
+                    className="text-micro text-slate-400 transition hover:text-cyan-300"
                   >
-                    <CreditCard className="h-3.5 w-3.5" />
-                    Manage billing
-                  </button>
-                </form>
+                    Refund policy
+                  </Link>
+                </div>
               ) : null}
             </div>
           </div>
@@ -193,7 +207,14 @@ export default async function MyPlansPage({
                   Pro is active until{" "}
                   <span className="font-mono">{cancelDate}</span>. After that,
                   this account drops to Free and only your most recent plan
-                  stays accessible. Changed your mind?
+                  stays accessible. Changed your mind? See our{" "}
+                  <Link
+                    href="/products/plansight-ai/legal/refunds"
+                    className="font-semibold text-amber-900 underline-offset-2 transition hover:underline"
+                  >
+                    Refund Policy
+                  </Link>{" "}
+                  for what cancellation does and doesn&apos;t refund.
                 </p>
                 <form action="/api/billing/portal" method="post" className="mt-3">
                   <button

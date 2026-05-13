@@ -16,8 +16,22 @@ const nextConfig = {
     // (`outputFileTracingIncludes`). On 14.2.x it must live under
     // `experimental` or it silently no-ops.
     outputFileTracingIncludes: {
-      "/products/plansight-ai/guides/**": ["./content/plansight-guides/**"]
+      "/products/plansight-ai/guides/**": ["./content/plansight-guides/**"],
+      "/products/plansight-ai/legal/**": ["./content/plansight-legal/**"]
     }
+  },
+  async redirects() {
+    // Legal docs originally shipped at /legal/* (one v1.1 release earlier).
+    // They now live under the PlanSight product surface — preserve any
+    // bookmarks, Stripe Dashboard URLs, and prior email-template links
+    // with a permanent 301.
+    return [
+      {
+        source: "/legal/:slug",
+        destination: "/products/plansight-ai/legal/:slug",
+        permanent: true
+      }
+    ];
   }
 };
 

@@ -2,6 +2,7 @@
 
 import { Loader2, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AiAnalysisDisclaimer } from "./disclaimers/AiAnalysisDisclaimer";
 
 type Props = {
   shareId: string;
@@ -184,7 +185,11 @@ export function ExplainTaskModal({ shareId, taskId, taskName, onClose }: Props) 
           </div>
         ) : null}
 
-        <div className="mt-5 min-h-[6rem] rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4">
+          <AiAnalysisDisclaimer variant="compact" />
+        </div>
+
+        <div className="mt-3 min-h-[6rem] rounded-md border border-slate-200 bg-slate-50 p-4">
           {status.kind === "loading" ? (
             <div className="flex items-center gap-2 text-body text-slate-600">
               <Loader2 className="h-4 w-4 animate-spin" />

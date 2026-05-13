@@ -9,6 +9,18 @@ Brand assets (voice, colors, typography, logos) live under
 - **[PRODUCT.md](PRODUCT.md)** — high-level product overview: what
   PlanSight is, what's shipped, who it's for, links to the specs below.
 
+- **[services.md](services.md)** — full inventory of third-party services
+  PlanSight depends on (Vercel, Supabase, Render, UptimeRobot, Anthropic,
+  Stripe, Resend, …), tiers, costs, and scaling cliffs.
+
+- **[stripe-setup.md](stripe-setup.md)** — step-by-step Stripe Dashboard
+  configuration: products, prices, webhooks, Customer Portal, Checkout,
+  emails, branding, GST, promotion codes, going-live checklist, gotchas.
+
+- **[CHANGELOG.md](CHANGELOG.md)** — notable shipped + in-progress
+  changes, organised by version. Add an entry when you ship anything
+  worth remembering.
+
 - **[specs/](specs/)** — living contracts. Each file is the source of
   truth for one domain and should be kept aligned with the code.
   - [pro-features.md](specs/pro-features.md) — Pro tier features, gates,

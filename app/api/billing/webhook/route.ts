@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import {
   getStripeClient,
+  getUserBillingByCustomerId,
   getUserIdForCustomer,
+  isBillingInterval,
   isProStatus,
+  recordStripeEvent,
   setProductTierForUser,
-  upsertBillingFromSubscription
+  upsertBillingFromSubscription,
+  type BillingInterval
 } from "@/lib/billing/stripe";
+import { sendOperatorAlert } from "@/lib/billing/operator-alert";
 
 export const runtime = "nodejs";
 // Stripe signature verification needs the exact raw bytes of the request.
@@ -33,6 +38,12 @@ function periodEndIso(sub: Stripe.Subscription): string | null {
   return new Date(seconds * 1000).toISOString();
 }
 
+function subscriptionInterval(sub: Stripe.Subscription): BillingInterval | null {
+  const item = sub.items?.data?.[0];
+  const interval = item?.price?.recurring?.interval;
+  return isBillingInterval(interval) ? interval : null;
+}
+
 async function syncSubscriptionToTier(sub: Stripe.Subscription): Promise<void> {
   const customerId =
     typeof sub.customer === "string" ? sub.customer : sub.customer.id;
@@ -41,7 +52,8 @@ async function syncSubscriptionToTier(sub: Stripe.Subscription): Promise<void> {
     subscriptionId: sub.id,
     status: sub.status,
     currentPeriodEnd: periodEndIso(sub),
-    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false
+    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+    billingInterval: subscriptionInterval(sub)
   });
 
   const userId = await getUserIdForCustomer(customerId);
@@ -51,6 +63,105 @@ async function syncSubscriptionToTier(sub: Stripe.Subscription): Promise<void> {
 
   const tier: "free" | "pro" = isProStatus(sub.status) ? "pro" : "free";
   await setProductTierForUser(userId, PLANSIGHT_SLUG, tier);
+}
+
+/**
+ * Dispute opened by the customer. Per policy (services.md), access is
+ * revoked immediately: continuing to serve Pro features to a disputing
+ * customer worsens the chargeback signal to Stripe's fraud model.
+ *
+ * Steps: flip tier to free, cancel the subscription (which fires
+ * customer.subscription.deleted and persists the canceled status), email
+ * the operator. Cancellation is best-effort — if it fails (e.g. already
+ * canceled), the tier flip still stands.
+ */
+async function handleDisputeCreated(
+  stripe: Stripe,
+  dispute: Stripe.Dispute
+): Promise<void> {
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  if (!chargeId) return;
+
+  const charge = await stripe.charges.retrieve(chargeId);
+  const customerId =
+    typeof charge.customer === "string" ? charge.customer : charge.customer?.id ?? null;
+  if (!customerId) return;
+
+  const userId = await getUserIdForCustomer(customerId);
+  const billing = await getUserBillingByCustomerId(customerId);
+
+  if (userId) {
+    await setProductTierForUser(userId, PLANSIGHT_SLUG, "free");
+  }
+
+  if (billing?.stripeSubscriptionId) {
+    try {
+      await stripe.subscriptions.cancel(billing.stripeSubscriptionId);
+    } catch (err) {
+      console.error("[stripe webhook] cancel-on-dispute failed:", err);
+    }
+  }
+
+  const amountUsd = (dispute.amount / 100).toFixed(2);
+  await sendOperatorAlert(
+    `[PlanSight] Dispute opened — $${amountUsd}`,
+    `A Stripe dispute was opened against a PlanSight Pro charge. Pro access has been revoked and the subscription has been cancelled.
+
+Dispute ID: ${dispute.id}
+Charge ID: ${chargeId}
+Customer ID: ${customerId}
+User ID: ${userId ?? "(no matching PlanSight user)"}
+Amount: $${amountUsd} ${dispute.currency.toUpperCase()}
+Reason: ${dispute.reason}
+Status: ${dispute.status}
+
+Review in Stripe: https://dashboard.stripe.com/disputes/${dispute.id}
+`
+  );
+}
+
+/**
+ * Dispute resolved. Won → log + email (no auto-restore — operator should
+ * manually re-enable Pro if it was a customer error). Lost → log + email;
+ * access stayed revoked from handleDisputeCreated. Other statuses fall
+ * through.
+ */
+async function handleDisputeClosed(
+  stripe: Stripe,
+  dispute: Stripe.Dispute
+): Promise<void> {
+  if (dispute.status !== "won" && dispute.status !== "lost") return;
+
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  const customerId = chargeId
+    ? await (async () => {
+        const charge = await stripe.charges.retrieve(chargeId);
+        return typeof charge.customer === "string"
+          ? charge.customer
+          : charge.customer?.id ?? null;
+      })()
+    : null;
+  const userId = customerId ? await getUserIdForCustomer(customerId) : null;
+  const amountUsd = (dispute.amount / 100).toFixed(2);
+
+  const verdict =
+    dispute.status === "won"
+      ? "Dispute won — funds released. Pro was revoked at dispute creation; re-enable manually if appropriate."
+      : "Dispute lost — chargeback finalised. A Stripe dispute fee likely applies.";
+
+  await sendOperatorAlert(
+    `[PlanSight] Dispute ${dispute.status} — $${amountUsd}`,
+    `${verdict}
+
+Dispute ID: ${dispute.id}
+Charge ID: ${chargeId ?? "(unknown)"}
+Customer ID: ${customerId ?? "(unknown)"}
+User ID: ${userId ?? "(no matching PlanSight user)"}
+Amount: $${amountUsd} ${dispute.currency.toUpperCase()}
+
+Review in Stripe: https://dashboard.stripe.com/disputes/${dispute.id}
+`
+  );
 }
 
 export async function POST(request: Request) {
@@ -77,6 +188,13 @@ export async function POST(request: Request) {
     );
   }
 
+  // Idempotency: short-circuit on duplicate delivery. Must come after
+  // signature verification (an unverified event id cannot be trusted).
+  const fresh = await recordStripeEvent(event.id, event.type);
+  if (!fresh) {
+    return NextResponse.json({ received: true, deduped: true });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -99,8 +217,18 @@ export async function POST(request: Request) {
         await syncSubscriptionToTier(sub);
         break;
       }
+      case "charge.dispute.created": {
+        await handleDisputeCreated(stripe, event.data.object as Stripe.Dispute);
+        break;
+      }
+      case "charge.dispute.closed": {
+        await handleDisputeClosed(stripe, event.data.object as Stripe.Dispute);
+        break;
+      }
       default:
-        // No-op ack so Stripe stops retrying.
+        // Unhandled events ack 200 so Stripe stops retrying. Log so we
+        // can see what's firing that we don't handle.
+        console.log("[stripe webhook] unhandled event:", event.type);
         break;
     }
   } catch (error) {

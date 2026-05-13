@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { listGuides } from "@/lib/guides";
+import { listLegalDocuments } from "@/lib/legal";
 
 const siteUrl = "https://aisolutionmaven.com";
 
@@ -27,7 +28,7 @@ const staticRoutes: Route[] = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const builtAt = new Date();
-  const guides = await listGuides();
+  const [guides, legalDocs] = await Promise.all([listGuides(), listLegalDocuments()]);
 
   const staticEntries = staticRoutes.map(({ path, changeFrequency, priority, lastModified }) => ({
     url: `${siteUrl}${path}`,
@@ -44,5 +45,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7
   }));
 
-  return [...staticEntries, ...guideEntries];
+  // Legal docs are low priority for crawlers — they exist for discoverability
+  // and compliance, not ranking. They change rarely; use the document's
+  // updatedAt so a policy revision actually pokes the crawler.
+  const legalEntries = legalDocs.map((doc) => ({
+    url: `${siteUrl}/products/plansight-ai/legal/${doc.slug}`,
+    lastModified: new Date(doc.updatedAt),
+    changeFrequency: "yearly" as const,
+    priority: 0.3
+  }));
+
+  return [...staticEntries, ...guideEntries, ...legalEntries];
 }

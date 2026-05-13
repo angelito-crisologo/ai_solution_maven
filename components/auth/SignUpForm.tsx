@@ -188,6 +188,24 @@ export function SignUpForm({ redirectTo, product = "" }: Props) {
         Create account
       </button>
 
+      <p className="text-caption text-slate-500">
+        By creating an account you agree to our{" "}
+        <Link
+          href="/products/plansight-ai/legal/terms"
+          className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+        >
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link
+          href="/products/plansight-ai/legal/privacy"
+          className="font-semibold text-slate-700 underline-offset-2 transition hover:text-cyan-700 hover:underline"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       {status.kind === "error" ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-body text-red-800">
           {status.message}

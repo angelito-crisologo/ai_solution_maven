@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, CheckCircle2, AlertTriangle, Lightbulb, MessageSquare } from "lucide-react";
 
 type FeedbackType = "general_feedback" | "feature_request" | "bug_report";
@@ -338,6 +339,17 @@ export function FeedbackForm({
         {status === "submitting" ? "Sending..." : "Send feedback"}
         <ArrowRight aria-hidden="true" className="h-5 w-5" />
       </button>
+
+      <p className="mt-3 text-xs text-slate-500">
+        We handle feedback per our{" "}
+        <Link
+          href="/products/plansight-ai/legal/privacy"
+          className="font-semibold text-slate-700 underline-offset-2 transition hover:text-primary hover:underline"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }

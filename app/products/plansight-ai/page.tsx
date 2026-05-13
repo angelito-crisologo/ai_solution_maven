@@ -212,7 +212,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         />
       </div>
 
-      <PlanSightPricingSection />
+      {activation?.tier === "pro" ? null : <PlanSightPricingSection />}
 
       {recentGuides.length > 0 ? (
         <section className="bg-slate-50 px-6 py-20">

@@ -30,6 +30,13 @@ export default function GlobalError({
             >
               Retry
             </button>
+            {/* Plain anchors, not next/link — the root layout is gone in this
+                error boundary, so use the safest possible navigation. */}
+            <nav aria-label="Legal" className="mt-6 flex flex-wrap gap-4 border-t border-slate-200 pt-4 text-xs text-slate-500">
+              <a href="/products/plansight-ai/legal/terms" className="transition hover:text-slate-700">Terms</a>
+              <a href="/products/plansight-ai/legal/privacy" className="transition hover:text-slate-700">Privacy</a>
+              <a href="/products/plansight-ai/legal/refunds" className="transition hover:text-slate-700">Refunds</a>
+            </nav>
           </div>
         </div>
       </body>

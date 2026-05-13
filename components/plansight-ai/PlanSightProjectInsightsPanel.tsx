@@ -10,6 +10,7 @@ import {
   Link2
 } from "lucide-react";
 import { useMemo, useState, type ComponentType, type ReactNode } from "react";
+import { InsightsDataQualityNote } from "./disclaimers/InsightsDataQualityNote";
 import type {
   ApproximateCriticalTask,
   CriticalPathTask,
@@ -219,6 +220,7 @@ export function PlanSightProjectInsightsPanel({
   return (
     <section className="px-6 py-10">
       <div className="mx-auto max-w-[1200px] space-y-6">
+        <InsightsDataQualityNote />
         <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
           <div className={`rounded-md border p-6 ${health.tone}`}>
             <div className="flex items-start justify-between gap-4">

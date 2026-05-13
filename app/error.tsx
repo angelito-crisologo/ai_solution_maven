@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Error({
   error,
@@ -29,6 +30,11 @@ export default function Error({
         >
           Try again
         </button>
+        <nav aria-label="Legal" className="mt-6 flex flex-wrap gap-4 border-t border-slate-200 pt-4 text-xs text-slate-500">
+          <Link href="/products/plansight-ai/legal/terms" className="transition hover:text-slate-700">Terms</Link>
+          <Link href="/products/plansight-ai/legal/privacy" className="transition hover:text-slate-700">Privacy</Link>
+          <Link href="/products/plansight-ai/legal/refunds" className="transition hover:text-slate-700">Refunds</Link>
+        </nav>
       </div>
     </div>
   );
