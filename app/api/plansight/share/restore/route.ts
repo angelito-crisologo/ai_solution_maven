@@ -17,8 +17,10 @@ const bodySchema = z.object({
  * if one is set). Free + Pro.
  */
 export async function POST(request: Request) {
+  console.log("[share-restore:enter]", { at: new Date().toISOString() });
   const user = await getCurrentUser();
   if (!user) {
+    console.log("[share-restore:reject]", { reason: "not-signed-in" });
     return NextResponse.json(
       { error: "You must be signed in to restore share links." },
       { status: 401 }
@@ -29,17 +31,28 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
+    console.log("[share-restore:reject]", { reason: "bad-body" });
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
+    console.log("[share-restore:reject]", { reason: "bad-shape" });
     return NextResponse.json({ error: "shareId is required." }, { status: 400 });
   }
+
+  console.log("[share-restore:authorized]", {
+    shareId: parsed.data.shareId,
+    userId: user.id
+  });
 
   try {
     const updated = await restoreShareForUser(parsed.data.shareId, user.id);
     if (!updated) {
+      console.log("[share-restore:no-match]", {
+        shareId: parsed.data.shareId,
+        userId: user.id
+      });
       return NextResponse.json(
         { error: "Share not found or not owned by you." },
         { status: 404 }
@@ -49,6 +62,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to restore share link.";
+    console.log("[share-restore:error]", { message });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
