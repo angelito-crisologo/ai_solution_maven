@@ -84,6 +84,12 @@ export function ShareViewFooterCta({ shareId }: Props) {
           </span>
           <span className="flex flex-wrap items-center gap-3">
             <Link
+              href="/products/plansight-ai/for-stakeholders"
+              className="transition hover:text-slate-700"
+            >
+              What is PlanSight?
+            </Link>
+            <Link
               href="/products/plansight-ai/legal/privacy"
               className="transition hover:text-slate-700"
             >

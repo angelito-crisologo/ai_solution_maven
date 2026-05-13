@@ -5,6 +5,7 @@ const productLinks = [
   { label: "Workspace", href: "/products/plansight-ai" },
   { label: "Guides", href: "/products/plansight-ai/guides" },
   { label: "Pricing", href: "/products/plansight-ai/upgrade" },
+  { label: "For stakeholders", href: "/products/plansight-ai/for-stakeholders" },
   { label: "Feedback", href: "/feedback?product=PlanSight%20AI" }
 ];
 
