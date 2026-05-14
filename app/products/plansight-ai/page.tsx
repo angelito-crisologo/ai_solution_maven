@@ -193,7 +193,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         tier={activation?.tier ?? null}
       />
 
-      {!initialPlan && (
+      {!initialPlan && !user && (
         <section className="bg-navy text-slate-100">
           <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
