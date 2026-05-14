@@ -232,7 +232,11 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
       </section>
 
       <div id="plansight-workspace" className="scroll-mt-16">
+        {/* key forces a remount when a new plan is pre-loaded via ?shareId or
+            ?sample URL params. Without this, useState(initialPlan) keeps its
+            first-mount value and ignores the updated prop after soft-navigation. */}
         <PlanSightProductShell
+          key={initialShareId ?? "empty"}
           signedIn={!!user}
           plansightActivated={!!activation}
           plansightTier={activation?.tier ?? null}

@@ -32,6 +32,9 @@ export function PlanSightHeroCta() {
       if (!res.ok) throw new Error("sample api error");
       const { shareId } = (await res.json()) as { shareId: string };
       router.push(`?sample=${encodeURIComponent(shareId)}`);
+      // Reset immediately — the shell remounts after navigation so the button
+      // would otherwise stay stuck at "Preparing sample…" indefinitely.
+      setSampleLoading(false);
     } catch {
       // On any failure reset the button — the user can try again or upload
       // their own file instead.
