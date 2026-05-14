@@ -193,43 +193,45 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         tier={activation?.tier ?? null}
       />
 
-      <section className="bg-navy text-slate-100">
-        <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div>
-            <Image
-              src="/products/plansight-ai/brand/plansight-logo-primary-dark.svg"
-              alt="PlanSight AI"
-              width={280}
-              height={56}
-              priority
-              className="h-12 w-auto md:h-14"
-            />
-            <p className="mt-6 text-micro text-cyan-400">AI project-plan analysis</p>
-            <h1 className="mt-3 text-display text-slate-100">
-              Your project plan, finally legible.
-            </h1>
-            <p className="mt-4 max-w-xl text-lead text-slate-300">
-              Upload an .mpp file. Review the critical path, RAG status, and an
-              AI-generated summary with risks and recommendations. Share a clear,
-              read-only view with stakeholders. No login required for viewers.
-            </p>
-            <PlanSightHeroCta />
-            <p className="mt-8 text-[11px] leading-[18px] font-normal text-[#94A3B8]">
-              Analysis runs on Anthropic&apos;s Claude Haiku 4.5.
-            </p>
-          </div>
+      {!initialPlan && (
+        <section className="bg-navy text-slate-100">
+          <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <Image
+                src="/products/plansight-ai/brand/plansight-logo-primary-dark.svg"
+                alt="PlanSight AI"
+                width={280}
+                height={56}
+                priority
+                className="h-12 w-auto md:h-14"
+              />
+              <p className="mt-6 text-micro text-cyan-400">AI project-plan analysis</p>
+              <h1 className="mt-3 text-display text-slate-100">
+                Your project plan, finally legible.
+              </h1>
+              <p className="mt-4 max-w-xl text-lead text-slate-300">
+                Upload an .mpp file. Review the critical path, RAG status, and an
+                AI-generated summary with risks and recommendations. Share a clear,
+                read-only view with stakeholders. No login required for viewers.
+              </p>
+              <PlanSightHeroCta />
+              <p className="mt-8 text-[11px] leading-[18px] font-normal text-[#94A3B8]">
+                Analysis runs on Anthropic&apos;s Claude Haiku 4.5.
+              </p>
+            </div>
 
-          <Image
-            src="/products/plansight-ai/hero/workspace.webp"
-            alt="PlanSight workspace showing the critical path, RAG status, and AI summary for a sample software development project plan."
-            width={2560}
-            height={1600}
-            priority
-            sizes="(min-width: 1024px) 600px, 100vw"
-            className="w-full rounded-xl border border-slate-800 shadow-modal"
-          />
-        </div>
-      </section>
+            <Image
+              src="/products/plansight-ai/hero/workspace.webp"
+              alt="PlanSight workspace showing the critical path, RAG status, and AI summary for a sample software development project plan."
+              width={2560}
+              height={1600}
+              priority
+              sizes="(min-width: 1024px) 600px, 100vw"
+              className="w-full rounded-xl border border-slate-800 shadow-modal"
+            />
+          </div>
+        </section>
+      )}
 
       <div id="plansight-workspace" className="scroll-mt-16">
         {/* key forces a remount when a new plan is pre-loaded via ?shareId or
