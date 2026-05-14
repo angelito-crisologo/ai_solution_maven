@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, CircleAlert, CreditCard, LayoutDashboard } from "lucide-react";
 import { PlanSightFooter } from "@/components/plansight-ai/PlanSightFooter";
 import { PlanSightNavbar } from "@/components/plansight-ai/PlanSightNavbar";
 import { PlanSightPricingSection } from "@/components/plansight-ai/PlanSightPricingSection";
 import { PlanSightProductShell } from "@/components/plansight-ai/PlanSightProductShell";
 import { PlanSightHeroCta } from "@/components/plansight-ai/PlanSightHeroCta";
+import { WeekStartDayToggle } from "@/components/plansight-ai/WeekStartDayToggle";
 import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserBilling } from "@/lib/billing/stripe";
 import { listGuides } from "@/lib/guides";
 import { loadPlanForOwner, loadSharedPlan } from "@/lib/plansight-ai/share-storage";
 
@@ -74,6 +76,16 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
   const user = await getCurrentUser();
   const activation = user ? await getProductActivation(user.id, PRODUCTS.PLANSIGHT) : null;
   const preferences = user ? await getUserPreferences(user.id) : { weekStartDay: "monday" as const };
+  const isPro = activation?.tier === "pro";
+  const billing = isPro && user ? await getUserBilling(user.id) : null;
+  const cancelPending = !!billing?.cancelAtPeriodEnd && !!billing.currentPeriodEnd;
+  const cancelDate = cancelPending
+    ? new Date(billing!.currentPeriodEnd!).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })
+    : null;
   // Latest published guides to surface in the discovery section near the
   // page footer. Limit to three so the section stays tight; the full list
   // lives at /products/plansight-ai/guides.
@@ -231,6 +243,107 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
             />
           </div>
         </section>
+      )}
+
+      {user && !initialPlan && (
+        <>
+          <section className="bg-navy text-slate-100">
+            <div className="mx-auto max-w-[1200px] px-6 py-12">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-slate-800 bg-navy-800 text-cyan-400">
+                    <LayoutDashboard className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-micro text-cyan-400">My plans</p>
+                      <span
+                        className={
+                          isPro
+                            ? "rounded border border-cyan-700 bg-cyan-900/30 px-2 py-0.5 text-micro text-cyan-300"
+                            : "rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-micro text-slate-300"
+                        }
+                      >
+                        {isPro
+                          ? billing?.billingInterval === "year"
+                            ? "Pro · Annual"
+                            : billing?.billingInterval === "month"
+                              ? "Pro · Monthly"
+                              : "Pro plan"
+                          : "Free plan"}
+                      </span>
+                    </div>
+                    <h1 className="mt-1 text-h1 text-slate-100">
+                      {isPro ? "Your plan workspace" : "Your most recent plan"}
+                    </h1>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <WeekStartDayToggle initial={preferences.weekStartDay} />
+                  {isPro ? (
+                    <form action="/api/billing/portal" method="post">
+                      <button
+                        type="submit"
+                        className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-navy-800 px-3 text-caption font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Manage billing
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+              {isPro ? (
+                <p className="mt-3 max-w-2xl text-body-lg text-slate-300">
+                  Pro keeps every plan you import. Open one to view its insights, AI
+                  analysis, or share view.
+                </p>
+              ) : (
+                <div className="mt-3 max-w-2xl space-y-2 text-body-lg text-slate-300">
+                  <p>
+                    Free includes one plan slot. Importing a new plan replaces the
+                    previous one — and{" "}
+                    <span className="font-semibold text-slate-100">
+                      invalidates any share links you sent for the previous plan
+                    </span>
+                    . Stakeholders opening an old link will see &ldquo;This plan is
+                    no longer available for viewing.&rdquo;
+                  </p>
+                  <p>
+                    Upgrade to Pro to keep every plan you upload, with stable share
+                    links that don&apos;t expire on import.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {cancelPending && (
+            <div className="border-b border-amber-200 bg-amber-50 px-6 py-4">
+              <div className="mx-auto flex max-w-[1200px] items-start gap-3 text-body text-amber-900">
+                <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div className="flex-1">
+                  <p className="font-semibold">Cancellation scheduled.</p>
+                  <p className="mt-0.5 text-amber-800">
+                    Pro is active until{" "}
+                    <span className="font-mono">{cancelDate}</span>. After that,
+                    this account drops to Free and only your most recent plan stays
+                    accessible.
+                  </p>
+                  <form action="/api/billing/portal" method="post" className="mt-3">
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center gap-2 rounded-md border border-amber-300 bg-white px-3 text-caption font-semibold text-amber-900 transition hover:border-amber-400 hover:bg-amber-100"
+                    >
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Reactivate subscription
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div id="plansight-workspace" className="scroll-mt-16">
