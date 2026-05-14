@@ -12,7 +12,7 @@ import { getProductActivation, PRODUCTS } from "@/lib/auth/activations";
 import { getUserPreferences } from "@/lib/auth/preferences";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listGuides } from "@/lib/guides";
-import { loadPlanForOwner } from "@/lib/plansight-ai/share-storage";
+import { loadPlanForOwner, loadSharedPlan } from "@/lib/plansight-ai/share-storage";
 
 // PlanSight is searched as its own product (independent of the AISM portfolio
 // brand), so we use an absolute title to bypass the "%s | AI Solution Maven"
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams?: { shareId?: string };
+  searchParams?: { shareId?: string; sample?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -85,6 +85,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
   // requires owner_user_id to match. Mismatches redirect to /my-plans.
   let initialPlan = null;
   let initialShareId: string | null = null;
+  let isSample = false;
   const requestedShareId = searchParams?.shareId?.trim();
   if (requestedShareId) {
     if (!user) {
@@ -107,6 +108,24 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
       if (process.env.NODE_ENV !== "production") {
         console.error("[plansight-ai] failed to load owned plan", error);
       }
+    }
+  }
+
+  // ?sample=<shareId>: load a freshly-created guest copy of the sample plan
+  // (written by /api/plansight/sample). No ownership check — the sample
+  // copy is a public guest row. If it has already expired (24h TTL) or
+  // never existed, fall through to the empty workspace silently.
+  const requestedSampleId = searchParams?.sample?.trim();
+  if (!initialPlan && requestedSampleId) {
+    try {
+      const samplePlan = await loadSharedPlan(requestedSampleId);
+      if (samplePlan) {
+        initialPlan = samplePlan;
+        initialShareId = requestedSampleId;
+        isSample = true;
+      }
+    } catch {
+      // Sample expired or DB hiccup — show empty workspace.
     }
   }
 
@@ -219,6 +238,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
           plansightTier={activation?.tier ?? null}
           initialPlan={initialPlan}
           initialShareId={initialShareId}
+          isSample={isSample}
           weekStartDay={preferences.weekStartDay}
         />
       </div>

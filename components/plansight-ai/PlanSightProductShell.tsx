@@ -43,6 +43,10 @@ type Props = {
    * import form. */
   initialPlan?: Plan | null;
   initialShareId?: string | null;
+  /** True when the pre-loaded plan is the sample plan loaded via the hero
+   * CTA. Surfaces a SAMPLE badge in the workspace header. Cleared as soon
+   * as the user imports their own file. */
+  isSample?: boolean;
   /** User's week-start preference. Used by the Weekly Report selector. */
   weekStartDay?: "monday" | "sunday";
 };
@@ -53,12 +57,14 @@ export function PlanSightProductShell({
   plansightTier,
   initialPlan = null,
   initialShareId = null,
+  isSample = false,
   weekStartDay = "monday"
 }: Props) {
   const isAnonymous = !signedIn;
   const isSignedInNotActivated = signedIn && !plansightActivated;
   const isFreeActivated = plansightActivated && plansightTier !== "pro";
   const [plan, setPlan] = useState<Plan | null>(initialPlan);
+  const [showSampleBadge, setShowSampleBadge] = useState(isSample);
   const [shareId, setShareId] = useState<string | null>(initialShareId);
   const [status, setStatus] = useState<string>(
     initialPlan
@@ -226,6 +232,7 @@ export function PlanSightProductShell({
 
     setPlan(parsedPlan);
     setShareId(newShareId);
+    setShowSampleBadge(false);
     setSelectedTaskIds(new Set());
     setStatus(`Imported ${fileName} and saved it.`);
     setActiveTab("plan");
@@ -475,6 +482,11 @@ export function PlanSightProductShell({
                   <Check className="h-3.5 w-3.5" />
                 </span>
                 <span className="font-semibold text-ink">Plan loaded</span>
+                {showSampleBadge && (
+                  <span className="inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide bg-slate-100 text-slate-500">
+                    Sample
+                  </span>
+                )}
                 <span className="text-slate-500">— pick a view</span>
               </div>
 
