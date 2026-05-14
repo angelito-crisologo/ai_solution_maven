@@ -245,7 +245,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         </section>
       )}
 
-      {user && !initialPlan && (
+      {!!user && (
         <>
           <section className="bg-navy text-slate-100">
             <div className="mx-auto max-w-[1200px] px-6 py-12">
