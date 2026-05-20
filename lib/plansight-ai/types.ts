@@ -26,7 +26,7 @@ export type PlanTask = {
 export type Plan = {
   id: string;
   title: string;
-  sourceFormat: "mpp" | "xlsx" | "smartsheet" | "other";
+  sourceFormat: "mpp" | "xml" | "xlsx" | "smartsheet" | "other";
   importedAt: string;
   startDate: string | null;
   finishDate: string | null;

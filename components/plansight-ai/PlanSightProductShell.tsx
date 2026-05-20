@@ -250,7 +250,7 @@ export function PlanSightProductShell({
     event.preventDefault();
 
     if (!selectedFile) {
-      setStatus("Choose an .mpp file first.");
+      setStatus("Choose an .mpp or .xml file first.");
       return;
     }
 
@@ -262,8 +262,11 @@ export function PlanSightProductShell({
       `Importing ${selectedFile.name}... This may take up to a minute.`
     );
 
+    const isXml = selectedFile.name.toLowerCase().endsWith(".xml");
+    const importUrl = isXml ? "/api/plansight/import-xml" : "/api/plansight/import-mpp";
+
     try {
-      const response = await fetch("/api/plansight/import-mpp", {
+      const response = await fetch(importUrl, {
         method: "POST",
         body: formData
       });
@@ -274,7 +277,7 @@ export function PlanSightProductShell({
         throw new Error(
           "error" in payload && payload.error
             ? payload.error
-            : "Failed to import the MPP file."
+            : "Failed to import the file."
         );
       }
 
@@ -292,7 +295,7 @@ export function PlanSightProductShell({
         );
       }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to import the MPP file.");
+      setStatus(error instanceof Error ? error.message : "Failed to import the file.");
     } finally {
       setIsSubmitting(false);
     }
@@ -401,7 +404,8 @@ export function PlanSightProductShell({
                 Upload a Microsoft Project file
               </h2>
               <p className="mt-2 max-w-2xl text-body text-slate-700">
-                <span className="font-mono text-body">.mpp</span> files only. The file is
+                <span className="font-mono text-body">.mpp</span> or{" "}
+                <span className="font-mono text-body">.xml</span> files. The file is
                 parsed into the PlanSight schema, then rendered as an analyzed plan with a
                 stakeholder share view.
               </p>
@@ -428,7 +432,7 @@ export function PlanSightProductShell({
               <input
                 id="plansight-file-input"
                 type="file"
-                accept=".mpp"
+                accept=".mpp,.xml"
                 onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
                 className="block w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-body text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-navy file:px-4 file:py-2 file:text-body file:font-semibold file:text-slate-100"
               />
@@ -642,7 +646,7 @@ export function PlanSightProductShell({
               Import a plan to continue
             </h2>
             <p className="mt-4 max-w-2xl text-body-lg text-slate-700">
-              No project is loaded yet. Import an .mpp plan to display the task table,
+              No project is loaded yet. Import an .mpp or .xml plan to display the task table,
               Gantt chart, and project insights.
             </p>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
