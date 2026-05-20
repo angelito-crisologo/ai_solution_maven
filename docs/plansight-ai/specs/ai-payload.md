@@ -22,20 +22,9 @@ lib/plansight-ai/ai-payload/
     └── build-ai-payload.test.ts    — 22 contract tests
 ```
 
-The builder is consumed by `lib/plansight-ai/ai.ts:generateAiAnalysisV2()`.
+The builder is consumed by `lib/plansight-ai/ai.ts:generateAiAnalysis()`.
 
 ---
-
-## Activation flag
-
-Controlled by the `AI_PAYLOAD_VERSION` env var (server-only):
-
-- **unset / `"v2"` / anything else** → v2: the bounded payload spec'd here.
-- **`"v1"`** → legacy `compressInsightsForPrompt()` path. Kept solely as an emergency rollback lever; not actively maintained.
-
-Read **per-request** in `resolvePayloadVersion()`. Flipping the var in Vercel takes effect on the next API call — no redeploy.
-
-Every generation logs `[ai-analysis] payload version: vN` so `ai_usage_log` rows can be correlated to the version that produced them.
 
 ---
 
@@ -218,7 +207,7 @@ Measured against the seeded fixture generator:
 
 We're ~5,000 tokens below the ceiling at the largest fixture, which leaves headroom to widen caps in a future iteration if Claude wants more context.
 
-A dev-mode `console.warn` fires in `generateAiAnalysisV2()` if a real payload exceeds 9k tokens — early signal that caps need tightening. In production the test suite + the per-section caps are the safety net.
+A dev-mode `console.warn` fires in `generateAiAnalysis()` if a real payload exceeds 9k tokens — early signal that caps need tightening. In production the test suite + the per-section caps are the safety net.
 
 ---
 
@@ -259,14 +248,6 @@ These are **parsing and rendering** caps — what the MPP parser proxy will acce
 If we ever raise the Pro cap beyond 25,000 tasks, the decision should be about parsing throughput and rendering performance — not about AI affordability.
 
 ---
-
-## v1 retirement
-
-The legacy `compressInsightsForPrompt()` path remains in the codebase as a one-env-var rollback (`AI_PAYLOAD_VERSION=v1`). Plan:
-
-1. Watch `ai_usage_log` and Vercel logs for ~2 weeks of real v2 traffic.
-2. If cost is flat across plan sizes and no quality regressions are reported, remove v1 (`compressInsightsForPrompt`, the v1 prompts, the dispatch branch in `generateAiAnalysis`) in a follow-up PR.
-3. The env var itself can stay as a defensive no-op (or be removed at the same time).
 
 ---
 

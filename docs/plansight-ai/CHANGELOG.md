@@ -11,6 +11,44 @@ current in-progress section.
 
 ---
 
+## v1.3 — 2026-05-20
+
+### Added
+
+- **Cross-browser email confirmation** (`app/auth/confirm/route.ts`). New
+  token-hash confirmation route that verifies signup and password-reset
+  links via `supabase.auth.verifyOtp({ token_hash, type })` instead of
+  the PKCE `exchangeCodeForSession` flow. Fixes the "PKCE code verifier
+  not found in storage" error that occurred when the user signed up in
+  one browser (e.g. incognito) and opened the confirmation email in
+  another. Required companion change: Supabase Auth email templates
+  updated to use `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup`
+  (signup) and `&type=recovery&next=/reset-password` (password reset).
+  The old `/auth/callback` PKCE route stays in place for any future
+  OAuth flows.
+
+- **User-deletion admin utility** (`supabase/migrations/util_delete_user.sql`).
+  Parameterised DO block that fully purges a user by email: explicitly
+  deletes `upload_events` (FK is SET NULL, not CASCADE), then removes
+  the `auth.users` row which cascades to `public.users`,
+  `product_activations`, `user_billing`, `ai_usage_log`,
+  `ai_spend_alerts`, `plans` → `plan_tasks`, `share_views`. Prints row
+  counts before deleting so the operator can confirm the scope. Wrap in
+  `BEGIN; … ROLLBACK;` to preview without committing. For GDPR/CCPA
+  deletion requests or test-account cleanup.
+
+### Removed
+
+- **AI payload v1 code path.** `compressInsightsForPrompt()`,
+  `generateAiAnalysisV1()`, `resolvePayloadVersion()`, `PayloadVersion`
+  type, `TOP_N_PER_CATEGORY` constant, and both v1 system prompts removed
+  from `lib/plansight-ai/ai.ts`. The `AI_PAYLOAD_VERSION` env var is no
+  longer read and can be removed from Vercel. v2 (`buildAIPayload`) has
+  been the sole production path since 2026-05-11; v1 was retained as a
+  rollback lever and is no longer needed.
+
+---
+
 ## v1.2 — 2026-05-13
 
 ### Added

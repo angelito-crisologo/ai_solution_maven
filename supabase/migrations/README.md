@@ -42,6 +42,16 @@ grant select, insert, update, delete on public.<new_table> to authenticated;
 alter table public.<new_table> enable row level security;
 ```
 
+## Utility scripts
+
+Scripts prefixed `util_` are **admin utilities, not schema migrations**. They are never run automatically — copy-paste into the Supabase SQL editor and run manually as needed.
+
+| File | Purpose |
+|---|---|
+| `util_delete_user.sql` | Fully purge a user and all associated data (plans, tasks, share views, billing, AI usage log, upload events, product activations). Use for GDPR/CCPA deletion requests or test-account cleanup. Replace the email variable at the top before running. Wrap in `BEGIN; … ROLLBACK;` to preview what would be deleted without committing. |
+
+---
+
 ## When the date arrives
 
 Before writing the next post-2026-10-30 migration, sanity-check this
