@@ -9,10 +9,10 @@ import { listGuides } from "@/lib/guides";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "PlanSight AI guides — project plans, .mpp files, and PM workflow"
+    absolute: "PlanSight AI guides — Microsoft Project plans and PM workflow"
   },
   description:
-    "Practical guides for project managers: opening .mpp files without Microsoft Project, sharing plans with stakeholders, critical path basics, and weekly status reporting.",
+    "Practical guides for project managers: opening .mpp files and XML exports without Microsoft Project, sharing plans with stakeholders, critical path basics, and weekly status reporting.",
   alternates: {
     canonical: "/products/plansight-ai/guides"
   },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PlanSight AI guides",
     description:
-      "Practical guides for project managers: .mpp files, stakeholder sharing, critical path, weekly status.",
+      "Practical guides for project managers: MS Project .mpp files and XML exports, stakeholder sharing, critical path, weekly status.",
     url: "/products/plansight-ai/guides",
     type: "website"
   }
@@ -63,8 +63,8 @@ export default async function GuidesIndexPage() {
             Practical reading for project managers.
           </h1>
           <p className="mt-4 max-w-2xl text-lead text-slate-300">
-            How to open and share Microsoft Project .mpp files, work with critical path, and
-            produce weekly status reports stakeholders actually read.
+            How to open and share Microsoft Project plans (.mpp files and XML exports),
+            work with critical path, and produce weekly status reports stakeholders actually read.
           </p>
         </div>
       </section>
@@ -82,7 +82,7 @@ export default async function GuidesIndexPage() {
                 >
                   PlanSight AI
                 </Link>{" "}
-                and upload your first .mpp file.
+                and upload your first plan.
               </p>
             </div>
           ) : (

@@ -240,7 +240,7 @@ export default async function MyPlansPage({
           {plans.length === 0 ? (
             <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
               <p className="text-body text-slate-600">
-                No plans yet. Upload an .mpp file to start.
+                No plans yet. Upload an .mpp or XML export to start.
               </p>
               <Link
                 href="/products/plansight-ai"

@@ -69,7 +69,7 @@ export function PlanSightProductShell({
   const [status, setStatus] = useState<string>(
     initialPlan
       ? `Loaded ${initialPlan.title}.`
-      : "Ready to import an MPP plan."
+      : "Ready to import a plan."
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -329,7 +329,7 @@ export function PlanSightProductShell({
 
   function cancelDuplicate() {
     setPendingDuplicate(null);
-    setStatus("Import cancelled. Rename the .mpp file or remove the existing plan first.");
+    setStatus("Import cancelled. Rename the file or remove the existing plan first.");
   }
 
   return (

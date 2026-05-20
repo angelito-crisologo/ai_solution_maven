@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Your PM sent you a project plan you can actually read",
     description:
-      "PlanSight turns a Microsoft Project .mpp file into a clean, read-only view your stakeholders can open in a browser.",
+      "PlanSight turns a Microsoft Project .mpp file or XML export into a clean, read-only view your stakeholders can open in a browser.",
     url: "/products/plansight-ai/for-stakeholders"
   }
 };

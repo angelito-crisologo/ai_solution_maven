@@ -49,7 +49,7 @@ export function PlanSightHeroCta() {
         onClick={handlePrimaryClick}
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#22D3EE] px-5 text-body font-semibold text-navy transition hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-navy sm:w-auto"
       >
-        Upload your .mpp file
+        Upload your plan
       </a>
 
       <div className="flex items-center gap-4">

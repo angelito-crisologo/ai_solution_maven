@@ -45,7 +45,7 @@ export function ShareViewFooterCta({ shareId }: Props) {
                 Need to share your own project plan?
               </p>
               <h2 className="mt-1 text-h3 text-ink">
-                Upload an .mpp file and PlanSight does the rest.
+                Upload your .mpp or XML export and PlanSight does the rest.
               </h2>
               <p className="mt-1 max-w-xl text-body text-slate-700">
                 Critical path, risks, AI-generated summary, and a clean
@@ -80,7 +80,7 @@ export function ShareViewFooterCta({ shareId }: Props) {
             >
               PlanSight AI
             </Link>
-            {" "}— an AI-analysed view of any Microsoft Project .mpp file.
+            {" "}— AI-analysed views of Microsoft Project .mpp files and XML exports.
           </span>
           <span className="flex flex-wrap items-center gap-3">
             <Link

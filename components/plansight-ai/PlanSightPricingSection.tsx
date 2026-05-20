@@ -40,11 +40,11 @@ const ROWS: RowItem[] = [
   {
     kind: "feature",
     key: "upload",
-    label: "Upload .mpp file",
+    label: "Upload plan file",
     cells: { anonymous: <Tick />, free: <Tick />, pro: <Tick /> },
     detail: {
       eyebrow: "Input",
-      lede: "PlanSight parses MS Project .mpp files into a structured plan you can view, analyse, and share. Drag-and-drop or click to upload.",
+      lede: "PlanSight accepts MS Project .mpp files and MS Project XML exports (File → Save As → XML Format). Both are parsed into a structured plan you can view, analyse, and share. Drag-and-drop or click to upload.",
       perTier: {
         anonymous: "Upload without signing in. Plan and share link persist for 24 hours.",
         free: "Upload after signing in. Your most recent plan stays in your account.",
@@ -318,7 +318,8 @@ export function PlanSightPricingSection() {
             Free for the first AI analysis. Pro for daily use.
           </h2>
           <p className="mt-4 text-body-lg text-slate-700">
-            Upload any .mpp file and PlanSight computes critical path, late
+            Upload any MS Project .mpp file or XML export (File → Save As → XML
+            Format in MS Project) and PlanSight computes critical path, late
             tasks, at-risk tasks, and overall project health — free, no signup.
             Every plan you upload gets one free Claude-generated analysis.
           </p>

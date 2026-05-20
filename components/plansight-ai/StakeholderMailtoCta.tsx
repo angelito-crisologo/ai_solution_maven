@@ -6,7 +6,7 @@ import { useState, type MouseEvent } from "react";
 
 const SUBJECT = "PlanSight AI — worth a look";
 const BODY =
-  "Saw a project plan shared through this — clean read-only view, AI summary on top. Worth a look if you're sharing .mpp files with stakeholders.\n\nhttps://aisolutionmaven.com/products/plansight-ai";
+  "Saw a project plan shared through this — clean read-only view, AI summary on top. Worth a look if you're sharing MS Project plans (.mpp or XML export) with stakeholders.\n\nhttps://aisolutionmaven.com/products/plansight-ai";
 
 // Direct Gmail compose URL. Opens in a new tab with subject + body
 // pre-filled, no protocol-handler config required. Works for any

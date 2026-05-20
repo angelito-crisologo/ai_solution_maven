@@ -23,10 +23,10 @@ import { loadPlanForOwner, loadSharedPlan } from "@/lib/plansight-ai/share-stora
 // "stakeholder view" — while keeping the brand name as the trailing anchor.
 export const metadata: Metadata = {
   title: {
-    absolute: "View and share Microsoft Project .mpp files — PlanSight AI"
+    absolute: "View and share Microsoft Project plans — PlanSight AI"
   },
   description:
-    "Upload a Microsoft Project .mpp file, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view. Free, no signup needed. Pro is $19/mo.",
+    "Upload a Microsoft Project .mpp file or XML export, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view. Free, no signup needed. Pro is $19/mo.",
   keywords: [
     "mpp viewer",
     "open mpp file online",
@@ -52,17 +52,17 @@ export const metadata: Metadata = {
   },
   manifest: "/products/plansight-ai/site.webmanifest",
   openGraph: {
-    title: "View and share Microsoft Project .mpp files — PlanSight AI",
+    title: "View and share Microsoft Project plans — PlanSight AI",
     description:
-      "Upload a .mpp file, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup.",
+      "Upload a .mpp file or MS Project XML export, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup.",
     url: "/products/plansight-ai",
     type: "website"
   },
   twitter: {
     card: "summary_large_image",
-    title: "View and share Microsoft Project .mpp files — PlanSight AI",
+    title: "View and share Microsoft Project plans — PlanSight AI",
     description:
-      "Upload a .mpp file, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup."
+      "Upload a .mpp file or MS Project XML export, see critical path and AI-generated risks, share a read-only stakeholder view. Free, no signup."
   }
 };
 
@@ -149,7 +149,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
     "@type": "SoftwareApplication",
     name: "PlanSight AI",
     description:
-      "Upload a Microsoft Project .mpp file, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view.",
+      "Upload a Microsoft Project .mpp file or XML export, see the critical path, late tasks, and AI-generated risks, then share a read-only stakeholder view.",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web Browser",
     url: "https://aisolutionmaven.com/products/plansight-ai",
@@ -162,7 +162,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
         price: "0",
         priceCurrency: "USD",
         description:
-          "Upload .mpp files, view deterministic insights, run one AI analysis per plan, share stakeholder links."
+          "Upload .mpp files or MS Project XML exports, view deterministic insights, run one AI analysis per plan, share stakeholder links."
       },
       {
         "@type": "Offer",
@@ -222,9 +222,10 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
                 Your project plan, finally legible.
               </h1>
               <p className="mt-4 max-w-xl text-lead text-slate-300">
-                Upload an .mpp file. Review the critical path, RAG status, and an
-                AI-generated summary with risks and recommendations. Share a clear,
-                read-only view with stakeholders. No login required for viewers.
+                Upload a Microsoft Project .mpp file or XML export. Review the
+                critical path, RAG status, and an AI-generated summary with risks
+                and recommendations. Share a clear, read-only view with
+                stakeholders. No login required for viewers.
               </p>
               <PlanSightHeroCta />
               <p className="mt-8 text-[11px] leading-[18px] font-normal text-[#94A3B8]">
@@ -380,7 +381,7 @@ export default async function PlanSightAIPage({ searchParams }: Props) {
                   Working PM reading
                 </h2>
                 <p className="mt-3 text-body-lg text-slate-700">
-                  Practical posts on opening .mpp files, sharing project plans,
+                  Practical posts on opening and sharing Microsoft Project plans,
                   and the analysis concepts that show up every week.
                 </p>
               </div>
