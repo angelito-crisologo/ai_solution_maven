@@ -1,4 +1,4 @@
-import type { Plan, PlanTask } from "./types";
+import type { Plan } from "./types";
 import type { PlanInsightsReport } from "./analysis";
 import { buildInsightsReport } from "./analysis";
 import { extractTokenUsage, type TokenUsage } from "./ai-usage/cost";
@@ -13,29 +13,6 @@ const MODEL_ID = "claude-haiku-4-5-20251001";
 // padding and adds latency. Tune jointly with the system prompt's
 // length budget.
 const MAX_OUTPUT_TOKENS = 800;
-// Cap the number of items per category (critical tasks, late, etc.)
-// shown to Claude. 8 is empirically the point where the model still
-// references items by ID without saturating prompt-relevance and where
-// the bounded payload stays in the 3k-10k token band.
-const TOP_N_PER_CATEGORY = 8;
-
-type PayloadVersion = "v1" | "v2";
-
-/**
- * Resolve the AI payload version per-request from env.
- *
- * - unset / "v2" / anything else → v2 (the bounded, curated payload built by
- *   buildAIPayload — see AI_PAYLOAD_IMPLEMENTATION_BRIEF.md).
- * - "v1" → fall back to the legacy compressInsightsForPrompt path. Kept as
- *   an emergency rollback lever; the goal is to remove v1 entirely once v2
- *   has run on real traffic for ~2 weeks without quality complaints.
- *
- * Read per-request so flipping the Vercel env var doesn't require a redeploy.
- */
-function resolvePayloadVersion(): PayloadVersion {
-  const raw = (process.env.AI_PAYLOAD_VERSION ?? "").toLowerCase().trim();
-  return raw === "v1" ? "v1" : "v2";
-}
 
 export type AiAnalysisRisk = {
   title: string;
@@ -103,98 +80,7 @@ export async function computePlanContentHash(plan: Plan): Promise<string> {
     .join("");
 }
 
-function compressInsightsForPrompt(plan: Plan, insights: PlanInsightsReport) {
-  const taskById = new Map(plan.tasks.map((task) => [task.id, task] as const));
-
-  const formatTask = (task: { id: number; name: string }) => ({
-    id: task.id,
-    name: task.name
-  });
-
-  const lateTasks = insights.insights.lateTasks.slice(0, TOP_N_PER_CATEGORY).map((task) => ({
-    ...formatTask(task),
-    daysLate: task.daysLate,
-    finish: task.finish,
-    assignee: task.assignee
-  }));
-
-  const atRiskTasks = insights.insights.atRiskTasks
-    .slice(0, TOP_N_PER_CATEGORY)
-    .map((task) => ({
-      ...formatTask(task),
-      daysRemaining: task.daysRemaining,
-      finish: task.finish,
-      progress: task.progress,
-      assignee: task.assignee
-    }));
-
-  const criticalSource = insights.mode === "approximate"
-    ? insights.insights.potentialCriticalTasks
-    : insights.insights.criticalTasks;
-  const criticalTasks = criticalSource.slice(0, TOP_N_PER_CATEGORY).map((task) => ({
-    ...formatTask(task),
-    start: task.start,
-    finish: task.finish,
-    assignee: task.assignee
-  }));
-
-  const laggingTasks = insights.insights.laggingTasks
-    .slice(0, TOP_N_PER_CATEGORY)
-    .map((task) => ({
-      ...formatTask(task),
-      expectedProgress: task.expectedProgress,
-      actualProgress: task.progress,
-      gap: task.gap
-    }));
-
-  const bottlenecks = insights.insights.bottlenecks.slice(0, TOP_N_PER_CATEGORY).map((task) => ({
-    ...formatTask(task),
-    dependentTaskCount: task.dependentTaskCount
-  }));
-
-  return {
-    title: plan.title,
-    startDate: plan.startDate,
-    finishDate: plan.finishDate,
-    mode: insights.mode,
-    summary: insights.summary,
-    lateTasks,
-    atRiskTasks,
-    criticalTasks,
-    laggingTasks,
-    bottlenecks,
-    totalPlanTasks: plan.tasks.length,
-    summaryTaskCount: plan.tasks.filter((t: PlanTask) => t.summary).length,
-    milestoneCount: plan.tasks.filter((t: PlanTask) => t.milestone).length,
-    leafTaskCount: insights.summary.totalTasks
-  };
-}
-
 const FINDINGS_SYSTEM_PROMPT = `You are a senior project management analyst. The user \
-gives you a structured insights report computed by a deterministic engine. The numbers \
-are authoritative.
-
-Your job is to produce two outputs:
-
-- SUMMARY (2-3 sentences): past/present-tense observation of the project's state. \
-Mention the health status (green/amber/red) and the top 1-2 findings. No imperatives, no \
-"must"/"should"/"needs to". Do not start with "This project".
-
-- RISKS (0-5): the most important threats to delivery. Each risk is descriptive — what \
-is at stake / what could go wrong. Reference specific task IDs when applicable. Skip if \
-the plan is genuinely healthy.
-
-When the analysis mode is "approximate", note that dependencies were not provided and \
-the critical-path findings are heuristic — frame language accordingly.
-
-Submit using the submit_findings tool.`;
-
-// v2 prompts — used when the bounded AIPayload is sent. Wording is close to v1
-// so output style stays consistent, with the only meaningful change being that
-// they reference the new payload sections (criticalTasks, lateTasks,
-// milestones, upcoming, structure, resources) by name.
-
-const FINDINGS_SYSTEM_PROMPT_V2 = `You are a senior project management analyst. The user \
 gives you a structured project plan payload (its schema is described in the schema header \
 above). The numbers in the payload are authoritative.
 
@@ -216,7 +102,7 @@ critical-path findings are heuristic — frame language accordingly.
 
 Submit using the submit_findings tool.`;
 
-const RECOMMENDATIONS_SYSTEM_PROMPT_V2 = `You are a senior project management analyst. \
+const RECOMMENDATIONS_SYSTEM_PROMPT = `You are a senior project management analyst. \
 The user gives you (1) a project plan payload (schema described in the schema header \
 above), (2) a SUMMARY of the plan's state, and (3) a list of RISKS already identified.
 
@@ -287,35 +173,6 @@ most-relevant predecessor IDs).
 
 Trust the numbers in the payload — they were computed by a deterministic engine. Your \
 job is narrative and judgment, not data crunching.`;
-
-const RECOMMENDATIONS_SYSTEM_PROMPT = `You are a senior project management analyst. The \
-user gives you (1) a project plan's deterministic insights, (2) a SUMMARY of the plan's \
-state, and (3) a list of RISKS already identified.
-
-Your ONLY job: produce 1-5 prescriptive RECOMMENDATIONS — concrete next actions the PM \
-must execute. You are not summarizing or describing; you are prescribing.
-
-For EACH risk in the input, write at least one recommendation that addresses it. If \
-there are no risks, write at least one forward-looking action (e.g., "Confirm milestone \
-X is still on track at next standup").
-
-Each recommendation has two fields:
-- action: Imperative starting with a verb (Reassign, Reschedule, Confirm, Update, \
-Convene, Review, Escalate, Reduce, Re-baseline, Delegate, Validate, etc.).
-- rationale: 1-2 sentences explaining why this action matters for this specific plan, \
-referencing concrete tasks/dates/numbers from the input.
-
-EXAMPLE for a risk "Scope tasks (1, 6) are unassigned and 2100 days overdue, blocking \
-the critical path":
-
-{
-  "action": "Assign owners to tasks 1 and 6 by end of week",
-  "rationale": "Both tasks are unassigned and gate the entire critical path. Until they \
-have owners, no scope work can resume and the project cannot move forward."
-}
-
-Submit using the submit_recommendations tool. The recommendations array MUST contain at \
-least 1 entry — there is no situation where zero recommendations is correct output.`;
 
 // Two-call architecture: split summary+risks from recommendations so the
 // recommendations call has no other field to "hide behind". Each call uses a
@@ -421,7 +278,7 @@ async function callClaude(
   tool: ToolDef,
   messages: ClaudeMessage[],
   /**
-   * Optional second cached block placed after the system prompt. v2 puts the
+   * Optional second cached block placed after the system prompt. Puts the
    * AIPayload schema header here so it benefits from the same ephemeral-cache
    * 90% discount as the system prompt, while the variable plan content stays
    * in the (uncached) user message.
@@ -624,7 +481,8 @@ function normalizeRecommendations(value: unknown): AiAnalysisRecommendation[] {
 }
 
 /**
- * Two-call Claude architecture.
+ * Two-call Claude architecture using the bounded AIPayload (see
+ * docs/plansight-ai/specs/ai-payload.md for the contract).
  *
  * Call 1 (submit_findings): summary + risks. Tool has no recommendations field,
  * so the model can't conflate prescriptive content into risks.
@@ -634,12 +492,8 @@ function normalizeRecommendations(value: unknown): AiAnalysisRecommendation[] {
  * elsewhere.
  *
  * Cost: ~2x Haiku per generation. Content-hash cache means each plan pays this
- * only once.
- *
- * Dispatches on AI_PAYLOAD_VERSION env (default "v2"):
- * - v2: bounded AIPayload via buildAIPayload — sections include milestones,
- *   upcoming, structure, resources; cost+latency are flat across plan sizes.
- * - v1: legacy compressInsightsForPrompt path. Kept as emergency rollback.
+ * only once. Per-section caps keep cost+latency flat across plan sizes (3–8¢
+ * regardless of task count).
  */
 export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysisResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -648,99 +502,6 @@ export async function generateAiAnalysis(plan: Plan): Promise<AiAnalysisResult> 
   }
 
   const insights = buildInsightsReport(plan);
-  const version = resolvePayloadVersion();
-  console.log(`[ai-analysis] payload version: ${version}`);
-
-  if (version === "v1") {
-    return generateAiAnalysisV1(plan, insights, apiKey);
-  }
-  return generateAiAnalysisV2(plan, insights, apiKey);
-}
-
-async function generateAiAnalysisV1(
-  plan: Plan,
-  insights: PlanInsightsReport,
-  apiKey: string
-): Promise<AiAnalysisResult> {
-  const compressed = compressInsightsForPrompt(plan, insights);
-  const compressedJson = JSON.stringify(compressed, null, 2);
-
-  // --- Call 1: summary + risks ---
-  const findingsData = await callClaude(
-    apiKey,
-    FINDINGS_SYSTEM_PROMPT,
-    FINDINGS_TOOL,
-    [
-      {
-        role: "user",
-        content: `Here is the project plan and its computed insights. Produce the findings (summary + risks).\n\n${compressedJson}`
-      }
-    ]
-  );
-
-  const findingsInput = extractToolUseInput(findingsData, "submit_findings");
-  const findings = normalizeFindings(findingsInput);
-  if (!findings) {
-    console.error(
-      "[ai-analysis] findings normalize failed:",
-      ((JSON.stringify(findingsInput) ?? "") as string).slice(0, 800)
-    );
-    throw new Error("Claude returned malformed findings.");
-  }
-
-  // --- Call 2: recommendations ---
-  const recommendationsContext = JSON.stringify(
-    {
-      insights: compressed,
-      summary: findings.summary,
-      risks: findings.risks
-    },
-    null,
-    2
-  );
-
-  const recsMessages: ClaudeMessage[] = [
-    {
-      role: "user",
-      content: `Here is the plan's deterministic insights, the SUMMARY, and the RISKS already identified. Produce 1-5 prescriptive RECOMMENDATIONS the PM should execute next.\n\n${recommendationsContext}`
-    }
-  ];
-
-  const recsData = await callClaude(
-    apiKey,
-    RECOMMENDATIONS_SYSTEM_PROMPT,
-    RECOMMENDATIONS_TOOL,
-    recsMessages
-  );
-
-  const recsInput = extractToolUseInput(recsData, "submit_recommendations");
-  let recommendations = normalizeRecommendations(recsInput);
-
-  if (recommendations.length === 0) {
-    console.warn(
-      "[ai-analysis] v1 recommendations call returned 0 items; retrying once with corrective tool_result. preview:",
-      ((JSON.stringify(recsInput) ?? "") as string).slice(0, 400)
-    );
-    recommendations = await retryRecommendationsIfEmpty(
-      apiKey,
-      RECOMMENDATIONS_SYSTEM_PROMPT,
-      undefined,
-      recsMessages,
-      recsData
-    );
-    if (recommendations.length === 0) {
-      console.error("[ai-analysis] v1 retry also returned 0 recommendations");
-    }
-  }
-
-  return assembleResult(findings.summary, findings.risks, recommendations, findingsData, recsData);
-}
-
-async function generateAiAnalysisV2(
-  plan: Plan,
-  insights: PlanInsightsReport,
-  apiKey: string
-): Promise<AiAnalysisResult> {
   const payload = buildAIPayload(plan, insights);
 
   // Dev-mode budget check: surface if a real plan ever pushes near the 10k
@@ -761,7 +522,7 @@ async function generateAiAnalysisV2(
   // --- Call 1: summary + risks ---
   const findingsData = await callClaude(
     apiKey,
-    FINDINGS_SYSTEM_PROMPT_V2,
+    FINDINGS_SYSTEM_PROMPT,
     FINDINGS_TOOL,
     [
       {
@@ -783,7 +544,7 @@ async function generateAiAnalysisV2(
   }
 
   // --- Call 2: recommendations ---
-  // Per the brief: the recommendations call gets the same bounded payload
+  // Per the spec: the recommendations call gets the same bounded payload
   // (so it can reference specific tasks) plus the findings from call 1.
   const recsContext = JSON.stringify(
     {
@@ -802,7 +563,7 @@ async function generateAiAnalysisV2(
 
   const recsData = await callClaude(
     apiKey,
-    RECOMMENDATIONS_SYSTEM_PROMPT_V2,
+    RECOMMENDATIONS_SYSTEM_PROMPT,
     RECOMMENDATIONS_TOOL,
     recsMessages,
     PAYLOAD_SCHEMA_HEADER
@@ -813,18 +574,18 @@ async function generateAiAnalysisV2(
 
   if (recommendations.length === 0) {
     console.warn(
-      "[ai-analysis] v2 recommendations call returned 0 items; retrying once with corrective tool_result. preview:",
+      "[ai-analysis] recommendations call returned 0 items; retrying once with corrective tool_result. preview:",
       ((JSON.stringify(recsInput) ?? "") as string).slice(0, 400)
     );
     recommendations = await retryRecommendationsIfEmpty(
       apiKey,
-      RECOMMENDATIONS_SYSTEM_PROMPT_V2,
+      RECOMMENDATIONS_SYSTEM_PROMPT,
       PAYLOAD_SCHEMA_HEADER,
       recsMessages,
       recsData
     );
     if (recommendations.length === 0) {
-      console.error("[ai-analysis] v2 retry also returned 0 recommendations");
+      console.error("[ai-analysis] retry also returned 0 recommendations");
     }
   }
 
