@@ -8,14 +8,14 @@ import { ProjectCard } from "@/components/ProjectCard";
 export const metadata: Metadata = {
   title: "Projects",
   description:
-    "Explore AI Solution Maven project work across AI products, booking workflows, and mobile app concepts.",
+    "Explore AI Solution Maven product work — PlanSight AI for project plan analysis and ScrumReady for Scrum certification exam prep.",
   alternates: {
     canonical: "/projects",
   },
   openGraph: {
     title: "Projects | AI Solution Maven",
     description:
-      "Explore AI Solution Maven project work across AI products, booking workflows, and mobile app concepts.",
+      "Explore AI Solution Maven product work — PlanSight AI for project plan analysis and ScrumReady for Scrum certification exam prep.",
     url: "/projects",
   },
 };
@@ -25,43 +25,31 @@ const projects = [
     id: "plansight-ai",
     title: "PlanSight AI",
     description:
-      "An AI planning product that helps teams compare scenarios, surface risk, and choose a clearer path forward.",
-    href: "/contact",
-    tags: ["AI planning", "SaaS", "Decision support"],
+      "An AI-powered project plan viewer that helps PMs understand schedules, surface risks, and share clear stakeholder views — all in the browser.",
+    href: "https://plansight.aisolutionmaven.com",
+    tags: ["AI planning", "SaaS", "Project management"],
     bars: [44, 72, 58, 86, 68],
-    problem: "Teams often commit to plans without a clear view of risk, capacity, or downstream tradeoffs.",
+    problem:
+      "Project managers need to communicate complex schedules to stakeholders who don't have MS Project installed and can't interpret raw .mpp files.",
     solution:
-      "PlanSight AI creates a practical decision layer where scenarios, assumptions, and next actions can be compared before the team commits.",
+      "PlanSight AI parses .mpp files and XML exports in the browser, surfaces the critical path and at-risk tasks, generates a Claude-powered AI analysis, and produces a shareable read-only stakeholder view.",
     outcome:
-      "A clearer planning workflow that helps leaders act earlier and communicate decisions with more confidence.",
+      "PMs can go from import to stakeholder-ready in minutes, with a clean share link that requires no login or software installation to open.",
   },
   {
-    id: "appointment-system",
-    title: "Appointment System",
+    id: "scrumready",
+    title: "ScrumReady",
     description:
-      "A booking workflow designed to reduce scheduling friction and give teams a cleaner operational view.",
-    href: "/contact",
-    tags: ["Scheduling", "Workflow", "Operations"],
-    bars: [62, 48, 74, 56, 88],
-    problem: "Manual booking creates avoidable admin work and makes it harder to understand availability.",
+      "A Scrum Master certification exam prep platform with guided quiz practice and a realistic timed exam simulator for CSM and PSM I candidates.",
+    href: "https://scrumready.aisolutionmaven.com",
+    tags: ["EdTech", "SaaS", "Exam prep"],
+    bars: [68, 82, 55, 90, 74],
+    problem:
+      "CSM and PSM I candidates struggle to find focused, realistic exam prep that explains the why behind each answer rather than just drilling pattern recall.",
     solution:
-      "A focused appointment flow gives customers a simpler booking path and gives operators a cleaner schedule view.",
+      "ScrumReady combines a thematic quiz mode with instant rationale explanations and a full exam simulator that mirrors real conditions — timed, free navigation, no feedback until submission.",
     outcome:
-      "Less manual coordination, fewer missed details, and a workflow that is easier to manage day to day.",
-  },
-  {
-    id: "my-vet-buddy",
-    title: "My Vet Buddy",
-    description:
-      "A pet-care product concept focused on helping owners track care, prepare visits, and manage follow-ups.",
-    href: "/contact",
-    tags: ["Mobile app", "Health records", "Care flow"],
-    bars: [52, 66, 45, 78, 70],
-    problem: "Pet owners often manage care details across memory, messages, paper notes, and vet follow-ups.",
-    solution:
-      "A mobile-first care record brings visit prep, reminders, and care history into one practical experience.",
-    outcome:
-      "A clearer care journey for owners and better prepared conversations with veterinary teams.",
+      "Candidates build genuine Scrum knowledge through deliberate practice, track their Readiness Score across sessions, and enter their exam with confidence.",
   },
 ];
 
@@ -85,7 +73,7 @@ export default function ProjectsPage() {
       </section>
 
       <section className="px-6 py-20">
-        <div className="mx-auto grid max-w-[1200px] gap-6 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-[1200px] gap-6 lg:grid-cols-2">
           {projects.map((project) => (
             <ProjectCard key={project.title} {...project} />
           ))}
@@ -110,6 +98,13 @@ export default function ProjectsPage() {
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   {project.description}
                 </p>
+                <a
+                  href={project.href}
+                  className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Open product
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </a>
               </div>
               <div className="grid gap-4">
                 {[

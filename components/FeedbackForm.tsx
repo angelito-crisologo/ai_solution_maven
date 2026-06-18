@@ -341,14 +341,7 @@ export function FeedbackForm({
       </button>
 
       <p className="mt-3 text-xs text-slate-500">
-        We handle feedback per our{" "}
-        <Link
-          href="/products/plansight-ai/legal/privacy"
-          className="font-semibold text-slate-700 underline-offset-2 transition hover:text-primary hover:underline"
-        >
-          Privacy Policy
-        </Link>
-        .
+        Feedback is used only to improve AI Solution Maven products.
       </p>
     </form>
   );

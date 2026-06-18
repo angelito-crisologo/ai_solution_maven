@@ -1,9 +1,13 @@
 import {
+  ArrowRight,
   BrainCircuit,
   CheckCircle2,
+  FileUp,
   Layers,
   Rocket,
   ServerCog,
+  Share2,
+  Sparkles,
 } from "lucide-react";
 import { Hero } from "@/components/Hero";
 import { Navbar } from "@/components/Navbar";
@@ -44,26 +48,18 @@ const projects = [
   {
     title: "PlanSight AI",
     description:
-      "An AI planning product that helps teams compare scenarios, surface risk, and choose a clearer path forward.",
+      "An AI-powered project plan viewer that helps PMs understand schedules, surface risks, and share clear stakeholder views.",
     href: "/projects#plansight-ai",
-    tags: ["AI planning", "SaaS", "Decision support"],
+    tags: ["AI planning", "SaaS", "Project management"],
     bars: [44, 72, 58, 86, 68],
   },
   {
-    title: "Appointment System",
+    title: "ScrumReady",
     description:
-      "A booking workflow designed to reduce scheduling friction and give teams a cleaner operational view.",
-    href: "/projects#appointment-system",
-    tags: ["Scheduling", "Workflow", "Operations"],
-    bars: [62, 48, 74, 56, 88],
-  },
-  {
-    title: "My Vet Buddy",
-    description:
-      "A pet-care product concept focused on helping owners track care, prepare visits, and manage follow-ups.",
-    href: "/projects#my-vet-buddy",
-    tags: ["Mobile app", "Health records", "Care flow"],
-    bars: [52, 66, 45, 78, 70],
+      "A Scrum Master certification exam prep platform with guided quiz practice and a realistic timed exam simulator.",
+    href: "/projects#scrumready",
+    tags: ["EdTech", "SaaS", "Exam prep"],
+    bars: [68, 82, 55, 90, 74],
   },
 ];
 
@@ -74,6 +70,82 @@ const reasons = [
   "Moves fast while keeping the scope practical",
 ];
 
+const plansightPreview = (
+  <>
+    <div className="mb-4 flex items-center justify-between">
+      <div>
+        <p className="text-sm text-slate-400">PlanSight AI</p>
+        <p className="font-medium">Imported plan workspace</p>
+      </div>
+      <span className="rounded-xl bg-emerald-400/15 px-3 py-2 text-sm font-medium text-emerald-300">
+        AI analysis live
+      </span>
+    </div>
+    <div className="rounded-xl border border-slate-800 bg-white/[0.04] p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
+        Product flow
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          { Icon: FileUp, label: "Upload", text: "Drop in an .mpp file. Parsed into a normalized workspace." },
+          { Icon: Sparkles, label: "Analyze", text: "Critical path, RAG status, and a Claude-generated narrative." },
+          { Icon: Share2, label: "Share", text: "Send stakeholders a read-only link. No login required." },
+        ].map(({ Icon, label, text }) => (
+          <div key={label} className="rounded-md border border-slate-800 bg-slate-950 p-4">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-slate-800 text-cyan-400">
+              <Icon className="h-5 w-5" />
+            </div>
+            <p className="mt-3 text-sm font-semibold text-slate-100">{label}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </>
+);
+
+const scrumreadyPreview = (
+  <>
+    <div className="mb-4 flex items-center justify-between">
+      <div>
+        <p className="text-sm text-slate-400">ScrumReady</p>
+        <p className="font-medium">Quiz Mode — QB 01</p>
+      </div>
+      <span className="rounded-xl bg-emerald-400/15 px-3 py-2 text-sm font-medium text-emerald-300">
+        3 correct in a row
+      </span>
+    </div>
+    <div className="rounded-xl border border-slate-800 bg-white/[0.04] p-4">
+      <p className="mb-1 text-xs text-slate-500">Question 7 of 20 · Single select</p>
+      <p className="text-sm font-medium text-slate-200">
+        Who is responsible for managing the Product Backlog in Scrum?
+      </p>
+      <div className="mt-3 grid gap-2">
+        {["The Scrum Master", "The Product Owner", "The Developers", "The Stakeholders"].map(
+          (opt, i) => (
+            <div
+              key={opt}
+              className={
+                i === 1
+                  ? "rounded-lg border border-emerald-500/40 bg-emerald-500/20 px-3 py-2 text-xs text-emerald-300"
+                  : "rounded-lg bg-white/[0.05] px-3 py-2 text-xs text-slate-400"
+              }
+            >
+              {opt}
+            </div>
+          )
+        )}
+      </div>
+      <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+        <p className="text-xs font-semibold text-emerald-400">Key Scrum idea</p>
+        <p className="mt-1 text-xs leading-5 text-slate-300">
+          The Product Owner owns and orders the Product Backlog to best achieve the product goal.
+        </p>
+      </div>
+    </div>
+  </>
+);
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-light">
@@ -83,17 +155,31 @@ export default function Home() {
       </section>
 
       <section id="products" className="px-6 py-20">
-        <div className="mx-auto max-w-[1200px]">
+        <div className="mx-auto max-w-[1200px] space-y-8">
           <ProductCard
             title="PlanSight AI"
-            description="PlanSight AI lets a PM upload an MPP plan, inspect the imported schedule, review project health, and share a clear stakeholder view from the same workflow."
+            description="Upload an MS Project plan, get an AI-generated analysis, and share a clean read-only view with stakeholders — all in the browser. Built for PMs who need their plans understood without forcing recipients to install MS Project."
             features={[
-              "Import an MPP plan and review the task table, Gantt chart, and schedule structure.",
-              "Surface project health, late work, and potential delivery risks quickly.",
-              "Generate a read-only stakeholder link from the same imported plan.",
+              "Import .mpp files or MS Project XML exports and view an interactive task table and Gantt chart.",
+              "Get deterministic PMP-aligned insights — critical path, late tasks, at-risk work — plus a Claude-generated AI analysis.",
+              "Share a public read-only stakeholder link with no login required.",
             ]}
-            demoHref="/products/plansight-ai"
+            demoHref="https://plansight.aisolutionmaven.com"
             caseStudyHref="/projects#plansight-ai"
+            preview={plansightPreview}
+          />
+          <ProductCard
+            title="ScrumReady"
+            description="Scrum Master certification exam prep for CSM and PSM I candidates. Combines a guided quiz mode with instant rationale explanations and a realistic timed exam simulator — so you build genuine knowledge, not just pattern memory."
+            features={[
+              "Six thematic quiz banks aligned with the Scrum Guide 2020, with instant feedback and rationale on every answer.",
+              "A full exam simulator that mirrors real conditions — countdown timer, free navigation, mark for review — no feedback until you submit.",
+              "Track your Readiness Score across sessions and review every past attempt with full answer explanations.",
+            ]}
+            demoHref="https://scrumready.aisolutionmaven.com"
+            caseStudyHref="/projects#scrumready"
+            primaryCtaLabel="Start for free"
+            preview={scrumreadyPreview}
           />
         </div>
       </section>
@@ -138,7 +224,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
             {projects.map((project) => (
               <ProjectCard key={project.title} {...project} />
             ))}

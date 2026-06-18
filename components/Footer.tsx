@@ -7,11 +7,6 @@ const footerLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const legalLinks = [
-  { label: "Terms", href: "/products/plansight-ai/legal/terms" },
-  { label: "Privacy", href: "/products/plansight-ai/legal/privacy" },
-  { label: "Refunds", href: "/products/plansight-ai/legal/refunds" },
-];
 
 export function Footer() {
   return (
@@ -37,19 +32,8 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 border-t border-slate-200 pt-5 text-xs text-slate-500">
           <span>© {new Date().getFullYear()} AI Solution Maven</span>
-          <nav aria-label="Legal" className="flex flex-wrap gap-4">
-            {legalLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="transition hover:text-slate-700"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
       </div>
     </footer>

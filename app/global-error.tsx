@@ -19,9 +19,9 @@ export default function GlobalError({
         <div className="flex min-h-screen items-center justify-center px-6">
           <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
             <p className="text-sm font-semibold uppercase tracking-normal text-primary">Application error</p>
-            <h1 className="mt-2 text-2xl font-semibold text-dark">PlanSight AI could not load</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-dark">Something went wrong</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              The app hit an unexpected error. Retry the page after the cache has refreshed.
+              The page hit an unexpected error. Retry after the cache has refreshed.
             </p>
             <button
               type="button"
@@ -30,13 +30,9 @@ export default function GlobalError({
             >
               Retry
             </button>
-            {/* Plain anchors, not next/link — the root layout is gone in this
-                error boundary, so use the safest possible navigation. */}
-            <nav aria-label="Legal" className="mt-6 flex flex-wrap gap-4 border-t border-slate-200 pt-4 text-xs text-slate-500">
-              <a href="/products/plansight-ai/legal/terms" className="transition hover:text-slate-700">Terms</a>
-              <a href="/products/plansight-ai/legal/privacy" className="transition hover:text-slate-700">Privacy</a>
-              <a href="/products/plansight-ai/legal/refunds" className="transition hover:text-slate-700">Refunds</a>
-            </nav>
+            <div className="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-500">
+              <a href="/" className="transition hover:text-slate-700">Back to home</a>
+            </div>
           </div>
         </div>
       </body>

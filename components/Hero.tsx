@@ -122,18 +122,20 @@ export function Hero() {
                 ))}
               </div>
 
-              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-slate-400">Currently shipping</p>
-                  <p className="mt-1 font-medium text-white">PlanSight AI</p>
-                </div>
-                <Link
-                  href="/products/plansight-ai"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/[0.1]"
-                >
-                  See it live
-                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
-                </Link>
+              <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2">
+                {[
+                  { label: "PlanSight AI", href: "https://plansight.aisolutionmaven.com" },
+                  { label: "ScrumReady", href: "https://scrumready.aisolutionmaven.com" },
+                ].map(({ label, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="inline-flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/[0.1]"
+                  >
+                    {label}
+                    <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>

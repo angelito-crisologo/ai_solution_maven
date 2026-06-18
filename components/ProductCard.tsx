@@ -1,13 +1,15 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { PlanSightFlowGraphic } from "@/components/plansight-ai/PlanSightFlowGraphic";
 
 type ProductCardProps = {
   title: string;
   description: string;
   features: string[];
   demoHref: string;
-  caseStudyHref: string;
+  primaryCtaLabel?: string;
+  caseStudyHref?: string;
+  preview: ReactNode;
 };
 
 export function ProductCard({
@@ -15,7 +17,9 @@ export function ProductCard({
   description,
   features,
   demoHref,
+  primaryCtaLabel = "Try for free",
   caseStudyHref,
+  preview,
 }: ProductCardProps) {
   return (
     <article className="grid gap-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-soft lg:grid-cols-[0.9fr_1.1fr] lg:p-8">
@@ -49,30 +53,22 @@ export function ProductCard({
             href={demoHref}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-5 py-3 text-sm font-medium text-white shadow-lg shadow-primary/20"
           >
-            Try for free
+            {primaryCtaLabel}
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
-          <Link
-            href={caseStudyHref}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-dark transition hover:border-slate-300 hover:bg-slate-50"
-          >
-            View Case Study
-          </Link>
+          {caseStudyHref && (
+            <Link
+              href={caseStudyHref}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-dark transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              View Case Study
+            </Link>
+          )}
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-slate-400">PlanSight AI</p>
-            <p className="font-medium">Imported plan workspace</p>
-          </div>
-          <span className="rounded-xl bg-emerald-400/15 px-3 py-2 text-sm font-medium text-emerald-300">
-            AI analysis live
-          </span>
-        </div>
-
-        <PlanSightFlowGraphic title="Product flow" className="bg-white/[0.04]" />
+        {preview}
       </div>
     </article>
   );
