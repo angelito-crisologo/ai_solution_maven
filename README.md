@@ -26,13 +26,12 @@ Names only; see `.env.example`.
 | `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL` | `/api/contact` | Sending the contact form (runtime) |
 | `NEXT_PUBLIC_BOOKING_URL` | Booking buttons | Optional; defaults to the Cal.com link |
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | GA4 | Optional; analytics is off when unset (build time) |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `/api/feedback` | The PlanSight feedback form (runtime) |
 
 The build needs none of them.
 
 ## Structure
 
-- `app/`: routes `/`, `/services`, `/how-i-work`, `/work`, `/about`, `/contact`, `/privacy`, plus `/feedback` (noindex) and the two API routes.
+- `app/`: routes `/`, `/services`, `/how-i-work`, `/work`, `/about`, `/contact`, `/privacy`, plus the `/api/contact` route.
 - `content/`: all site copy, typed.
 - `components/`: layout, cards, blocks and the contact form.
 - `lib/`: analytics, booking link, contact validation, metadata helper, UI class recipes.

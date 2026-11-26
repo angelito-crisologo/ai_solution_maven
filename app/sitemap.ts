@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { meta } from "@/content/pages";
 import { site } from "@/content/site";
 
-/** The seven public pages. /feedback is deliberately left out. */
+/** The seven public pages. */
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [meta.home, meta.services, meta.howIWork, meta.work, meta.about, meta.contact, meta.privacy];
   return pages.map(({ path }) => ({

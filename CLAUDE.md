@@ -40,4 +40,3 @@ The one action the site drives is booking an intro call.
 ## Keep working
 - Redirects in `next.config.mjs` (PlanSight subdomain, legacy `/legal/:slug`, old `/products` and `/projects`).
 - Google Search Console token in `app/layout.tsx`; GA4 gated on `NEXT_PUBLIC_GA4_MEASUREMENT_ID`.
-- `/feedback` and `/api/feedback` (PlanSight feedback, Supabase): working, noindex, not in nav or sitemap.

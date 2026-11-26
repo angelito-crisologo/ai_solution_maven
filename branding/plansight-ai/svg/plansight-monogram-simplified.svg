@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="PlanSight AI">
-  <title>PlanSight AI</title>
-  <rect x="0" y="0" width="32" height="32" rx="7" fill="#0B1220"/>
-  <!-- Simplified: just sightline + dot, no bracket (mushes at small sizes) -->
-  <line x1="6" y1="16" x2="18" y2="16" stroke="#22D3EE" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="22" cy="16" r="4" fill="#22D3EE"/>
-</svg>
