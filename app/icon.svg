@@ -1,12 +1,1 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#0F172A"/>
-  <rect x="48" y="48" width="416" height="416" rx="88" fill="url(#brandGradient)"/>
-  <path d="M132 352L208 160H255L331 352H282L268 313H194L180 352H132ZM207 276H255L231 207L207 276Z" fill="white"/>
-  <path d="M351 160H397V352H351V160Z" fill="white"/>
-  <defs>
-    <linearGradient id="brandGradient" x1="48" y1="48" x2="464" y2="464" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB"/>
-      <stop offset="1" stop-color="#7C3AED"/>
-    </linearGradient>
-  </defs>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="21" fill="#132440"/><svg x="20" y="20" width="60" height="60" viewBox="0 0 236 236"><rect x="0" y="164" width="72" height="72" rx="10" fill="#ffffff"/><rect x="82" y="164" width="72" height="72" rx="10" fill="#ffffff"/><rect x="164" y="164" width="72" height="72" rx="10" fill="#ffffff"/><rect x="82" y="82" width="72" height="72" rx="10" fill="#ffffff"/><rect x="164" y="82" width="72" height="72" rx="10" fill="#ffffff"/><rect x="164" y="0" width="72" height="72" rx="10" fill="#1094a3"/></svg></svg>
