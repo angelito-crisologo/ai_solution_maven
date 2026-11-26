@@ -1,16 +1,13 @@
 import type { MetadataRoute } from "next";
+import { meta } from "@/content/pages";
+import { site } from "@/content/site";
 
-const siteUrl = "https://aisolutionmaven.com";
-
+/** The seven public pages. /feedback is deliberately left out. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const builtAt = new Date();
-
-  return [
-    { url: siteUrl, lastModified: builtAt, changeFrequency: "weekly", priority: 1 },
-    { url: `${siteUrl}/products`, lastModified: builtAt, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${siteUrl}/products/plansight-ai`, lastModified: builtAt, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/products/scrumready`, lastModified: builtAt, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/projects`, lastModified: builtAt, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteUrl}/contact`, lastModified: builtAt, changeFrequency: "monthly", priority: 0.6 },
-  ];
+  const pages = [meta.home, meta.services, meta.howIWork, meta.work, meta.about, meta.contact, meta.privacy];
+  return pages.map(({ path }) => ({
+    url: path === "/" ? site.url : `${site.url}${path}`,
+    changeFrequency: "monthly",
+    priority: path === "/" ? 1 : path === "/privacy" ? 0.3 : 0.8,
+  }));
 }
