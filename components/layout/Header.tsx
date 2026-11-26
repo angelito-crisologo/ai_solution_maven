@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
-import { btnPrimary, cx } from "@/lib/ui";
+import { btnHeader, btnHeaderSmall, cx } from "@/lib/ui";
 import { BookingLink } from "../BookingLink";
 import { Logo } from "./Logo";
 
@@ -70,7 +70,7 @@ export function Header() {
             })}
             <BookingLink
               location="header"
-              className={cx(btnPrimary, "min-h-[44px] px-[18px] py-2.5 text-[16px]")}
+              className={btnHeader}
             >
               {site.navButton}
             </BookingLink>
@@ -86,7 +86,7 @@ export function Header() {
             <div className="flex flex-none items-center gap-1.5">
               <BookingLink
                 location="header"
-                className={cx(btnPrimary, "min-h-[44px] whitespace-nowrap px-3 py-2 text-[15px]")}
+                className={btnHeaderSmall}
               >
                 {site.navButton}
               </BookingLink>

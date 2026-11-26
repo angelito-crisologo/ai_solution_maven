@@ -10,6 +10,10 @@ const buttonBase =
 /** Primary: Teal 700 fill. Used once per view. */
 export const btnPrimary = `${buttonBase} min-h-[48px] px-[22px] py-3 text-[17px] bg-teal-700 text-white hover:bg-navy-900 hover:text-white disabled:bg-line disabled:text-ink-700 disabled:hover:bg-line disabled:hover:text-ink-700`;
 
+/** Header "Book a call": desktop and phone sizes from the design. */
+export const btnHeader = `${buttonBase} min-h-[44px] px-[18px] py-2.5 text-[16px] bg-teal-700 text-white hover:bg-navy-900 hover:text-white`;
+export const btnHeaderSmall = `${buttonBase} min-h-[44px] whitespace-nowrap px-3 py-2 text-[15px] bg-teal-700 text-white hover:bg-navy-900 hover:text-white`;
+
 /** Larger primary, as on the Contact booking card. */
 export const btnPrimaryLarge = `${buttonBase} min-h-[52px] px-[26px] py-[14px] text-[18px] bg-teal-700 text-white hover:bg-navy-900 hover:text-white`;
 

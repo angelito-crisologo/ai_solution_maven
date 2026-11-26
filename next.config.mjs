@@ -2,7 +2,7 @@
 const nextConfig = {
   async redirects() {
     return [
-      // PlanSight now lives at its own subdomain. Redirect all old routes so
+      // PlanSight lives at its own subdomain. Redirect all old routes so
       // bookmarks, Stripe emails, and indexed URLs stay functional.
       {
         source: "/products/plansight-ai",
@@ -20,6 +20,10 @@ const nextConfig = {
         destination: "https://plansight.aisolutionmaven.com/legal/:slug",
         permanent: true,
       },
+      // Old portfolio routes, replaced by /work in the redesign.
+      { source: "/products", destination: "/work", permanent: true },
+      { source: "/products/scrumready", destination: "/work", permanent: true },
+      { source: "/projects", destination: "/work", permanent: true },
     ];
   },
 };

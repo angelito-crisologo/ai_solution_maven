@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { system } from "@/content/system";
+import "./globals.css";
 
+/** Replaces the root layout when it fails, so it carries its own shell. */
 export default function GlobalError({
   error,
-  reset
+  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -14,27 +17,24 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
-      <body className="bg-light font-sans antialiased">
-        <div className="flex min-h-screen items-center justify-center px-6">
-          <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-            <p className="text-sm font-semibold uppercase tracking-normal text-primary">Application error</p>
-            <h1 className="mt-2 text-2xl font-semibold text-dark">Something went wrong</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              The page hit an unexpected error. Retry after the cache has refreshed.
-            </p>
+    <html lang="en-AU">
+      <body className="font-sans">
+        <main className="px-gutter py-section-lg">
+          <div className="mx-auto flex max-w-content flex-col items-start gap-5">
+            <h1 className="m-0 text-display text-navy-900">{system.error.heading}</h1>
+            <p className="m-0 max-w-[60ch] text-lead">{system.error.text}</p>
             <button
               type="button"
               onClick={() => reset()}
-              className="mt-6 rounded-full bg-dark px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex min-h-[48px] items-center rounded-control bg-teal-700 px-[22px] py-3 text-[17px] font-semibold text-white hover:bg-navy-900"
             >
-              Retry
+              {system.error.retry}
             </button>
-            <div className="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-500">
-              <a href="/" className="transition hover:text-slate-700">Back to home</a>
-            </div>
+            <a href="/" className="font-semibold">
+              {system.error.home}
+            </a>
           </div>
-        </div>
+        </main>
       </body>
     </html>
   );

@@ -1,118 +1,65 @@
 import type { Metadata } from "next";
-import { CheckCircle2, Clock, Mail, MessageSquare } from "lucide-react";
-import { ContactForm } from "@/components/ContactForm";
-import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
+import { BookingLink } from "@/components/BookingLink";
+import { PageIntro } from "@/components/blocks/PageIntro";
+import { ContactForm } from "@/components/contact/ContactForm";
+import { Calendar, Mail } from "@/components/Icons";
+import { contact, meta } from "@/content/pages";
+import { site } from "@/content/site";
+import { pageMetadata } from "@/lib/metadata";
+import { btnPrimaryLarge, srOnly } from "@/lib/ui";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description:
-    "Contact AI Solution Maven to discuss AI app development, MVPs, internal tools, and practical product builds.",
-  alternates: {
-    canonical: "/contact",
-  },
-  openGraph: {
-    title: "Contact | AI Solution Maven",
-    description:
-      "Contact AI Solution Maven to discuss AI app development, MVPs, internal tools, and practical product builds.",
-    url: "/contact",
-  },
-};
+export const metadata: Metadata = pageMetadata(meta.contact);
 
-const highlights = [
-  "AI app and MVP builds",
-  "Full-stack web and mobile products",
-  "Internal tools and workflow automation",
-];
-
+/** Contact. No call-to-action band: the booking button is the call to action. */
 export default function ContactPage() {
+  const { details } = contact;
+
   return (
-    <main className="min-h-screen bg-light">
-      <section className="bg-dark text-white">
-        <Navbar />
-        <div className="mx-auto grid max-w-[1200px] gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:py-20">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-normal text-emerald-300">
-              Contact
-            </p>
-            <h1 className="mt-3 text-[40px] font-bold leading-[1.12] tracking-normal text-white md:text-[48px]">
-              Tell me what you want to build
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
-              Share the workflow, product idea, or business problem. I will use
-              that context to suggest a practical next step.
-            </p>
+    <>
+      <PageIntro heading={contact.heading} intro={contact.intro} />
 
-            <div className="mt-8 grid gap-4">
-              {highlights.map((highlight) => (
-                <div key={highlight} className="flex items-start gap-3">
-                  <CheckCircle2
-                    aria-hidden="true"
-                    className="mt-0.5 h-5 w-5 shrink-0 text-success"
-                  />
-                  <span className="text-base text-slate-200">{highlight}</span>
-                </div>
-              ))}
-            </div>
+      <section className="bg-surface px-gutter pb-[clamp(56px,7vw,88px)] pt-[clamp(40px,5vw,72px)]">
+        <div className="mx-auto grid max-w-content grid-cols-1 items-start gap-stack [grid-template-areas:'book''form''details'] two:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] two:grid-rows-[auto_1fr] two:[grid-template-areas:'book_form''details_form']">
+          <div className="flex flex-col gap-3.5 rounded-card border border-line bg-white p-6 [grid-area:book]">
+            <BookingLink location="contact" className={btnPrimaryLarge}>
+              <Calendar />
+              {site.ctaLabel}
+            </BookingLink>
+            <p className="m-0 text-small text-ink-500">{contact.bookingNote}</p>
           </div>
 
-          <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur">
-            <div className="flex items-start gap-4 rounded-xl bg-white/[0.06] p-4">
-              <Mail aria-hidden="true" className="mt-1 h-5 w-5 text-primary" />
-              <div>
-                <p className="font-medium text-white">Email</p>
-                <p className="mt-1 text-sm text-slate-300">
-                  hello@aisolutionmaven.com
-                </p>
+          <div className="relative min-w-0 rounded-card border border-line bg-white p-6 [grid-area:form]">
+            <h2 className={srOnly}>{contact.formHeading}</h2>
+            <ContactForm />
+          </div>
+
+          <div className="flex flex-col gap-4 px-1 [grid-area:details]">
+            <h2 className="m-0 text-h3 text-navy-900">{details.heading}</h2>
+            <dl className="m-0 flex flex-col gap-3.5 text-body-sm">
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-label text-navy-900">{details.emailLabel}</dt>
+                <dd className="m-0">
+                  <a
+                    href={`mailto:${site.email}`}
+                    className="inline-flex min-h-[44px] items-center gap-2 text-teal-700 [overflow-wrap:anywhere]"
+                  >
+                    <Mail />
+                    {site.email}
+                  </a>
+                </dd>
               </div>
-            </div>
-            <div className="flex items-start gap-4 rounded-xl bg-white/[0.06] p-4">
-              <Clock aria-hidden="true" className="mt-1 h-5 w-5 text-primary" />
-              <div>
-                <p className="font-medium text-white">Typical response</p>
-                <p className="mt-1 text-sm text-slate-300">
-                  Within 1-2 business days
-                </p>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-label text-navy-900">{details.locationLabel}</dt>
+                <dd className="m-0">{site.location}</dd>
               </div>
-            </div>
-            <div className="flex items-start gap-4 rounded-xl bg-white/[0.06] p-4">
-              <MessageSquare
-                aria-hidden="true"
-                className="mt-1 h-5 w-5 text-primary"
-              />
-              <div>
-                <p className="font-medium text-white">Best first message</p>
-                <p className="mt-1 text-sm text-slate-300">
-                  Include the problem, users, timeline, and what success looks
-                  like.
-                </p>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-label text-navy-900">{details.abnLabel}</dt>
+                <dd className="m-0">{site.abn}</dd>
               </div>
-            </div>
+            </dl>
           </div>
         </div>
       </section>
-
-      <section className="px-6 py-20">
-        <div className="mx-auto grid max-w-[1200px] gap-10 lg:grid-cols-[0.75fr_1.25fr]">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-normal text-primary">
-              Project enquiry
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold leading-tight text-dark md:text-4xl">
-              Keep it simple and specific
-            </h2>
-            <p className="mt-4 text-base leading-7 text-slate-600">
-              The form sends messages directly from the site. Once your sender
-              and inbox settings are configured, enquiries will arrive in your
-              business email without relying on the visitor’s mail app.
-            </p>
-          </div>
-
-          <ContactForm />
-        </div>
-      </section>
-
-      <Footer />
-    </main>
+    </>
   );
 }

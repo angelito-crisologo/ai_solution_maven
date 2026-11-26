@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { ArrowLink } from "@/components/blocks/ArrowLink";
+import { system } from "@/content/system";
+import { btnPrimary, h1Class } from "@/lib/ui";
 
 export default function Error({
   error,
-  reset
+  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -15,25 +17,15 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-light px-6">
-      <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-        <p className="text-sm font-semibold uppercase tracking-normal text-primary">Something went wrong</p>
-        <h1 className="mt-2 text-2xl font-semibold text-dark">The page failed to load</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          Refreshing should usually recover from a transient error. If it does not, the browser console will show the
-          underlying issue.
-        </p>
-        <button
-          type="button"
-          onClick={() => reset()}
-          className="mt-6 rounded-full bg-dark px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-        >
-          Try again
+    <section className="px-gutter py-section-lg">
+      <div className="mx-auto flex max-w-content flex-col items-start gap-5">
+        <h1 className={h1Class}>{system.error.heading}</h1>
+        <p className="m-0 max-w-[60ch] text-lead">{system.error.text}</p>
+        <button type="button" onClick={() => reset()} className={btnPrimary}>
+          {system.error.retry}
         </button>
-        <div className="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-500">
-          <Link href="/" className="transition hover:text-slate-700">Back to home</Link>
-        </div>
+        <ArrowLink href="/" label={system.error.home} />
       </div>
-    </div>
+    </section>
   );
 }

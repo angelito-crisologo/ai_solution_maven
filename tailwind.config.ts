@@ -14,6 +14,7 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./content/**/*.{js,ts}",
+    "./lib/**/*.{js,ts,tsx}",
   ],
   theme: {
     // Breakpoints from the design. 375, 768 and 1280 are the review widths;

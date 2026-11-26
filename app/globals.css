@@ -34,6 +34,7 @@
   /* Inline links are always underlined, Teal 700, navy on hover. */
   a {
     color: #0b6c78;
+    text-decoration-line: underline;
     text-underline-offset: 3px;
   }
 

@@ -159,14 +159,14 @@ export function FeedbackForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft md:p-8"
+      className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8"
     >
       <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-normal text-primary">
+          <p className="text-sm font-semibold uppercase tracking-normal text-teal-700">
             Feedback
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-dark">Report an issue or share an idea</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-navy-900">Report an issue or share an idea</h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
             Use this form for comments, feature requests, and bug reports. If you need a reply,
             include your email address.
@@ -174,7 +174,7 @@ export function FeedbackForm({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <p className="font-semibold text-dark">{product}</p>
+          <p className="font-semibold text-navy-900">{product}</p>
           <p className="mt-1">Source: {sourceContext || "feedback page"}</p>
           {planTitle ? <p className="mt-1">Plan: {planTitle}</p> : null}
         </div>
@@ -192,34 +192,34 @@ export function FeedbackForm({
               onClick={() => updateField("feedbackType", option.value)}
               className={`rounded-2xl border p-4 text-left transition ${
                 active
-                  ? "border-primary bg-primary/5 shadow-soft"
+                  ? "border-teal-700 bg-teal-50"
                   : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-dark text-white">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-navy-900 text-white">
                   <Icon className="h-5 w-5" />
                 </div>
                 {active ? (
-                  <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold uppercase tracking-normal text-white">
+                  <span className="rounded-full bg-teal-700 px-2.5 py-1 text-[14px] font-semibold uppercase tracking-normal text-white">
                     Selected
                   </span>
                 ) : null}
               </div>
-              <p className="mt-4 font-semibold text-dark">{option.label}</p>
+              <p className="mt-4 font-semibold text-navy-900">{option.label}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">{option.description}</p>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium text-dark sm:col-span-2">
+      <div className="mt-6 grid gap-5 two:grid-cols-2">
+        <label className="grid gap-2 text-sm font-medium text-navy-900 two:col-span-2">
           Subject
           <input
             value={form.subject}
             onChange={(event) => updateField("subject", event.target.value)}
-            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-navy-900 outline-none transition placeholder:text-slate-400"
             placeholder={
               form.feedbackType === "bug_report"
                 ? "Short summary of the issue"
@@ -230,23 +230,23 @@ export function FeedbackForm({
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-dark">
+        <label className="grid gap-2 text-sm font-medium text-navy-900">
           Name
           <input
             value={form.name}
             onChange={(event) => updateField("name", event.target.value)}
-            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-navy-900 outline-none transition placeholder:text-slate-400"
             placeholder="Optional"
             autoComplete="name"
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-dark">
+        <label className="grid gap-2 text-sm font-medium text-navy-900">
           Email
           <input
             value={form.email}
             onChange={(event) => updateField("email", event.target.value)}
-            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+            className="h-12 rounded-xl border border-slate-200 px-4 text-base font-normal text-navy-900 outline-none transition placeholder:text-slate-400"
             placeholder="Optional"
             autoComplete="email"
             inputMode="email"
@@ -254,12 +254,12 @@ export function FeedbackForm({
         </label>
 
         {form.feedbackType === "bug_report" ? (
-          <label className="grid gap-2 text-sm font-medium text-dark">
+          <label className="grid gap-2 text-sm font-medium text-navy-900">
             Severity
             <select
               value={form.severity}
               onChange={(event) => updateField("severity", event.target.value)}
-              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base font-normal text-dark outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base font-normal text-navy-900 outline-none transition"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -272,12 +272,12 @@ export function FeedbackForm({
 
       {form.feedbackType === "bug_report" ? (
         <div className="mt-5 grid gap-5">
-          <label className="grid gap-2 text-sm font-medium text-dark">
+          <label className="grid gap-2 text-sm font-medium text-navy-900">
             Steps to reproduce
             <textarea
               value={form.stepsToReproduce}
               onChange={(event) => updateField("stepsToReproduce", event.target.value)}
-              className="min-h-28 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+              className="min-h-28 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-navy-900 outline-none transition placeholder:text-slate-400"
               placeholder="What were you doing when the problem happened?"
             />
           </label>
@@ -286,24 +286,24 @@ export function FeedbackForm({
 
       {form.feedbackType === "feature_request" ? (
         <div className="mt-5 grid gap-5">
-          <label className="grid gap-2 text-sm font-medium text-dark">
+          <label className="grid gap-2 text-sm font-medium text-navy-900">
             Desired outcome
             <textarea
               value={form.desiredOutcome}
               onChange={(event) => updateField("desiredOutcome", event.target.value)}
-              className="min-h-28 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+              className="min-h-28 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-navy-900 outline-none transition placeholder:text-slate-400"
               placeholder="What should the product do?"
             />
           </label>
         </div>
       ) : null}
 
-      <label className="mt-5 grid gap-2 text-sm font-medium text-dark">
+      <label className="mt-5 grid gap-2 text-sm font-medium text-navy-900">
         Details
         <textarea
           value={form.message}
           onChange={(event) => updateField("message", event.target.value)}
-          className="min-h-40 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-dark outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
+          className="min-h-40 resize-y rounded-xl border border-slate-200 px-4 py-3 text-base font-normal leading-7 text-navy-900 outline-none transition placeholder:text-slate-400"
           placeholder={
             form.feedbackType === "bug_report"
               ? "Describe what happened and what you expected to happen."
@@ -319,13 +319,13 @@ export function FeedbackForm({
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+        <p className="mt-4 rounded-xl border border-error bg-error-tint px-4 py-3 text-sm font-medium text-error">
           {error}
         </p>
       ) : null}
 
       {status === "success" ? (
-        <p className="mt-4 flex items-start gap-2 rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm font-medium text-emerald-700">
+        <p className="mt-4 flex items-start gap-2 rounded-xl border border-success bg-success-tint px-4 py-3 text-sm font-medium text-success">
           <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4" />
           Feedback saved. Thank you for the note.
         </p>
@@ -334,13 +334,13 @@ export function FeedbackForm({
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-base font-medium text-white shadow-lg shadow-primary/20 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 hover:bg-navy-900 px-6 py-3 text-base font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-70 two:w-auto"
       >
         {status === "submitting" ? "Sending..." : "Send feedback"}
         <ArrowRight aria-hidden="true" className="h-5 w-5" />
       </button>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-[14px] text-slate-500">
         Feedback is used only to improve AI Solution Maven products.
       </p>
     </form>
