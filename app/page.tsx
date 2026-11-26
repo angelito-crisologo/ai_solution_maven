@@ -16,7 +16,7 @@ import { demos } from "@/content/demos";
 import { home, meta } from "@/content/pages";
 import { site } from "@/content/site";
 import { pageMetadata } from "@/lib/metadata";
-import { btnPrimary, btnSecondary, cx, h1Class, h2Class } from "@/lib/ui";
+import { btnPrimary, btnSecondary, cx, h1Class, h2Class, h2PlainClass } from "@/lib/ui";
 
 export const metadata: Metadata = pageMetadata(meta.home);
 
@@ -77,7 +77,7 @@ export default function HomePage() {
 
       {/* Three ways I help */}
       <Section labelledBy="h-help" size="lg">
-        <h2 id="h-help" className={h2Class}>
+        <h2 id="h-help" className={h2PlainClass}>
           {help.heading}
         </h2>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-card-gap">
@@ -91,7 +91,7 @@ export default function HomePage() {
       {/* Working demos */}
       <Section id="demos" labelledBy="h-demos" tone="surface" size="lg">
         <div className="flex max-w-[720px] flex-col gap-3">
-          <h2 id="h-demos" className={h2Class}>
+          <h2 id="h-demos" className={h2PlainClass}>
             {home.demos.heading}
           </h2>
           <p className="m-0">{home.demos.text}</p>
@@ -107,7 +107,7 @@ export default function HomePage() {
       {/* Credentials */}
       <Section labelledBy="h-cred" size="lg">
         <div className="flex flex-col gap-3">
-          <h2 id="h-cred" className={h2Class}>
+          <h2 id="h-cred" className={h2PlainClass}>
             {credentialsCopy.heading}
           </h2>
           <p className="m-0">{credentialsCopy.text}</p>
@@ -117,7 +117,7 @@ export default function HomePage() {
 
       {/* How it starts */}
       <Section labelledBy="h-starts" tone="surface" size="lg">
-        <h2 id="h-starts" className={h2Class}>
+        <h2 id="h-starts" className={h2PlainClass}>
           {starts.heading}
         </h2>
         <div className="flex flex-wrap items-stretch gap-card-gap">
@@ -137,7 +137,7 @@ export default function HomePage() {
         <ArrowLink {...starts.link} />
       </Section>
 
-      <CtaBand />
+      <CtaBand balance={false} />
     </>
   );
 }

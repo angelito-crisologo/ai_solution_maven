@@ -345,7 +345,7 @@ export const about = {
       "Leading development, test and support teams.",
       [
         "Power Platform applications built inside a bank. ",
-        ph("confirm this is within what my former employer allows"),
+        ph("confirm"),
       ],
       ["Independent since ", ph("year to supply"), "."],
     ] as readonly RichText[],

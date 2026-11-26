@@ -3,7 +3,7 @@ import type { RichText as RichTextValue } from "@/content/types";
 import { Placeholder } from "./Placeholder";
 
 /** Renders copy from /content: plain text, inline links and placeholders. */
-export function RichText({ value }: { value: RichTextValue }) {
+export function RichText({ value, chipNowrap = false }: { value: RichTextValue; chipNowrap?: boolean }) {
   if (typeof value === "string") return <>{value}</>;
   return (
     <>
@@ -12,7 +12,11 @@ export function RichText({ value }: { value: RichTextValue }) {
           return <Fragment key={i}>{segment}</Fragment>;
         }
         if ("placeholder" in segment) {
-          return <Placeholder key={i}>{segment.placeholder}</Placeholder>;
+          return (
+            <Placeholder key={i} nowrap={chipNowrap}>
+              {segment.placeholder}
+            </Placeholder>
+          );
         }
         return (
           <a

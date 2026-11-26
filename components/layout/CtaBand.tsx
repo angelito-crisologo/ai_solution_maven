@@ -9,6 +9,8 @@ type Props = {
   eyebrow?: string;
   /** Sent with the GA4 booking event. */
   location?: string;
+  /** Balanced heading wrap (inner pages). Home uses natural wrapping. */
+  balance?: boolean;
 };
 
 /** The navy call-to-action band. Defaults to the site-wide copy. */
@@ -17,6 +19,7 @@ export function CtaBand({
   text = site.ctaBand.text,
   eyebrow,
   location = "cta_band",
+  balance = true,
 }: Props) {
   return (
     <section
@@ -28,7 +31,7 @@ export function CtaBand({
           {eyebrow ? (
             <p className="m-0 text-label text-navy-100">{eyebrow}</p>
           ) : null}
-          <h2 id="h-cta" className="m-0 text-h2 text-white [text-wrap:balance]">
+          <h2 id="h-cta" className={cx("m-0 text-h2 text-white", balance && "[text-wrap:balance]")}>
             {heading}
           </h2>
           {text ? <p className="m-0 max-w-[56ch] text-navy-100">{text}</p> : null}

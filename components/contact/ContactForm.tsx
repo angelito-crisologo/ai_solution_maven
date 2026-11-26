@@ -49,8 +49,17 @@ export function ContactForm() {
     message: useRef<HTMLTextAreaElement>(null),
   };
 
+  const focusNameNext = useRef(false);
+
   useEffect(() => {
     if (status === "success") successRef.current?.focus();
+    // After "Send another message", the form is back: start at the name field.
+    if (status === "idle" && focusNameNext.current) {
+      focusNameNext.current = false;
+      refs.name.current?.focus();
+    }
+    // refs are stable objects; status is the only trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   function update(field: keyof Values, value: string) {
@@ -121,9 +130,8 @@ export function ContactForm() {
   function reset() {
     setValues(EMPTY);
     setErrors({});
+    focusNameNext.current = true;
     setStatus("idle");
-    // Wait for the form to render again before moving focus.
-    requestAnimationFrame(() => refs.name.current?.focus());
   }
 
   const sending = status === "sending";

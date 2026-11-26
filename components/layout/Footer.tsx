@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-content flex-col gap-7">
         <div className="flex flex-wrap justify-between gap-8">
           <div className="flex max-w-[380px] flex-[1_1_280px] flex-col gap-2.5">
-            <Logo size={28} />
+            <Logo size="footer" />
             <p className="m-0">{site.tagline}</p>
           </div>
           <nav

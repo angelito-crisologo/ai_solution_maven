@@ -33,6 +33,8 @@ export const container = "mx-auto w-full max-w-content";
 
 export const h1Class = "m-0 text-display text-navy-900 [text-wrap:balance]";
 export const h2Class = "m-0 text-h2 text-navy-900 [text-wrap:balance]";
+/** Home section headings are not balanced in the design. */
+export const h2PlainClass = "m-0 text-h2 text-navy-900";
 export const h3Class = "m-0 text-h3 text-navy-900";
 
 /** Visually hidden but read by screen readers. */

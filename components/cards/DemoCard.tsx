@@ -49,7 +49,7 @@ export function DemoCard({ demo, variant }: Props) {
         <p className={cx("m-0", full && "max-w-prose")}>{demo.text}</p>
         <p className="m-0 text-small text-ink-500">
           <span className="font-semibold text-navy-900">{demoCopy.builtWithLabel}</span>{" "}
-          <RichText value={demo.builtWith} />
+          <RichText value={demo.builtWith} chipNowrap={!full} />
         </p>
         {demo.liveDemo ? <Placeholder variant="block">{demo.liveDemo.placeholder}</Placeholder> : null}
         {!full ? (

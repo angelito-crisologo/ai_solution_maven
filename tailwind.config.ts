@@ -65,6 +65,7 @@ const config: Config = {
       },
       fontSize: {
         // Fluid between 375 and 1280 px, as in the design. Nothing below 14 px.
+        // Small sizes keep the page line height (1.6), as the page designs do.
         display: [
           "clamp(36px, 4.5vw, 56px)",
           { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" },
@@ -77,10 +78,10 @@ const config: Config = {
         lead: ["clamp(20px, 1.8vw, 22px)", { lineHeight: "1.5" }],
         "lead-sm": ["clamp(18px, 1.7vw, 20px)", { lineHeight: "1.6" }],
         body: ["18px", { lineHeight: "1.6" }],
-        "body-sm": ["17px", { lineHeight: "1.5" }],
-        small: ["16px", { lineHeight: "1.5" }],
-        caption: ["15px", { lineHeight: "1.4" }],
-        label: ["14px", { lineHeight: "1.4", fontWeight: "600" }],
+        "body-sm": ["17px", { lineHeight: "1.6" }],
+        small: ["16px", { lineHeight: "1.6" }],
+        caption: ["15px", { lineHeight: "1.6" }],
+        label: ["14px", { lineHeight: "1.6", fontWeight: "600" }],
       },
       spacing: {
         gutter: "var(--gutter)",

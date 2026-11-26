@@ -24,6 +24,8 @@ const nextConfig = {
       { source: "/products", destination: "/work", permanent: true },
       { source: "/products/scrumready", destination: "/work", permanent: true },
       { source: "/projects", destination: "/work", permanent: true },
+      // The old metadata pointed browsers at an SVG apple icon that never existed.
+      { source: "/apple-icon.svg", destination: "/apple-icon.png", permanent: true },
     ];
   },
 };
